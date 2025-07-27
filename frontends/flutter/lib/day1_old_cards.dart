@@ -5,15 +5,17 @@ import 'dart:io';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: AdaptiveUIScreen(),
-    );
+    return MaterialApp(home: AdaptiveUIScreen());
   }
 }
 
 class AdaptiveUIScreen extends StatefulWidget {
+  const AdaptiveUIScreen({super.key});
+
   @override
   _AdaptiveUIScreenState createState() => _AdaptiveUIScreenState();
 }
@@ -31,24 +33,37 @@ class _AdaptiveUIScreenState extends State<AdaptiveUIScreen> {
   final String userId = 'user_123';
   final File eventLog = File('events.jsonl');
 
-  void logEvent(String eventType, String targetElement, Offset? coordinates) async {
+  void logEvent(
+    String eventType,
+    String targetElement,
+    Offset? coordinates,
+  ) async {
     final event = {
       'event_type': eventType,
       'source': 'touch',
       'timestamp': DateTime.now().toIso8601String(),
       'user_id': userId,
       'target_element': targetElement,
-      if (coordinates != null) 'coordinates': {'x': coordinates.dx, 'y': coordinates.dy},
+      if (coordinates != null)
+        'coordinates': {'x': coordinates.dx, 'y': coordinates.dy},
     };
-    await eventLog.writeAsString('${jsonEncode(event)}\n', mode: FileMode.append);
+    await eventLog.writeAsString(
+      '${jsonEncode(event)}\n',
+      mode: FileMode.append,
+    );
     if (eventType == 'miss_tap') {
       setState(() {
-        cards = cards.map((card) {
-          if (card['id'].toString() == targetElement.split('_').last) {
-            return {...card, 'buttonScale': 1.5, 'buttonOffset': Offset(20, 0)};
-          }
-          return card;
-        }).toList();
+        cards =
+            cards.map((card) {
+              if (card['id'].toString() == targetElement.split('_').last) {
+                return {
+                  ...card,
+                  'buttonScale': 1.5,
+                  'buttonOffset': Offset(20, 0),
+                };
+              }
+              return card;
+            }).toList();
       });
     }
   }
@@ -71,23 +86,37 @@ class _AdaptiveUIScreenState extends State<AdaptiveUIScreen> {
                   child: GestureDetector(
                     onTapDown: (details) {
                       final target = 'card_${card['id']}';
-                      final hit = details.localPosition.dx >= 0 &&
+                      final hit =
+                          details.localPosition.dx >= 0 &&
                           details.localPosition.dx <= 200 &&
                           details.localPosition.dy >= 0 &&
                           details.localPosition.dy <= 300;
-                      logEvent(hit ? 'tap' : 'miss_tap', target, details.globalPosition);
+                      logEvent(
+                        hit ? 'tap' : 'miss_tap',
+                        target,
+                        details.globalPosition,
+                      );
                     },
                     child: Card(
                       child: Column(
                         children: [
-                          Image.asset('assets/placeholder.jpg', height: 100, fit: BoxFit.cover),
+                          Image.asset(
+                            'assets/placeholder.jpg',
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
                           Text(card['title']),
                           Transform.translate(
                             offset: card['buttonOffset'],
                             child: Transform.scale(
                               scale: card['buttonScale'],
                               child: ElevatedButton(
-                                onPressed: () => logEvent('tap', 'button_play_${card['id']}', null),
+                                onPressed:
+                                    () => logEvent(
+                                      'tap',
+                                      'button_play_${card['id']}',
+                                      null,
+                                    ),
                                 child: Text('Play'),
                               ),
                             ),
@@ -97,7 +126,12 @@ class _AdaptiveUIScreenState extends State<AdaptiveUIScreen> {
                             child: Transform.scale(
                               scale: card['buttonScale'],
                               child: ElevatedButton(
-                                onPressed: () => logEvent('tap', 'button_info_${card['id']}', null),
+                                onPressed:
+                                    () => logEvent(
+                                      'tap',
+                                      'button_info_${card['id']}',
+                                      null,
+                                    ),
                                 child: Text('Info'),
                               ),
                             ),

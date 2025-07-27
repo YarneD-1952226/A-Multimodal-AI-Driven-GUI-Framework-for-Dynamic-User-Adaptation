@@ -7,21 +7,24 @@ import 'package:flutter/rendering.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: ArtExplorerScreen(),
-    );
+    return MaterialApp(home: ArtExplorerScreen());
   }
 }
 
 class ArtExplorerScreen extends StatefulWidget {
+  const ArtExplorerScreen({super.key});
+
   @override
   _ArtExplorerScreenState createState() => _ArtExplorerScreenState();
 }
 
 class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
-  List<Map<String, dynamic>> cards = List.generate( // UI metadata
+  List<Map<String, dynamic>> cards = List.generate(
+    // UI metadata
     10,
     (index) => {
       'id': index,
@@ -41,16 +44,24 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
 
   // Log user events to a file and adapt UI based on events
   // This function logs events like taps, scrolls, and misses
-  void logEventAndAdapt(String eventType, String targetElement, Offset? coordinates) async {
+  void logEventAndAdapt(
+    String eventType,
+    String targetElement,
+    Offset? coordinates,
+  ) async {
     final event = {
       'event_type': eventType,
       'source': 'touch',
       'timestamp': DateTime.now().toIso8601String(),
       'user_id': userId,
       'target_element': targetElement,
-      if (coordinates != null) 'coordinates': {'x': coordinates.dx, 'y': coordinates.dy},
+      if (coordinates != null)
+        'coordinates': {'x': coordinates.dx, 'y': coordinates.dy},
     };
-    await eventLog.writeAsString('${jsonEncode(event)}\n', mode: FileMode.append);
+    await eventLog.writeAsString(
+      '${jsonEncode(event)}\n',
+      mode: FileMode.append,
+    );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -65,23 +76,24 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
   // BACKEND INTERACTION MOCKUP
   // Simulates backend adaptation logic based on event type and target element
   void adapt(String eventType, String targetElement) {
-      // BACKEND INTERACTION MOCKUP
+    // BACKEND INTERACTION MOCKUP
     if (eventType == 'miss_tap' && targetElement.startsWith('card_')) {
       setState(() {
-        cards = cards.map((card) {
-          if (card['id'].toString() == targetElement.split('_').last) {
-            return {
-              ...card,
-              'cardScale': 1.1,
-              'buttonScale': 1.3,
-              'buttonOffset': Offset(20, 0),
-              'textFontSize': 20.0,
-              'textContrast': 'high',
-              'buttonContrast': 'high',
-            };
-          }
-          return card;
-        }).toList();
+        cards =
+            cards.map((card) {
+              if (card['id'].toString() == targetElement.split('_').last) {
+                return {
+                  ...card,
+                  'cardScale': 1.1,
+                  'buttonScale': 1.3,
+                  'buttonOffset': Offset(20, 0),
+                  'textFontSize': 20.0,
+                  'textContrast': 'high',
+                  'buttonContrast': 'high',
+                };
+              }
+              return card;
+            }).toList();
       });
     } else if (eventType == 'scroll_miss') {
       setState(() {
@@ -115,17 +127,15 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Art Explorer Demo'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('Art Explorer Demo'), centerTitle: true),
       body: GestureDetector(
         onTapDown: (details) {
           // Check if tap is outside cards (ScrollView miss-tap)
           bool hitCard = false;
           for (var card in cards) {
             final cardId = 'card_${card['id']}';
-            final cardHit = details.localPosition.dx >= 15 &&
+            final cardHit =
+                details.localPosition.dx >= 15 &&
                 details.localPosition.dx <= 365 && // Card width + margins
                 details.localPosition.dy >= 0 &&
                 details.localPosition.dy <= 400; // Card height
@@ -136,7 +146,11 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
             }
           }
           if (!hitCard) {
-            logEventAndAdapt('scroll_miss', 'scrollview', details.globalPosition); // precisely scroll when not hitting a card with for example gaze or tap
+            logEventAndAdapt(
+              'scroll_miss',
+              'scrollview',
+              details.globalPosition,
+            ); // precisely scroll when not hitting a card with for example gaze or tap
           }
         },
         child: Column(
@@ -153,27 +167,43 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
                     child: GestureDetector(
                       onTapDown: (details) {
                         final target = 'card_${card['id']}';
-                        final hit = details.localPosition.dx >= 0 &&
+                        final hit =
+                            details.localPosition.dx >= 0 &&
                             details.localPosition.dx <= 350 &&
                             details.localPosition.dy >= 0 &&
                             details.localPosition.dy <= 400;
-                        logEventAndAdapt(hit ? 'tap' : 'miss_tap', target, details.globalPosition);
+                        logEventAndAdapt(
+                          hit ? 'tap' : 'miss_tap',
+                          target,
+                          details.globalPosition,
+                        );
                       },
                       child: Transform.scale(
                         scale: card['cardScale'],
                         child: Card(
-                          color: card['textContrast'] == 'high' ? Colors.white : Colors.grey[200],
+                          color:
+                              card['textContrast'] == 'high'
+                                  ? Colors.white
+                                  : Colors.grey[200],
                           child: Padding(
                             padding: EdgeInsets.all(10),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Image.asset('assets/placeholder.jpg', height: 200, width: 200, fit: BoxFit.cover),
+                                Image.asset(
+                                  'assets/placeholder.jpg',
+                                  height: 200,
+                                  width: 200,
+                                  fit: BoxFit.cover,
+                                ),
                                 Text(
                                   card['title'],
                                   style: TextStyle(
                                     fontSize: card['textFontSize'],
-                                    color: card['textContrast'] == 'high' ? Colors.black : Colors.grey[800],
+                                    color:
+                                        card['textContrast'] == 'high'
+                                            ? Colors.black
+                                            : Colors.grey[800],
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -181,7 +211,10 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
                                   card['description'],
                                   style: TextStyle(
                                     fontSize: card['textFontSize'] - 2,
-                                    color: card['textContrast'] == 'high' ? Colors.black : Colors.grey[600],
+                                    color:
+                                        card['textContrast'] == 'high'
+                                            ? Colors.black
+                                            : Colors.grey[600],
                                   ),
                                 ),
                                 SizedBox(height: 10),
@@ -194,10 +227,21 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
                                         scale: card['buttonScale'],
                                         child: ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: card['buttonContrast'] == 'high' ? Colors.black : Colors.blue,
-                                            foregroundColor: card['buttonContrast'] == 'high' ? Colors.white : Colors.white,
+                                            backgroundColor:
+                                                card['buttonContrast'] == 'high'
+                                                    ? Colors.black
+                                                    : Colors.blue,
+                                            foregroundColor:
+                                                card['buttonContrast'] == 'high'
+                                                    ? Colors.white
+                                                    : Colors.white,
                                           ),
-                                          onPressed: () => logEventAndAdapt('tap', 'button_play_${card['id']}', null),
+                                          onPressed:
+                                              () => logEventAndAdapt(
+                                                'tap',
+                                                'button_play_${card['id']}',
+                                                null,
+                                              ),
                                           child: Text('Play'),
                                         ),
                                       ),
@@ -209,10 +253,21 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
                                         scale: card['buttonScale'],
                                         child: ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: card['buttonContrast'] == 'high' ? Colors.black : Colors.blue,
-                                            foregroundColor: card['buttonContrast'] == 'high' ? Colors.white : Colors.white,
+                                            backgroundColor:
+                                                card['buttonContrast'] == 'high'
+                                                    ? Colors.black
+                                                    : Colors.blue,
+                                            foregroundColor:
+                                                card['buttonContrast'] == 'high'
+                                                    ? Colors.white
+                                                    : Colors.white,
                                           ),
-                                          onPressed: () => logEventAndAdapt('tap', 'button_info_${card['id']}', null),
+                                          onPressed:
+                                              () => logEventAndAdapt(
+                                                'tap',
+                                                'button_info_${card['id']}',
+                                                null,
+                                              ),
                                           child: Text('Info'),
                                         ),
                                       ),
@@ -231,10 +286,7 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
             ),
             Padding(
               padding: EdgeInsets.all(10),
-              child: ElevatedButton(
-                onPressed: resetUI,
-                child: Text('Reset'),
-              ),
+              child: ElevatedButton(onPressed: resetUI, child: Text('Reset')),
             ),
           ],
         ),
@@ -250,12 +302,15 @@ class AdjustableScrollController extends ScrollController {
     super.addListener(() {
       ScrollDirection scrollDirection = super.position.userScrollDirection;
       if (scrollDirection != ScrollDirection.idle) {
-        double scrollEnd = super.offset +
+        double scrollEnd =
+            super.offset +
             (scrollDirection == ScrollDirection.reverse
                 ? extraScrollSpeed
                 : -extraScrollSpeed);
-        scrollEnd = min(super.position.maxScrollExtent,
-            max(super.position.minScrollExtent, scrollEnd));
+        scrollEnd = min(
+          super.position.maxScrollExtent,
+          max(super.position.minScrollExtent, scrollEnd),
+        );
         jumpTo(scrollEnd);
       }
     });

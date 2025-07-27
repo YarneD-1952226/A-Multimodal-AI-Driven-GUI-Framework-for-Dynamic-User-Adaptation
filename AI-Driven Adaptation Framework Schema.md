@@ -8,7 +8,6 @@ toward specialized models that dynamically rewrite UI code, a future PhD-level c
 "Let’s have an AI system that understands the multimodal user context (gesture, layout, gaze, etc.), and adapts the GUI dynamically — on the fly — to improve the UX for this specific user, in this specific moment."
 
 ---
-
 ## Architecture Overview
 
 The framework is input- and output-agnostic, with an optional analyzing module for dynamic UI inspection. The data flow is:
