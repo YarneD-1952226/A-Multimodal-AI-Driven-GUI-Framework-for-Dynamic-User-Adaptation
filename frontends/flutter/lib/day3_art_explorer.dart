@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/rendering.dart';
+import 'package:frontend/day3_adapter_layer.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(
+    ChangeNotifierProvider(create: (_) => AdaptationState(), child: MyApp()),
+  );
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -23,6 +30,7 @@ class ArtExplorerScreen extends StatefulWidget {
 }
 
 class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
+  late AdaptiveScrollController scrollController;
   List<Map<String, dynamic>> cards = List.generate(
     // UI metadata
     10,
@@ -40,7 +48,43 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
   );
   final String userId = 'user_123';
   final File eventLog = File('events.jsonl');
-  int scrollFriction = 40; // Default scroll speed (lower = faster)
+
+  // Initialize the custom adaptive scroll controller
+  @override
+  void initState() {
+    super.initState();
+    scrollController = AdaptiveScrollController();
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  // Create a JSON contract for user events for backend processing
+  Map<String, dynamic> createJsonEvent({
+    required String eventType,
+    required String source,
+    required String userId,
+    String? targetElement,
+    Offset? coordinates,
+    double confidence = 1.0,
+    Map<String, dynamic>? metadata,
+  }) {
+    return {
+      'event_type': eventType,
+      'source': source,
+      'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'user_id': userId,
+      if (targetElement != null) 'target_element': targetElement,
+      if (coordinates != null)
+        'coordinates': {'x': coordinates.dx, 'y': coordinates.dy},
+      'confidence': confidence,
+      'metadata':
+          metadata ?? {'command': null, 'gesture_type': null, 'key': null},
+    };
+  }
 
   // Log user events to a file and adapt UI based on events
   // This function logs events like taps, scrolls, and misses
@@ -49,58 +93,80 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
     String targetElement,
     Offset? coordinates,
   ) async {
-    final event = {
-      'event_type': eventType,
-      'source': 'touch',
-      'timestamp': DateTime.now().toIso8601String(),
-      'user_id': userId,
-      'target_element': targetElement,
-      if (coordinates != null)
-        'coordinates': {'x': coordinates.dx, 'y': coordinates.dy},
-    };
+    final jsonEvent = createJsonEvent(
+      eventType: eventType,
+      source: 'touch',
+      userId: userId,
+      targetElement: targetElement,
+      coordinates: coordinates,
+    );
+
+    print('Sending event to backend: ${jsonEncode(jsonEvent)}');
+
+    // Log the event to a file
     await eventLog.writeAsString(
-      '${jsonEncode(event)}\n',
+      '${jsonEncode(jsonEvent)}\n',
       mode: FileMode.append,
     );
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Event: $eventType on $targetElement'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+
+    //snackbar to show event logging
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Event logged: $eventType on $targetElement'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      final adaptations = await sendEventToBackend(jsonEvent);
+
+      print('Received adaptations: $adaptations');
+
+      // Apply adaptations locally in adapt()
+      for (var adaptation in adaptations) {
+        adapt(adaptation['action'], adaptation['target'], adaptation['value']);
+      }
+    } catch (e) {
+      print('Error contacting backend: $e');
     }
-    adapt(eventType, targetElement);
+  }
+
+  // Send event to backend and get adaptations
+  Future<List<Map<String, dynamic>>> sendEventToBackend(
+    Map<String, dynamic> jsonEvent,
+  ) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:8000/context'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(jsonEvent),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['adaptations']);
+    } else {
+      throw Exception('Failed to get adaptations from backend');
+    }
   }
 
   // BACKEND INTERACTION MOCKUP
   // Simulates backend adaptation logic based on event type and target element
-  void adapt(String eventType, String targetElement) {
-    // BACKEND INTERACTION MOCKUP
-    if (eventType == 'miss_tap' && targetElement.startsWith('card_')) {
+  void adapt(String action, String targetElement, [dynamic value]) {
+    if (action == 'increase_size') {
       setState(() {
         cards =
             cards.map((card) {
               if (card['id'].toString() == targetElement.split('_').last) {
-                return {
-                  ...card,
-                  'cardScale': 1.1,
-                  'buttonScale': 1.3,
-                  'buttonOffset': Offset(0, 20),
-                  'textFontSize': 20.0,
-                  'textContrast': 'high',
-                  'buttonContrast': 'high',
-                };
+                return {...card, 'buttonScale': value ?? 1.5};
               }
               return card;
             }).toList();
       });
-    } else if (eventType == 'scroll_miss') {
+    } else if (action == 'adjust_scroll_speed') {
       setState(() {
-        scrollFriction = -10; // Increase friction (slower scroll)
+        scrollController.updateScrollSpeed(value ?? 40);
       });
     }
-    // BACKEND INTERACTION MOCKUP
   }
 
   // Reset UI to default state
@@ -120,7 +186,7 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
           'buttonContrast': 'normal',
         },
       );
-      scrollFriction = 40; // Reset scroll speed
+      scrollController.updateScrollSpeed(40);
     });
   }
 
@@ -156,7 +222,7 @@ class _ArtExplorerScreenState extends State<ArtExplorerScreen> {
           children: [
             Expanded(
               child: ListView.builder(
-                controller: AdaptiveScrollController(scrollFriction),
+                controller: scrollController,
                 scrollDirection: Axis.horizontal,
                 itemCount: cards.length,
                 itemBuilder: (context, index) {
@@ -280,26 +346,33 @@ class AdaptiveButton extends StatelessWidget {
   final double scale;
   final Offset offset;
   final Color backgroundColor;
+  final Color foregroundColor;
+  final double fontSize;
 
   const AdaptiveButton({
+    super.key,
     required this.label,
     required this.onPressed,
     this.scale = 1.0,
     this.offset = Offset.zero,
     this.backgroundColor = Colors.blue,
-    super.key,
+    this.foregroundColor = Colors.white,
+    this.fontSize = 14,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: offset,
-      child: Transform.scale(
-        scale: scale,
+    return Transform.scale(
+      scale: scale,
+      child: Padding(
+        padding: EdgeInsets.only(left: offset.dx, top: offset.dy),
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: backgroundColor),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+          ),
           onPressed: onPressed,
-          child: Text(label),
+          child: Text(label, style: TextStyle(fontSize: fontSize)),
         ),
       ),
     );
@@ -332,63 +405,79 @@ class AdaptiveText extends StatelessWidget {
 }
 
 // AdaptiveCardList to display a list of images with adaptive scaling
-class AdaptiveCardList extends StatelessWidget {
-  final List<String> imageUrls;
-  final double cardScale;
-  final double spacing;
+// class AdaptiveCardList extends StatelessWidget {
+//   final List<String> imageUrls;
+//   final double cardScale;
+//   final double spacing;
 
-  const AdaptiveCardList({
-    required this.imageUrls,
-    this.cardScale = 1.0,
-    this.spacing = 8.0,
-    super.key,
-  });
+//   const AdaptiveCardList({
+//     required this.imageUrls,
+//     this.cardScale = 1.0,
+//     this.spacing = 8.0,
+//     super.key,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 180 * cardScale,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: imageUrls.length,
-        separatorBuilder: (_, __) => SizedBox(width: spacing),
-        itemBuilder: (context, index) {
-          return Transform.scale(
-            scale: cardScale,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imageUrls[index],
-                width: 120,
-                height: 180,
-                fit: BoxFit.cover,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return SizedBox(
+//       height: 180 * cardScale,
+//       child: ListView.separated(
+//         scrollDirection: Axis.horizontal,
+//         itemCount: imageUrls.length,
+//         separatorBuilder: (_, __) => SizedBox(width: spacing),
+//         itemBuilder: (context, index) {
+//           return Transform.scale(
+//             scale: cardScale,
+//             child: ClipRRect(
+//               borderRadius: BorderRadius.circular(12),
+//               child: Image.network(
+//                 imageUrls[index],
+//                 width: 120,
+//                 height: 180,
+//                 fit: BoxFit.cover,
+//               ),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
 
 // AdaptiveScrollController to adjust scroll speed
 // This controller allows for a custom scroll speed based on user input
 class AdaptiveScrollController extends ScrollController {
-  AdaptiveScrollController([int extraScrollSpeed = 40]) {
-    super.addListener(() {
-      ScrollDirection scrollDirection = super.position.userScrollDirection;
-      if (scrollDirection != ScrollDirection.idle) {
-        double scrollEnd =
-            super.offset +
-            (scrollDirection == ScrollDirection.reverse
-                ? extraScrollSpeed
-                : -extraScrollSpeed);
-        scrollEnd = min(
-          super.position.maxScrollExtent,
-          max(super.position.minScrollExtent, scrollEnd),
-        );
-        jumpTo(scrollEnd);
-      }
-    });
+  int scrollSpeed = 40; // Default scroll speed (lower = faster)
+
+  AdaptiveScrollController() : super() {
+    addListener(_scrollListener);
+  }
+
+  void updateScrollSpeed(int newSpeed) {
+    scrollSpeed = newSpeed;
+    notifyListeners();
+  }
+
+  void _scrollListener() {
+    if (!hasClients) return;
+    ScrollDirection scrollDirection = position.userScrollDirection;
+    if (scrollDirection != ScrollDirection.idle) {
+      double scrollEnd =
+          offset +
+          (scrollDirection == ScrollDirection.reverse
+              ? scrollSpeed
+              : -scrollSpeed);
+      scrollEnd = min(
+        position.maxScrollExtent,
+        max(position.minScrollExtent, scrollEnd),
+      );
+      jumpTo(scrollEnd);
+    }
+  }
+
+  @override
+  void dispose() {
+    removeListener(_scrollListener);
+    super.dispose();
   }
 }
