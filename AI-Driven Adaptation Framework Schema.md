@@ -2,8 +2,8 @@
 
 ## Objective
 
-This thesis presents a generalized, modular, and scalable framework for dynamic user interface (UI) adaptation, enabling real-time, personalized UI enhancements across diverse platforms (Flutter, React, SwiftUI, and future Unity) and domains (accessibility, gaming, smart homes). The framework leverages multimodal inputs (touch, keyboard, voice, gestures) to capture rich user interaction context, processed by a large language model (LLM) via xAI’s API (https://x.ai/api) and rule-based logic to deliver intelligent, accessibility-focused adaptations. The novel **Smart Intent Fusion** feature uses the LLM to fuse multimodal inputs, infer user intent, and propose predefined UI adaptations, enhancing accessibility and usability. Designed to be developer-friendly, the framework minimizes integration effort through a cross-platform SDK and is extensible to future modalities (e.g., eye tracking) and on-device AI models. The thesis positions AI-driven UI adaptation as an emerging research area, with LLMs as a stepping stone 
-toward specialized models that dynamically rewrite UI code, a future PhD-level challenge.
+This thesis presents a generalized, modular, and scalable framework for dynamic user interface (UI) adaptation, enabling real-time, personalized UI enhancements across diverse platforms (Flutter, React, SwiftUI, and future Unity) and domains (accessibility, gaming, smart homes). The framework leverages multimodal inputs (touch, keyboard, voice, gestures) to capture rich user interaction context, processed by a large language model (LLM) and rule-based logic to deliver intelligent, accessibility-focused adaptations. The novel **Smart Intent Fusion** feature uses the LLM to fuse multimodal inputs, infer user intent, and propose predefined UI adaptations, enhancing accessibility and usability. Designed to be developer-friendly, the framework minimizes integration effort through a cross-platform SDK and is extensible to future modalities (e.g., eye tracking) and on-device AI models. The thesis positions AI-driven UI adaptation as an emerging research area, with LLMs as a stepping stone 
+toward specialized models that dynamically rewrite UI code, a future challenge.
 
 "Let’s have an AI system that understands the multimodal user context (gesture, layout, gaze, etc.), and adapts the GUI dynamically — on the fly — to improve the UX for this specific user, in this specific moment."
 
@@ -115,12 +115,10 @@ The framework is input- and output-agnostic, with an optional analyzing module f
   - **Purpose**: Fuses multimodal inputs (e.g., voice “play” + miss-tap) to infer intent and suggest proactive adaptations (e.g., trigger button, enlarge it).
   - **Process**:
     - Combines inputs, user profiles (e.g., motor impairment), and history (e.g., frequent miss-taps).
-    - Uses LLM (via xAI’s API) to reason (e.g., “Given user_123 with motor impairment, miss_tap near button_play, and voice ‘play,’ suggest adaptation”).
+    - Uses LLM to reason (e.g., “Given user_123 with motor impairment, miss_tap near button_play, and voice ‘play,’ suggest adaptation”).
     - Response: `{"action": "increase_size", "target": "button_play", "value": 1.5, "secondary_action": "trigger_button"}`.
   - **Examples**:
     - **Accessibility**: Miss-tap + voice “play” → enlarge button, trigger action.
-    - **Gaming**: Repeated miss-taps + voice “attack” → larger hitboxes.
-    - **Smart Homes**: Voice “turn on” + gesture → reposition control.
   - **Value**:
     - **Intent Clarity**: Voice/gestures clarify vague inputs (e.g., point + “play” = select Play).
     - **Behavioral Insight**: Shaky gestures indicate motor issues, triggering accessibility adaptations.
@@ -136,22 +134,22 @@ The framework is input- and output-agnostic, with an optional analyzing module f
 
 ---
 
-### 3. AI Backend Logic
+### 3. Smart Intent Fusion (SIF)
 
-- **Purpose**: Generates adaptation actions using rule-based logic, LLM-driven **Smart Intent Fusion**, heatmap analysis, user profiles, and historical data.
+- **Purpose**: Generates adaptation actions using rule-based logic, LLM-driven reasoning and intent inference, optional heatmap analysis, user profiles, and historical UI interaction data.
 - **Components**:
   - **Rule-Based Logic**: Deterministic adaptations (e.g., `if miss_tap then increase_size`).
     - Config: `{"condition": "miss_tap", "action": "increase_size", "value": 1.5}`
-  - **LLM Reasoning (Smart Intent Fusion)**: Fuses inputs and profiles to infer intent and suggest creative adaptations (e.g., switch to voice mode).
-  - **Heatmap Analysis**: Prioritizes targets based on interaction density (e.g., frequent taps on “Play”). Simulated via mock data if sprint time is limited.
+  - **LLM Reasoning**: Fuses history of inputs and profiles to infer intent and suggest creative adaptations (e.g., switch to voice mode).
+  - **Heatmap Analysis**: Prioritizes targets based on interaction density (e.g., frequent taps on “Play”). Simulated via mock data
   - **User Profiles & History**:
     - **Content**:
       - `user_id`: Unique identifier (e.g., UUID).
       - `accessibility_needs`: Booleans (e.g., `motor_impaired: true`, `visual_impaired: false`, `hands_free_preferred: true`).
-      - `input_preferences`: Preferred modality (e.g., “voice”), sensitivity (0–1, e.g., 0.8 for gestures).
+      - `input_preferences`: Preferred modality (e.g., “voice”).
       - `interaction_history`: Past events (e.g., `[{event_type: "miss_tap", timestamp: "..."}]`), adaptation outcomes (e.g., `[{action: "increase_size", success: true}]`).
       - `ui_preferences`: Font size (e.g., 18), contrast mode (e.g., “high”), button size (e.g., 1.2).
-      - Example:
+      - Example user profile:
         ```json
         {
           "user_id": "user_123",
@@ -162,17 +160,21 @@ The framework is input- and output-agnostic, with an optional analyzing module f
           },
           "input_preferences": {
             "preferred_modality": "voice",
-            "sensitivity": 0.8
           },
-          "interaction_history": [
-            {"event_type": "miss_tap", "target_element": "button_play", "timestamp": "2025-07-22T12:00:00Z"},
-            {"event_type": "tap", "target_element": "button_info", "timestamp": "2025-07-22T12:01:00Z"}
-          ],
           "ui_preferences": {
             "font_size": 18,
             "contrast_mode": "normal",
             "button_size": 1.2
           }
+        }
+        ```
+        Example UI interaction history:
+        ```json
+        {
+        "interaction_history": [
+            {"event_type": "miss_tap", "target_element": "button_play", "timestamp": "2025-07-22T12:00:00Z"},
+            {"event_type": "tap", "target_element": "button_info", "timestamp": "2025-07-22T12:01:00Z"}
+          ],
         }
         ```
     - **Use**:
@@ -185,9 +187,6 @@ The framework is input- and output-agnostic, with an optional analyzing module f
     - `/modalities`: Configures supported inputs.
     - `/ws/adapt`: WebSocket for real-time adaptations (optional, simulated if needed).
   - **Logging**: Stores events and adaptations in `adaptation_log.jsonl` (e.g., `{"timestamp": "...", "context": {...}, "action": {...}}`). Uses MongoDB for scalability in production.
-- **Implementation**:
-  - Day 4: Build FastAPI backend with rule-based logic and mock LLM responses.
-  - Day 5: Integrate xAI’s API for LLM-driven **Smart Intent Fusion**. Mock responses if API setup exceeds sprint.
 
 ---
 

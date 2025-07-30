@@ -41,7 +41,7 @@ async def process_event(event: Event):
         adaptations.append({
             "action": "adjust_scroll_speed",
             "target": "scrollview",
-            "value": -10
+            "value": 10
         })
 
     return {"adaptations": adaptations}
