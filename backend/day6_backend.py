@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict
@@ -6,9 +6,17 @@ import json
 from datetime import datetime
 from google import genai
 from google.genai import types
+import pymongo
 
 app = FastAPI()
 client = genai.Client(api_key="AIzaSyAKbdndI2mZCDufsSbJI2Y3qaIlThoVpds")
+
+#MongoDB setup
+mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = mongo_client["adaptive_ui"]
+profiles_collection = db["profiles"]
+logs_collection = db["logs"]
+profiles_collection.create_index("user_id", unique=True)
 
 # CORS for Flutter/React/SwiftUI frontends
 app.add_middleware(
@@ -18,18 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# In-memory storage for user profiles and history (manual updates for demo)
-USER_PROFILES = {
-    "user_123": {
-        "user_id": "user_123",
-        "accessibility_needs": {"motor_impaired": False, "visual_impaired": True, "hands_free_preferred": False},
-        "input_preferences": {"preferred_modality": "voice"},
-        "ui_preferences": {"font_size": 16, "contrast_mode": "normal", "button_size": 1.0},
-        "interaction_history": []
-    }
-}
-ADAPTATION_LOG = []
 
 # Event schema (matches JSON contract)
 class Event(BaseModel):
@@ -117,9 +113,9 @@ def mock_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
 # Smart Intent Fusion (Gemini LLM integration for reasoning and intent inference)
 def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
     prompt = f"""
-    Analyze this user event: {json.dumps(event.dict())}
+    Analyze this user event: {event.model_dump_json()}
     User profile: {json.dumps(profile)}
-    Recent history (last 10 events): {json.dumps(history[-10:])}
+    Recent history (last 10 events): {json.dumps(history)}
     Suggest UI adaptations as JSON.
     Focus on accessibility and multimodal fusion (e.g., voice + miss_tap → enlarge + trigger). 
     Ensure actions are in ["increase_size", "reposition_element", "increase_contrast", "adjust_scroll_speed", "switch_mode", "trigger_button", "simplify_layout"].
@@ -161,50 +157,72 @@ def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> Lis
         print(f"Gemini API error: {e}, using mock")
         return mock_fusion(event, profile, history)
 
-# Update user profile and history
-async def update_user_profile(event: Event):
-    profile = USER_PROFILES.get(event.user_id, {
-        "user_id": event.user_id,
-        "accessibility_needs": {"motor_impaired": False, "visual_impaired": False, "hands_free_preferred": False},
-        "input_preferences": {"preferred_modality": "touch"},
-        "ui_preferences": {"font_size": 16, "contrast_mode": "normal", "button_size": 1.0},
-        "interaction_history": []
-    })
-    profile["interaction_history"].append(event.dict(exclude_none=True))
-    USER_PROFILES[event.user_id] = profile
-
 # Log adaptation
-async def log_adaptation(event: Event, adaptations: List[Dict]):
+async def log_adaptation(event: Event, adaptations: List[Dict], background_tasks: BackgroundTasks):
     log_entry = {
         "timestamp": datetime.utcnow().isoformat(),
         "context": event.dict(exclude_none=True),
         "adaptations": adaptations
     }
-    ADAPTATION_LOG.append(log_entry)
+    background_tasks.add_task(logs_collection.insert_one, log_entry)
+    # Optional: Keep jsonl
     with open("adaptation_log.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
-# HTTP endpoint for context processing
+# Update user history
+async def append_event(user_id: str, event_data: str):
+    profiles_collection.update_one(
+        {"user_id": user_id}, 
+        {"$push": {"interaction_history": {"$each": [event_data], "$slice": -10}}}
+    )
+
+# Load user profile from MongoDB
+async def load_profile(user_id: str) -> Dict:
+    profile = profiles_collection.find_one({"user_id": user_id}, {'_id': 0})
+    return profile
+
+# Atomic update for interaction history (MongoDB transaction)
+async def atomic_update(user_id: str, event_data: Dict):
+    def callback(session):
+        profiles_collection.update_one(
+            {"user_id": user_id},
+            {"$push": {"interaction_history": {"$each": [event_data], "$slice": -20}}},
+            session=session
+        )
+    mongo_client.with_transaction(callback)
+
+
+
+# Process event endpoint
 @app.post("/context")
-async def process_event(event: Event):
-    await update_user_profile(event)
-    profile = USER_PROFILES.get(event.user_id, {})
-    adaptations = smart_intent_fusion(event, profile, profile.get("interaction_history", []))
-    await log_adaptation(event, adaptations)
+async def process_event(event: Event, background_tasks: BackgroundTasks):
+    profile = await load_profile(event.user_id)
+    history = profile.get("interaction_history", [])
+    adaptations = smart_intent_fusion(event, profile, history)
+    await append_event(event.user_id, event.dict(exclude_none=True), background_tasks)
+    await log_adaptation(event, adaptations, background_tasks)
     return {"adaptations": adaptations}
 
-# WebSocket endpoint for real-time adaptations
+# WebSocket endpoint for real-time adaptation
 @app.websocket("/ws/adapt")
-async def websocket_adapt(websocket: WebSocket):
+async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTasks):
     await websocket.accept()
     try:
         while True:
             data = await websocket.receive_json()
             event = Event(**data)
-            #await update_user_profile(event)
-            profile = USER_PROFILES.get(event.user_id, {})
-            adaptations = smart_intent_fusion(event, profile, profile.get("interaction_history", []))
-            await log_adaptation(event, adaptations)
+            profile = await load_profile(event.user_id) or {
+                "user_id": event.user_id,
+                "interaction_history": [],
+                "accessibility_needs": {},
+                "input_preferences": {},
+                "ui_preferences": {}
+            }
+            history = profile.get("interaction_history", [])
+            adaptations = smart_intent_fusion(event, profile, history)
+            await append_event(event.user_id, event.model_dump_json())
+            await log_adaptation(event, adaptations, background_tasks)
+            print(f"Adaptations: {adaptations}")
             await websocket.send_json({"adaptations": adaptations})
     except Exception as e:
         print(f"WebSocket error: {e}")
@@ -212,14 +230,35 @@ async def websocket_adapt(websocket: WebSocket):
         await websocket.close()
 
 # Profile management endpoint (manual updates for demo)
+@app.post("/profile")
+async def set_profile(profile: Dict, background_tasks: BackgroundTasks):
+    internal_profile = await load_profile(profile.get("user_id"))
+    print(f"Internal profile: {internal_profile}")
+    if not internal_profile:
+        profiles_collection.insert_one(profile)
+        print("Profile created")
+        return {"status": "Profile created"}
+    else:
+        print("Profile updated")
+        background_tasks.add_task(profiles_collection.update_one, {"user_id": profile.get("user_id")}, {"$set": profile}, upsert=True)
+        return {"status": "Profile update queued"}
+
+# Profile retrieval endpoint
 @app.get("/profile/{user_id}")
 async def get_profile(user_id: str):
-    return USER_PROFILES.get(user_id, {"error": "Profile not found"})
+    profile = await load_profile(user_id)
+    if not profile:
+        raise HTTPException(404, "Profile not found")
+    return profile
 
-@app.post("/profile")
-async def update_profile(profile: Dict):
-    USER_PROFILES[profile["user_id"]] = profile
-    return {"status": "Profile updated"}
+@app.get("/full_history")
+async def get_full_history():
+    history = list(profiles_collection.find({}, {'_id': 0, 'interaction_history': 1, 'user_id': 1}))
+    formatted_history = [{"user_id": doc["user_id"], "interaction_history": doc.get("interaction_history", [])} for doc in history]
+    print(f"Full history: {formatted_history}")
+    if not history:
+        raise HTTPException(404, "No interaction history found")
+    return {"history": formatted_history}
 
 # Modalities configuration endpoint
 @app.get("/modalities")
