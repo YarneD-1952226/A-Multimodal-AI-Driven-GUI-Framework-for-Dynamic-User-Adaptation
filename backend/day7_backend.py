@@ -18,7 +18,7 @@ profiles_collection = db["profiles"]
 logs_collection = db["logs"]
 profiles_collection.create_index("user_id", unique=True)
 
-# CORS for Flutter/React/SwiftUI frontends
+# CORS for Flutter/SwiftUI frontends
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -118,37 +118,64 @@ def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> Lis
     Recent history (last 10 events): {json.dumps(history)}
     Suggest UI adaptations as JSON.
     Focus on accessibility and multimodal fusion (e.g., voice + miss_tap → enlarge + trigger). 
-    Ensure actions are in ["increase_size", "reposition_element", "increase_contrast", "adjust_scroll_speed", "switch_mode", "trigger_button", "simplify_layout"].
-    """
+    Ensure actions are in ["increase_size", "reposition_element", "increase_contrast", "switch_mode", "trigger_button", "simplify_layout"].
+    Switch modes only entails changing the interaction mode, not the UI layout. eg. "switch_mode": "voice" or "switch_mode": "gesture".
+    Also ensure that the adaptations are tailored to the user's specific needs and context. Use the given User profile to make drastic UI changes, atleast increase_contrast and simplify_layout.
+    """ #TODO: Config file
+    # print(f"Prompt for Gemini: {prompt}")
     # Call Gemini API for intent fusion
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash", 
             contents=prompt,
             config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_json_schema={ #TODO: Create a pydantic model for this schema -> send to frontend?
+            response_mime_type="application/json",
+            response_json_schema={
+                "type": "object",
+                "properties": {
+                "adaptations": {
+                    "type": "array",
+                    "items": {
                     "type": "object",
                     "properties": {
-                        "adaptations": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "action": {"type": "string"},
-                                    "target": {"type": "string"},
-                                    "value": {"type": ["number", "string"], "nullable": True},
-                                    "mode": {"type": "string", "nullable": True},
-                                    "reason": {"type": "string"}
-                                },
-                                "required": ["action", "target", "reason"]
-                            }
+                        "action": {
+                        "type": "string",
+                        "description": "The type of UI adaptation to perform",
+                        },
+                        "target": {
+                        "type": "string",
+                        "description": "The UI element or component to apply the adaptation to, 'all' is also an option, if targeting all elements",
+                        },
+                        "value": {
+                        "type": ["number", "string"],
+                        "description": "Numeric multiplier for size/speed changes or string value for layout changes (e.g., 1.5 for 50% larger). it needs to be positive and a decimal with one digit after the dot.",
+                        },
+                        "mode": {
+                        "type": "string",
+                        "description": "Interaction mode or visual mode to switch to (e.g., 'voice', 'gesture', 'high' for contrast)",
+                        },
+                        "reason": {
+                        "type": "string",
+                        "description": "Human-readable explanation of why this adaptation was suggested based on the user event and context"
+                        },
+                        "intent": {
+                        "type": "string",
+                        "description": "The inferred user intent, what did you think the user's intent was based on the user input event?"
                         }
                     },
-                    "required": ["adaptations"]
+                    "required": ["action", "target", "reason", "intent"],
+                    "oneOf": [
+                        {"required": ["value"]},
+                        {"required": ["mode"]}
+                    ]
+                    }
+                }
                 },
-                thinking_config=types.ThinkingConfig(thinking_budget=0),  # Disables thinking
-                system_instruction="You are an expert in multimodal AI-driven GUI adaptation. Analyze user events and suggest UI adaptations based on accessibility needs and interaction history.",
+                "required": ["adaptations"]
+            },
+            temperature=0.2,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            system_instruction="You are an expert in multimodal AI-driven GUI adaptation. Analyze user events and suggest UI adaptations based on accessibility needs and interaction history.",
             ),
         )
         print(response.text)
@@ -222,7 +249,7 @@ async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTask
             adaptations = smart_intent_fusion(event, profile, history)
             await append_event(event.user_id, event.model_dump_json())
             await log_adaptation(event, adaptations, background_tasks)
-            print(f"Adaptations: {adaptations}")
+            # print(f"Adaptations: {adaptations}")
             await websocket.send_json({"adaptations": adaptations})
     except Exception as e:
         print(f"WebSocket error: {e}")
