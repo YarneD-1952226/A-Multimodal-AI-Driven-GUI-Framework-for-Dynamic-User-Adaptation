@@ -102,7 +102,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
     profile_json = json.dumps(profile)
     history_json = json.dumps(history)
 
-    def call_gemini_with_timeout(prompt, timeout=15):
+    def call_gemini_with_timeout(prompt, model, timeout=15):
         
         def timeout_handler(signum, frame):
             raise TimeoutError("Gemini API call timed out")
@@ -112,7 +112,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
             signal.alarm(timeout)
             
             response = client.models.generate_content(
-                model="gemini-2.5-flash-lite",
+                model=model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -191,8 +191,8 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         ) + "\nAllowed actions: " + ", ".join(agent_config["allowed_actions"]) + " with as focus: " + ", ".join(agent_config.get("focus", [])) + "\n"
         
         # Call Gemini API for each agent
-        agent_suggestions = call_gemini_with_timeout(agent_prompt)
-        
+        agent_suggestions = call_gemini_with_timeout(agent_prompt, model=agent_config.get("model", "gemini-2.5-flash-lite"))
+
         if agent_suggestions:
             # Cycle through a list of ANSI color codes for each agent
             colors = ["\033[92m", "\033[94m", "\033[93m", "\033[95m", "\033[96m", "\033[91m"]
@@ -212,7 +212,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         profile_json=profile_json,
         history_json=[]
     ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
-    final_adaptations = call_gemini_with_timeout(validator_prompt)
+    final_adaptations = call_gemini_with_timeout(validator_prompt, model=sif_config["agents"]["validator"].get("model", "gemini-2.5-flash"))
 
     if final_adaptations:
         print(f"\033[96mFinal adaptations: {final_adaptations}\033[0m")
