@@ -9,10 +9,13 @@ from google import genai
 from google.genai import types
 import pymongo
 import signal
+import os
+from dotenv import load_dotenv
 
 # Initialize FastAPI and Google GenAI client
 app = FastAPI()
-client = genai.Client(api_key="AIzaSyAKbdndI2mZCDufsSbJI2Y3qaIlThoVpds")
+load_dotenv(dotenv_path="gemini.env")
+client = genai.Client(api_key=os.getenv("GOOGLE_GENAI_API_KEY"))
 
 # Load SIF configuration
 with open('sif_config.json', 'r') as f:

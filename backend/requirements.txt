@@ -4,3 +4,4 @@ uvicorn
 requests
 google-genai
 pymongo
+python-dotenv
