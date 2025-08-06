@@ -105,7 +105,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
     profile_json = json.dumps(profile)
     history_json = json.dumps(history)
 
-    def call_gemini_with_timeout(prompt, model, timeout=15):
+    def call_gemini_with_timeout(prompt, model, thinking_budget=0, temp=0.2, timeout=15):
         
         def timeout_handler(signum, frame):
             raise TimeoutError("Gemini API call timed out")
@@ -113,7 +113,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         try:
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(timeout)
-            
+
             response = client.models.generate_content(
                 model=model,
                 contents=prompt,
@@ -151,10 +151,10 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
                         "type": "string",
                         "description": "The inferred user intent, what did you think the user's intent was based on the user input event?"
                         },
-                        "validator_reason": {
-                            "type": "string",
-                            "description": "ONLY if you're the validator agent. The reasoning provided by the validator agent for accepting or rejecting the adaptation"
-                        }
+                        # "validator_reason": {
+                        #     "type": "string",
+                        #     "description": "ONLY if you're the validator agent. The reasoning provided by the validator agent for accepting or rejecting the adaptation"
+                        # }
                     },
                     "required": ["action", "target", "reason", "intent"],
                     "oneOf": [
@@ -166,8 +166,8 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
                 },
                 "required": ["adaptations"]
             },
-                    temperature=0.2,
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
+                    temperature=temp,
+                    thinking_config=types.ThinkingConfig(thinking_budget=thinking_budget),
                     system_instruction="You are an expert in multimodal AI-driven GUI adaptation. Analyze user events and suggest UI adaptations based on accessibility needs and interaction history. Youre part of a multi-agent system, each agent has its own focus and allowed actions.",
                 ),
             )
@@ -192,7 +192,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
             profile_json=profile_json,
             history_json=history_json
         ) + "\nAllowed actions: " + ", ".join(agent_config["allowed_actions"]) + " with as focus: " + ", ".join(agent_config.get("focus", [])) + "\n"
-        
+        # print(f"\033[92m{agent_name} prompt: {agent_prompt}\033[0m")
         # Call Gemini API for each agent
         agent_suggestions = call_gemini_with_timeout(agent_prompt, model=agent_config.get("model", "gemini-2.5-flash-lite"))
 
@@ -215,7 +215,8 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         profile_json=profile_json,
         history_json=[]
     ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
-    final_adaptations = call_gemini_with_timeout(validator_prompt, model=sif_config["agents"]["validator"].get("model", "gemini-2.5-flash"))
+    # print(f"\033[95mValidator prompt: {validator_prompt}\033[0m")
+    final_adaptations = call_gemini_with_timeout(validator_prompt, model=sif_config["agents"]["validator"].get("model", "gemini-2.5-flash"), thinking_budget=-1, temp=0.3, timeout=30)
 
     if final_adaptations:
         print(f"\033[96mFinal adaptations: {final_adaptations}\033[0m")
