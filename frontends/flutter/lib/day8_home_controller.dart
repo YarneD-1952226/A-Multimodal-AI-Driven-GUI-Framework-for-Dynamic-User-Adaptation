@@ -308,8 +308,10 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             }
             appliedAdaptations.add('Increased borders for all elements');
           } else {
-            elementBorders[target] = elementBorders[target]! * 2.0;
-            appliedAdaptations.add('Increased border for $target');
+            if (elementBorders.containsKey(target)) {
+              elementBorders[target] = elementBorders[target]! * 2.0;
+              appliedAdaptations.add('Increased border for $target');
+            }
           }
           break;
 
@@ -320,8 +322,10 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             }
             appliedAdaptations.add('Increased all slider sizes');
           } else {
-            sliderSizes[target] = adapt.value ?? 1.0;
-            appliedAdaptations.add('Increased slider size for $target');
+            if (sliderSizes.containsKey(target)) {
+              sliderSizes[target] = adapt.value ?? 1.0;
+              appliedAdaptations.add('Increased slider size for $target');
+            }
           }
           break;
 
@@ -361,11 +365,13 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             }
             appliedAdaptations.add('Adjusted spacing for all elements');
           } else {
-            elementSpacing[target] =
-                adapt.value != null
-                    ? elementSpacing[target]! * adapt.value!
-                    : 16.0;
-            appliedAdaptations.add('Adjusted spacing for $target');
+            if (elementSpacing.containsKey(target)) {
+              elementSpacing[target] =
+                  adapt.value != null
+                      ? elementSpacing[target]! * adapt.value!
+                      : 16.0;
+              appliedAdaptations.add('Adjusted spacing for $target');
+            }
           }
           break;
 
@@ -386,7 +392,6 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
 
         case 'switch_mode':
           if (adapt.mode != null) {
-            // uiModes[target] = adapt.mode!;
             appliedAdaptations.add(
               'Switched UI navigation mode to ${adapt.mode}',
             );

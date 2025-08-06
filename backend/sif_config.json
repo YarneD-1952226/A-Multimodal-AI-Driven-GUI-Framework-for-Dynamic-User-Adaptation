@@ -32,7 +32,7 @@
         "trigger_button",
         "simplify_layout"
       ],
-      "prompt": "You are the validator agent. Review suggestions from all agents.\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nAdaptations from all agents: {adaptations_json}\nValidate and refine into a final JSON list of adaptations. Each adaptation must include at least a 'value' or 'mode' field with a reasonable value if applicable. Remove duplicates, prioritize accessibility, fix hallucinations, and adhere to strict JSON guidelines. Each adaptation must include a 'validator_reason' field with your reasoning behind the validation."
+      "prompt": "You are the validator agent. Review suggestions from all agents.\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nAdaptations from all agents: {adaptations_json}\nValidate and refine into a final JSON list of adaptations. Each adaptation must include at least a 'value' or 'mode' field with a reasonable value if applicable. Remove duplicates, prioritize accessibility, fix hallucinations, validate target name, and adhere to the strict JSON guidelines. Each adaptation must include a 'validator_reason' field with your reasoning behind the validation."
     }
   }
 }
