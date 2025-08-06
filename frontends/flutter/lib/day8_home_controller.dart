@@ -46,7 +46,7 @@ class _AdaptiveSmartHomeAppState extends State<AdaptiveSmartHomeApp> {
       // Button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          side: BorderSide(width: 1.0, color: Colors.blue),
+          side: BorderSide(width: 1.0, color: Colors.white),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           elevation: 2,
@@ -119,6 +119,8 @@ class _AdaptiveSmartHomeAppState extends State<AdaptiveSmartHomeApp> {
         ),
         margin: EdgeInsets.all(4),
       ),
+
+      iconTheme: IconThemeData(color: Colors.white),
 
       // Button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -367,6 +369,21 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           }
           break;
 
+        case 'show_tooltip':
+          // Show tooltip for the specific element
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                adapt.value ?? 'Here is a helpful tip for $target!',
+                style: TextStyle(fontSize: 16),
+              ),
+              duration: Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          appliedAdaptations.add('Showed tooltip for $target');
+          break;
+
         case 'switch_mode':
           if (adapt.mode != null) {
             // uiModes[target] = adapt.mode!;
@@ -396,6 +413,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           break;
       }
     }
+
     // print('Applied adaptations: $appliedAdaptations');
     if (appliedAdaptations.isNotEmpty) {
       _showAdaptationSnackBar(appliedAdaptations);
@@ -411,17 +429,17 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey[400],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_fix_high, size: 16),
+              Icon(Icons.auto_awesome, size: 16),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Applied: $adaptationText',
-                  style: TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
                 ),
               ),
             ],
@@ -432,10 +450,15 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 10,
+          bottom: MediaQuery.of(context).size.height - 115,
           left: 20,
           right: 20,
         ),
         duration: Duration(seconds: 3),
+
+        // Show at the top
+        // This is supported in Flutter 3.7+ with SnackBarActionLocation
+        // But for now, using margin and floating behavior is the best way
       ),
     );
   }
@@ -454,6 +477,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 35),
               buildAdaptiveText('Welcome, $userId!', 'welcome'),
               SizedBox(height: simplifiedLayout ? 8 : 16),
               if (simplifiedLayout)
@@ -516,11 +540,10 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
     List<String> actions,
   ) {
     bool isThisCardLoading = isLoading && _loadingDevice == device;
-    // String mode = uiModes[device] ?? 'standard';
 
     final cardContent = Card(
-      // elevation: mode == 'minimal' ? 0 : 4,
       margin: EdgeInsets.zero,
+      surfaceTintColor: Colors.black,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Transform.translate(
         offset: elementPositions[device] ?? Offset.zero,
@@ -531,24 +554,51 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             left: simplifiedLayout ? 8 : 16,
             right: simplifiedLayout ? 8 : 16,
           ),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildAdaptiveText(title, device),
-              SizedBox(height: 8),
-              buildAdaptiveText('Status: ${deviceStatuses[device]}', device),
-              SizedBox(height: 8),
-              if (actions.isEmpty)
-                buildAdaptiveSlider(device)
-              else
-                ...buildActionButtons(device, actions),
-              SizedBox(height: 8),
-              Text("Mock Events:", style: TextStyle(fontSize: 16)),
-              SizedBox(height: 8),
-              if (!simplifiedLayout) ...[
-                SizedBox(height: 8),
-                buildMockButtons(device),
-              ],
+              if (!simplifiedLayout)
+                Icon(
+                  device == 'lamp'
+                      ? Icons.lightbulb
+                      : device == 'thermostat'
+                      ? Icons.thermostat
+                      : Icons.lock,
+                  size: 40 * (buttonScales[device] ?? 1.0),
+                  color:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : device == 'lamp'
+                          ? Colors.yellow[700]
+                          : device == 'thermostat'
+                          ? Colors.blue[700]
+                          : Colors.grey[700],
+                ),
+              if (!simplifiedLayout) SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildAdaptiveText(title, device),
+                    SizedBox(height: 8),
+                    buildAdaptiveText(
+                      'Status: ${deviceStatuses[device]}',
+                      device,
+                    ),
+                    SizedBox(height: 8),
+                    if (actions.isEmpty)
+                      buildAdaptiveSlider(device)
+                    else
+                      ...buildActionButtons(device, actions),
+                    if (!simplifiedLayout) ...[
+                      SizedBox(height: 20),
+                      Text("Mock Events:", style: TextStyle(fontSize: 16)),
+                      SizedBox(height: 8),
+                      buildMockButtons(device),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -704,6 +754,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
                             : device == 'lock'
                             ? 'unlock'
                             : 'adjust',
+                    'UI_element': device == 'thermostat' ? 'slider' : 'button',
                   },
                 ),
               );
@@ -725,7 +776,10 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
                   eventType: 'gesture',
                   source: 'gesture',
                   targetElement: device,
-                  metadata: {'gesture_type': 'point'},
+                  metadata: {
+                    'gesture_type': 'point',
+                    'UI_element': device == 'thermostat' ? 'slider' : 'button',
+                  },
                 ),
               );
             },
@@ -764,6 +818,9 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
               'thermostat': '20°C',
               'lock': 'Locked',
             };
+            thermostatValue = 20.0;
+            elementBorders = {'lamp': 1.0, 'lock': 1.0};
+            elementSpacing = {'lamp': 8.0, 'thermostat': 8.0, 'lock': 8.0};
             isLoading = false;
             _loadingDevice = null;
           });

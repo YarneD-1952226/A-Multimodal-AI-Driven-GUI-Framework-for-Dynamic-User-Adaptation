@@ -93,6 +93,10 @@ def mock_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
 
 #Multi-Agent Smart Intent Fusion (MA-SIF)
 def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
+    """Multi-Agent Smart Intent Fusion using Gemini LLMs"""
+    print("---------------------------------")
+    print(f"Processing event: {event.model_dump_json()}")
+
     event_json = event.model_dump_json()
     profile_json = json.dumps(profile)
     history_json = json.dumps(history)
