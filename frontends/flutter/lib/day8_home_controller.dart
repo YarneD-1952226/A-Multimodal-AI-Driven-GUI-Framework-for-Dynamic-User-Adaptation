@@ -301,15 +301,15 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           }
           break;
 
-        case 'highlight_button_border':
+        case 'increase_button_border':
           if (target == "all") {
             for (var device in elementBorders.keys) {
               elementBorders[device] = elementBorders[device]! * 2.0;
             }
-            appliedAdaptations.add('Highlighted borders for all elements');
+            appliedAdaptations.add('Increased borders for all elements');
           } else {
             elementBorders[target] = elementBorders[target]! * 2.0;
-            appliedAdaptations.add('Highlighted border for $target');
+            appliedAdaptations.add('Increased border for $target');
           }
           break;
 

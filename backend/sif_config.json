@@ -2,8 +2,8 @@
   "agents": {
     "ui": {
       "name": "UI suggestion Agent",
-      "focus": ["increasing font sizes", "turning on contrast UI mode", "highlight button borders for better visibility"],
-      "allowed_actions": ["increase_font_size", "increase_contrast", "highlight_button_border"],
+      "focus": ["increasing font sizes", "turning on contrast UI mode", "increasing button borders for better visibility"],
+      "allowed_actions": ["increase_font_size", "increase_contrast", "increase_button_border"],
       "prompt": "You're the UI suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be a reasonable number (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements."
     },
     "geometry": {
@@ -14,7 +14,7 @@
     },
     "other": {
       "name": "Other suggestions Agent",
-      "focus": ["UI navigation mode switching", "layout simplification", "showing helpful tooltips", "triggering buttons"],
+      "focus": ["UI navigation mode switching (e.g. keyboard, voice, gestures)", "layout simplification", "showing helpful tooltips for UI navigation", "triggering buttons"],
       "allowed_actions": ["switch_mode", "simplify_layout", "trigger_button", "show_tooltip"],
       "prompt": "You're the Other suggestions Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be reasonable (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements."
     },
@@ -24,7 +24,7 @@
         "increase_button_size",
         "show_tooltip",
         "adjust_spacing",
-        "highlight_button_border",
+        "increase_button_border",
         "increase_contrast",
         "increase_font_size",
         "increase_slider_size",
@@ -32,7 +32,7 @@
         "trigger_button",
         "simplify_layout"
       ],
-      "prompt": "You are the validator agent. Review suggestions from all agents.\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nAdaptations from all agents: {adaptations_json}\nValidate and refine into a final JSON list of adaptations. Each adaptation must include a 'value' or 'mode' field with a reasonable value if applicable. Remove duplicates, prioritize accessibility, fix hallucinations, and adhere to strict JSON guidelines. Each adaptation must include a 'validator_reason' field with your reasoning behind the validation."
+      "prompt": "You are the validator agent. Review suggestions from all agents.\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nAdaptations from all agents: {adaptations_json}\nValidate and refine into a final JSON list of adaptations. Each adaptation must include at least a 'value' or 'mode' field with a reasonable value if applicable. Remove duplicates, prioritize accessibility, fix hallucinations, and adhere to strict JSON guidelines. Each adaptation must include a 'validator_reason' field with your reasoning behind the validation."
     }
   }
 }
