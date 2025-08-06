@@ -301,14 +301,14 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           }
           break;
 
-        case 'highlight_border':
+        case 'highlight_button_border':
           if (target == "all") {
             for (var device in elementBorders.keys) {
-              elementBorders[device] = 2.0;
+              elementBorders[device] = elementBorders[device]! * 2.0;
             }
             appliedAdaptations.add('Highlighted borders for all elements');
           } else {
-            elementBorders[target] = 2.0;
+            elementBorders[target] = elementBorders[target]! * 2.0;
             appliedAdaptations.add('Highlighted border for $target');
           }
           break;
@@ -339,17 +339,17 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           appliedAdaptations.add('Switched to high contrast theme');
           break;
 
-        case 'element_position':
-          if (target == "all") {
-            for (var device in elementPositions.keys) {
-              elementPositions[device] = adapt.value ?? Offset.zero;
-            }
-            appliedAdaptations.add('Reset positions for all elements');
-          } else {
-            elementPositions[target] = adapt.value ?? Offset.zero;
-            appliedAdaptations.add('Reset position for $target');
-          }
-          break;
+        // case 'element_position':
+        //   if (target == "all") {
+        //     for (var device in elementPositions.keys) {
+        //       elementPositions[device] = adapt.value ?? Offset.zero;
+        //     }
+        //     appliedAdaptations.add('Reset positions for all elements');
+        //   } else {
+        //     elementPositions[target] = adapt.value ?? Offset.zero;
+        //     appliedAdaptations.add('Reset position for $target');
+        //   }
+        //   break;
 
         case 'adjust_spacing':
           if (target == "all") {
@@ -760,7 +760,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
               );
             },
             icon: Icon(Icons.mic),
-            label: Text('Voice'),
+            label: Text('Voice Command'),
           ),
         ),
         SizedBox(width: 8),
@@ -784,7 +784,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
               );
             },
             icon: Icon(Icons.gesture),
-            label: Text('Gesture'),
+            label: Text('Gesture (pointing)'),
           ),
         ),
       ],

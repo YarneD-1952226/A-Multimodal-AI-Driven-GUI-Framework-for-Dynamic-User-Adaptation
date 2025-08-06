@@ -1,3 +1,4 @@
+from time import time
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -132,8 +133,8 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
                         "description": "The UI element or component to apply the adaptation to, 'all' is also an option, if targeting all elements",
                         },
                         "value": {
-                        "type": ["number", "string"],
-                        "description": "Numeric multiplier for size/speed changes or string value for layout changes (e.g., 1.5 for 50% larger)"
+                        "type": "number",
+                        "description": "Numeric multiplier for size changes (e.g., 1.5 for 50% larger)"
                         },
                         "mode": {
                         "type": "string",
@@ -164,7 +165,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
             },
                     temperature=0.2,
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
-                    system_instruction="You are an expert in multimodal AI-driven GUI adaptation."
+                    system_instruction="You are an expert in multimodal AI-driven GUI adaptation. Analyze user events and suggest UI adaptations based on accessibility needs and interaction history. Youre part of a multi-agent system, each agent has its own focus and allowed actions.",
                 ),
             )
             signal.alarm(0)  # Cancel alarm
@@ -176,71 +177,64 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
 
     # Collect all suggestions
     all_adaptations = []
-    
-    # UI Agent (font/contrast)
-    ui_suggestions = call_gemini_with_timeout(sif_config["ui_agent_prompt"].format(
-        event_json=event_json,
-        profile_json=profile_json,
-        history_json=history_json
-    ))
-    if ui_suggestions:
-        print(f"\033[92mUI suggestions: {ui_suggestions}\033[0m")
-        all_adaptations.extend(ui_suggestions)
 
-    # Geometry Agent (reposition/size)
-    geometry_suggestions = call_gemini_with_timeout(sif_config["geometry_agent_prompt"].format(
-        event_json=event_json,
-        profile_json=profile_json,
-        history_json=history_json
-    ))
-    if geometry_suggestions:
-        print(f"\033[94mGeometry suggestions: {geometry_suggestions}\033[0m")
-        all_adaptations.extend(geometry_suggestions)
+    # Iterate through each agent (except validator) in the SIF configuration
+    for agent_name, agent_config in sif_config["agents"].items():
+        if agent_name == "validator":
+            continue  # Skip validator for now, handled later
 
-    # Other Agent (switch_mode/simplify_layout/trigger_button)
-    other_suggestions = call_gemini_with_timeout(sif_config["other_agent_prompt"].format(
-        event_json=event_json,
-        profile_json=profile_json,
-        history_json=history_json
-    ))
-    if other_suggestions:
-        print(f"\033[95mOther suggestions: {other_suggestions}\033[0m")
-        all_adaptations.extend(other_suggestions)
-
-    # If we have any adaptations, try validator, otherwise return what we have
-    if all_adaptations:
-        # Validator Agent
-        validator_prompt = sif_config["validator_prompt"].format(
-            ui_suggestions=json.dumps(ui_suggestions or []),
-            geometry_suggestions=json.dumps(geometry_suggestions or []),
-            other_suggestions=json.dumps(other_suggestions or []),
+        # print(f"Calling {agent_name} agent")
+        agent_prompt = agent_config["prompt"].format(
             event_json=event_json,
             profile_json=profile_json,
-            history_json=[]
-        )
+            history_json=history_json
+        ) + "\nAllowed actions: " + ", ".join(agent_config["allowed_actions"]) + " with as focus: " + ", ".join(agent_config.get("focus", [])) + "\n"
         
-        final_adaptations = call_gemini_with_timeout(validator_prompt)
+        # Call Gemini API for each agent
+        agent_suggestions = call_gemini_with_timeout(agent_prompt)
         
-        if final_adaptations:
-            print(f"\033[96mFinal adaptations: {final_adaptations}\033[0m")
-            # Compare adaptations counts
-            total_suggestions = len(ui_suggestions or []) + len(geometry_suggestions or []) + len(other_suggestions or [])
-            accepted_count = len(final_adaptations)
-            print(f"\033[93mValidator accepted {accepted_count} out of {total_suggestions} total suggestions\033[0m")
-            
-            # Print all accepted actions
-            for adaptation in final_adaptations:
-                print(f"  - {adaptation.get('action', 'unknown')} on {adaptation.get('target', 'unknown')}: {adaptation.get('reason', 'no reason')}")
-            
-            return final_adaptations
+        if agent_suggestions:
+            # Cycle through a list of ANSI color codes for each agent
+            colors = ["\033[92m", "\033[94m", "\033[93m", "\033[95m", "\033[96m", "\033[91m"]
+            color = colors[len(all_adaptations) % len(colors)]
+            print(f"{color}{agent_name} suggestions: {agent_suggestions}\033[0m")
+            # Add agent name to each suggestion
+            for suggestion in agent_suggestions:
+                suggestion["agent"] = agent_name
+            all_adaptations.extend(agent_suggestions)
         else:
-            print("\033[91mValidator failed, returning combined agent suggestions\033[0m")
-            print(f"Adaptations from all agents: {all_adaptations}")
-            return all_adaptations
+            print(f"\033[91m{agent_name} failed to provide suggestions\033[0m")
     
-    # Ultimate fallback
-    print("\033[91mAll agents failed, using mock fusion\033[0m")
-    return mock_fusion(event, profile, history)
+    # Call the validator agent with all adaptations
+    validator_prompt = sif_config["agents"]["validator"]["prompt"].format(
+        adaptations_json=json.dumps(all_adaptations),
+        event_json=event_json,
+        profile_json=profile_json,
+        history_json=[]
+    ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
+    final_adaptations = call_gemini_with_timeout(validator_prompt)
+
+    if final_adaptations:
+        print(f"\033[96mFinal adaptations: {final_adaptations}\033[0m")
+        # Compare adaptations counts
+        total_suggestions = len(all_adaptations)
+        accepted_count = len(final_adaptations)
+        print(f"\033[93mValidator accepted {accepted_count} out of {total_suggestions} total suggestions\033[0m")
+        
+        # Print all accepted actions
+        for adaptation in final_adaptations:
+            reason = adaptation.get('validator_reason') or adaptation.get('reason', 'no reason')
+            print(f"  - {adaptation.get('action', 'unknown')} on {adaptation.get('target', 'unknown')}: {reason}")
+
+        return final_adaptations
+    elif all_adaptations:
+        print("\033[91mValidator failed, returning combined agent suggestions\033[0m")
+        print(f"Adaptations from all agents: {all_adaptations}")
+        return all_adaptations
+    else:
+        # Ultimate fallback
+        print("\033[91mAll agents failed, using mock fusion\033[0m")
+        return mock_fusion(event, profile, history)
 
 # Smart Intent Fusion (Gemini LLM integration for reasoning and intent inference)
 def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
@@ -253,7 +247,7 @@ def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> Lis
     Ensure actions are in ["increase_size", "reposition_element", "increase_contrast", "switch_mode", "trigger_button", "simplify_layout"].
     Switch modes only entails changing the interaction mode, not the UI layout. eg. "switch_mode": "voice" or "switch_mode": "gesture".
     Also ensure that the adaptations are tailored to the user's specific needs and context. Use the given User profile to make drastic UI changes, atleast increase_contrast and simplify_layout.
-    """ #TODO: Config file
+    """
     # print(f"Prompt for Gemini: {prompt}")
     # Call Gemini API for intent fusion
     try:

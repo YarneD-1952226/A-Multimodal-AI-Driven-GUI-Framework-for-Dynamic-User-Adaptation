@@ -1,6 +1,38 @@
 {
-  "ui_agent_prompt": "Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format, focusing on font and contrast and highlight changes for accessibility (e.g., increase_font_size, increase_contrast, highlight_border). Ensure actions are in ['increase_font_size', 'increase_contrast', 'highlight_border']. Include 'intent' and 'reason' fields and atleast a value or mode field.",
-  "geometry_agent_prompt": "Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format, focusing on geometry changes like size and spacing (e.g., increase_button_size, increase_slider_size, adjust_spacing). Ensure actions are in ['increase_button_size', 'increase_slider_size', 'adjust_spacing']. Include 'intent' and 'reason' fields. and atleast a value or mode field. Dont just give random values, ensure the value is reasonable and at most one decimal place. Target can be 'all' or specific elements.",
-  "other_agent_prompt": "Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format, focusing on mode switching, layout simplification, button triggers or showing a helpful tooltip (e.g., switch_mode, simplify_layout, trigger_button, show_tooltip). Ensure actions are in ['switch_mode', 'simplify_layout', 'trigger_button', 'show_tooltip']. Include 'intent' and 'reason' fields. and atleast a value or mode field.",
-  "validator_prompt": "You're the validator agent. Review suggestions from UI Agent: {ui_suggestions}, Geometry Agent: {geometry_suggestions}, Other Agent: {other_suggestions}\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nValidate and refine into a final JSON list of adaptations. Ensure actions are in ['increase_button_size', 'show_tooltip', 'adjust_spacing', 'highlight_border', 'increase_contrast', 'increase_font_size', 'increase_slider_size', 'switch_mode', 'trigger_button', 'simplify_layout'] and a value or mode field is present with a value this is reasonable where applicable, if not either discard or add a value/mode by your discrestion. Be judgy, Remove duplicates, prioritize accessibility, and fix hallucinations (e.g., invalid or wrong targets or no actions), adhere to the strict json guidelines, remove ones you think arent needed. Include 'validator_reason' field in every adaptation."
+  "agents": {
+    "ui": {
+      "name": "UI suggestion Agent",
+      "focus": ["increasing font sizes", "turning on contrast UI mode", "highlight button borders for better visibility"],
+      "allowed_actions": ["increase_font_size", "increase_contrast", "highlight_button_border"],
+      "prompt": "You're the UI suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be a reasonable number (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements."
+    },
+    "geometry": {
+      "name": "Geometry suggestion Agent",
+      "focus": ["adjusting space between elements", "increasing button sizes", "increasing slider sizes"],
+      "allowed_actions": ["increase_button_size", "increase_slider_size", "adjust_spacing"],
+      "prompt": "You're the Geometry suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be reasonable(e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements."
+    },
+    "other": {
+      "name": "Other suggestions Agent",
+      "focus": ["UI navigation mode switching", "layout simplification", "showing helpful tooltips", "triggering buttons"],
+      "allowed_actions": ["switch_mode", "simplify_layout", "trigger_button", "show_tooltip"],
+      "prompt": "You're the Other suggestions Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be reasonable (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements."
+    },
+    "validator": {
+      "name": "Validator Agent",
+      "allowed_actions": [
+        "increase_button_size",
+        "show_tooltip",
+        "adjust_spacing",
+        "highlight_button_border",
+        "increase_contrast",
+        "increase_font_size",
+        "increase_slider_size",
+        "switch_mode",
+        "trigger_button",
+        "simplify_layout"
+      ],
+      "prompt": "You are the validator agent. Review suggestions from all agents.\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nAdaptations from all agents: {adaptations_json}\nValidate and refine into a final JSON list of adaptations. Each adaptation must include a 'value' or 'mode' field with a reasonable value if applicable. Remove duplicates, prioritize accessibility, fix hallucinations, and adhere to strict JSON guidelines. Each adaptation must include a 'validator_reason' field with your reasoning behind the validation."
+    }
+  }
 }
