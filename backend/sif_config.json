@@ -1,0 +1,56 @@
+{
+  "agents": {
+    "ui": {
+      "name": "UI suggestion Agent",
+      "focus": ["increasing font sizes", "turning on contrast UI mode when the user is visually impaired", "increasing button borders for better visibility", "showing helpful tooltips for UI navigation"],
+      "allowed_actions": ["increase_font_size", "increase_contrast", "increase_button_border", "show_tooltip"],
+      "prompt": "You're the UI suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be a reasonable number (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements.",
+      "model_settings": {
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2,
+        "thinking_budget": 0
+      }
+    },
+    "geometry": {
+      "name": "Geometry suggestion Agent",
+      "focus": ["adjusting space between elements", "increasing button sizes", "increasing slider sizes"],
+      "allowed_actions": ["increase_button_size", "increase_slider_size", "adjust_spacing"],
+      "prompt": "You're the Geometry suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be reasonable(e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements.",
+      "model_settings": {
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2
+      }
+    },
+    "input": {
+      "name": "Input suggestions Agent",
+      "focus": ["UI navigation mode switching (e.g. keyboard, voice, gestures)", "layout simplification", "triggering buttons"],
+      "allowed_actions": ["switch_mode", "simplify_layout", "trigger_button"],
+      "prompt": "You're the Input suggestions Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' or 'mode' field. Value must be reasonable (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements.",
+      "model_settings": {
+        "model": "gemini-2.5-flash-lite"
+      }
+    },
+    "validator": {
+      "name": "Validator Agent",
+      "allowed_actions": [
+        "increase_button_size",
+        "show_tooltip",
+        "adjust_spacing",
+        "increase_button_border",
+        "increase_contrast",
+        "increase_font_size",
+        "increase_slider_size",
+        "switch_mode",
+        "trigger_button",
+        "simplify_layout"
+      ],
+      "prompt": "You are the validator agent. Review suggestions from all agents.\nUser event: {event_json}\nUser profile: {profile_json}\nRecent history: {history_json}\nAdaptations from all agents: {adaptations_json}\nValidate and refine into a final JSON list of adaptations. Each adaptation must include at least a 'value' or 'mode' field with a reasonable value if applicable. Remove duplicates, fix hallucinations, validate target element, and adhere to the strict JSON guidelines.",
+      "model_settings": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.3,
+        "thinking_budget": -1,
+        "timeout": 30
+      }
+    }
+  }
+}
