@@ -151,10 +151,6 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
                         "type": "string",
                         "description": "The inferred user intent, what did you think the user's intent was based on the user input event?"
                         },
-                        # "validator_reason": {
-                        #     "type": "string",
-                        #     "description": "ONLY if you're the validator agent. The reasoning provided by the validator agent for accepting or rejecting the adaptation"
-                        # }
                     },
                     "required": ["action", "target", "reason", "intent"],
                     "oneOf": [
@@ -194,11 +190,12 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         ) + "\nAllowed actions: " + ", ".join(agent_config["allowed_actions"]) + " with as focus: " + ", ".join(agent_config.get("focus", [])) + "\n"
         # print(f"\033[92m{agent_name} prompt: {agent_prompt}\033[0m")
         # Call Gemini API for each agent
-        agent_suggestions = call_gemini_with_timeout(agent_prompt, model=agent_config.get("model", "gemini-2.5-flash-lite"))
+        agent_config_model = agent_config.get("model_settings", {})
+        agent_suggestions = call_gemini_with_timeout(agent_prompt, model=agent_config_model.get("model", "gemini-2.5-flash-lite"), thinking_budget=agent_config_model.get("thinking_budget", 0), temp=agent_config_model.get("temperature", 0.2), timeout=agent_config_model.get("timeout", 15))
 
         if agent_suggestions:
             # Cycle through a list of ANSI color codes for each agent
-            colors = ["\033[92m", "\033[94m", "\033[93m", "\033[95m", "\033[96m", "\033[91m"]
+            colors = ["\033[92m", "\033[94m", "\033[95m", "\033[91m"]
             color = colors[len(all_adaptations) % len(colors)]
             print(f"{color}{agent_name} suggestions: {agent_suggestions}\033[0m")
             # Add agent name to each suggestion
@@ -215,8 +212,10 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         profile_json=profile_json,
         history_json=[]
     ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
-    # print(f"\033[95mValidator prompt: {validator_prompt}\033[0m")
-    final_adaptations = call_gemini_with_timeout(validator_prompt, model=sif_config["agents"]["validator"].get("model", "gemini-2.5-flash"), thinking_budget=-1, temp=0.3, timeout=30)
+
+    validator_model_setting = sif_config["agents"]["validator"].get("model_settings", {})
+
+    final_adaptations = call_gemini_with_timeout(validator_prompt, model=validator_model_setting.get("model", "gemini-2.5-flash"), thinking_budget=validator_model_setting.get("thinking_budget", -1), temp=validator_model_setting.get("temperature", 0.3), timeout=validator_model_setting.get("timeout", 30))
 
     if final_adaptations:
         print(f"\033[96mFinal adaptations: {final_adaptations}\033[0m")
@@ -338,27 +337,7 @@ async def load_profile(user_id: str) -> Dict:
     profile = profiles_collection.find_one({"user_id": user_id}, {'_id': 0})
     return profile
 
-# Atomic update for interaction history (MongoDB transaction)
-async def atomic_update(user_id: str, event_data: Dict):
-    def callback(session):
-        profiles_collection.update_one(
-            {"user_id": user_id},
-            {"$push": {"interaction_history": {"$each": [event_data], "$slice": -20}}},
-            session=session
-        )
-    mongo_client.with_transaction(callback)
 
-
-
-# Process event endpoint
-@app.post("/context")
-async def process_event(event: Event, background_tasks: BackgroundTasks):
-    profile = await load_profile(event.user_id)
-    history = profile.get("interaction_history", [])
-    adaptations = ma_smart_intent_fusion(event, profile, history)
-    await append_event(event.user_id, event.dict(exclude_none=True), background_tasks)
-    await log_adaptation(event, adaptations, background_tasks)
-    return {"adaptations": adaptations}
 
 # WebSocket endpoint for real-time adaptation
 @app.websocket("/ws/adapt")
@@ -382,7 +361,7 @@ async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTask
             # print(f"Adaptations: {adaptations}")
             await websocket.send_json({"adaptations": adaptations})
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        print(f"WebSocket error: closing down")
     finally:
         await websocket.close()
 
@@ -390,7 +369,7 @@ async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTask
 @app.post("/profile")
 async def set_profile(profile: Dict, background_tasks: BackgroundTasks):
     internal_profile = await load_profile(profile.get("user_id"))
-    print(f"Internal profile: {internal_profile}")
+    # print(f"Internal profile: {internal_profile}")
     if not internal_profile:
         profiles_collection.insert_one(profile)
         print("Profile created")

@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'dart:math' as math;
-import 'adapter_layer.dart';
+import 'adaptive_ui_adapter.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(AdaptiveSmartHomeApp());
@@ -21,6 +22,7 @@ class _AdaptiveSmartHomeAppState extends State<AdaptiveSmartHomeApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: SmartHomeScreen(onThemeChange: _changeTheme),
       theme: _buildNormalTheme(),
       darkTheme: _buildContrastTheme(),
@@ -237,35 +239,99 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
     'lock': 'Locked',
   };
   double thermostatValue = 20.0;
-  String userId = 'user_133';
+  String userId = 'Yarne';
   bool isLoading = false;
   String? _loadingDevice;
+  UserProfile? _profile;
+  bool _profileLoading = false;
 
   @override
   void initState() {
     super.initState();
     adapter = AdaptiveUIAdapter(userId, onAdaptations: applyAdaptations);
-    adapter.checkProfile().then((exists) {
-      if (!exists) {
-        adapter.createProfile(
-          UserProfile(
-            userId: userId,
-            accessibilityNeeds: {
-              'motor_impaired': false,
-              'visual_impaired': true,
-              'hands_free_preferred': false,
-            },
-            inputPreferences: {'preferred_modality': 'voice'},
-            uiPreferences: {
-              'font_size': 16,
-              'contrast_mode': 'normal',
-              'button_size': 1.0,
-            },
-            interactionHistory: [],
+    _initProfile();
+  }
+
+  Future _initProfile() async {
+    setState(() => _profileLoading = true);
+    final exists = await adapter.checkProfile();
+    if (!exists) {
+      _profile = UserProfile(
+        userId: userId,
+        accessibilityNeeds: {
+          'motor_impaired': false,
+          'visual_impaired': true,
+          'hands_free_preferred': false,
+        },
+        inputPreferences: {'preferred_modality': 'voice'},
+        uiPreferences: {'font_size': 16, 'button_size': 1.0},
+        interactionHistory: [],
+      );
+      await adapter.createProfile(_profile!);
+    } else {
+      final data = await adapter.getProfile();
+      if (data != null) {
+        _profile = UserProfile(
+          userId: data['user_id'],
+          accessibilityNeeds: Map<String, dynamic>.from(
+            data['accessibility_needs'] ?? {},
           ),
+          inputPreferences: Map<String, dynamic>.from(
+            data['input_preferences'] ?? {},
+          ),
+          uiPreferences: Map<String, dynamic>.from(
+            data['ui_preferences'] ?? {},
+          ),
+          interactionHistory:
+              (() {
+                final raw = data['interaction_history'];
+                if (raw is! List) return <Map<String, dynamic>>[];
+                return raw.map<Map<String, dynamic>>((e) {
+                  if (e is Map<String, dynamic>) {
+                    return e;
+                  } else if (e is String) {
+                    try {
+                      final decoded = jsonDecode(e);
+                      if (decoded is Map<String, dynamic>) {
+                        return decoded;
+                      }
+                    } catch (_) {
+                      // Ignore malformed JSON
+                    }
+                  }
+                  return <String, dynamic>{};
+                }).toList();
+              })(),
         );
       }
-    });
+    }
+    _reloadUI();
+    setState(() => _profileLoading = false);
+  }
+
+  void _openProfileEditor() async {
+    if (_profile == null) return;
+    final updated = await showModalBottomSheet<UserProfile>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => ProfileEditorSheet(profile: _profile!),
+    );
+    if (updated != null) {
+      setState(() => _profile = updated);
+      await adapter.updateProfile(updated);
+      // Apply immediate UI changes (font/contrast) if desired:
+      final scale = (updated.uiPreferences['button_size'] ?? 1.0).toDouble();
+      setState(() {
+        for (var k in buttonScales.keys) {
+          buttonScales[k] = scale;
+        }
+        final baseFont = (updated.uiPreferences['font_size'] ?? 16).toDouble();
+        fontSizes.updateAll(
+          (k, v) => k == 'title' || k == 'welcome' ? baseFont + 4 : baseFont,
+        );
+      });
+    }
   }
 
   _switchToHighContrastTheme() {
@@ -472,7 +538,22 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: buildAdaptiveText('Smart Home Controller', 'title'),
+        title: buildAdaptiveText('Adaptive Smart Home Controller', 'title'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person),
+            tooltip: 'Profile',
+            onPressed: _profileLoading ? null : _openProfileEditor,
+          ),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            tooltip: 'Reload Profile and UI',
+            onPressed: () {
+              _initProfile();
+              _reloadUI();
+            },
+          ),
+        ],
       ),
       backgroundColor: simplifiedLayout ? Colors.white : null,
       body: SingleChildScrollView(
@@ -490,12 +571,59 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
               else
                 buildStandardLayout(),
               SizedBox(height: 20),
-              buildResetButton(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _reloadUI() {
+    final baseFont = (_profile?.uiPreferences['font_size'] ?? 16).toDouble();
+    final btnScale = (_profile?.uiPreferences['button_size'] ?? 1.0).toDouble();
+
+    setState(() {
+      // Reset adaptive UI state using (possibly updated) profile preferences
+      buttonScales = {
+        'lamp': btnScale,
+        'thermostat': btnScale,
+        'lock': btnScale,
+      };
+      fontSizes = {
+        'lamp': baseFont,
+        'thermostat': baseFont,
+        'lock': baseFont,
+        'title': baseFont + 4,
+        'welcome': baseFont + 4,
+      };
+      sliderSizes = {'thermostat': 1.0};
+      _switchToNormalTheme();
+      simplifiedLayout = false;
+      deviceStatuses = {'lamp': 'Off', 'thermostat': '20°C', 'lock': 'Locked'};
+      thermostatValue = 20.0;
+      elementBorders = {'lamp': 1.0, 'lock': 1.0};
+      elementSpacing = {'lamp': 8.0, 'thermostat': 8.0, 'lock': 8.0};
+      isLoading = false;
+      _loadingDevice = null;
+
+      // Sync back into the in-memory profile (so future logic sees the reset)
+      if (_profile != null) {
+        _profile = UserProfile(
+          userId: _profile!.userId,
+          accessibilityNeeds: Map<String, dynamic>.from(
+            _profile!.accessibilityNeeds,
+          ),
+          inputPreferences: Map<String, dynamic>.from(
+            _profile!.inputPreferences,
+          ),
+          // Keep only the supported UI prefs
+          uiPreferences: {'font_size': baseFont, 'button_size': btnScale},
+          interactionHistory: _profile!.interactionHistory,
+        );
+        // Persist updated (reset) UI prefs
+        adapter.updateProfile(_profile!);
+      }
+    });
   }
 
   Widget buildAdaptiveText(String text, String target) {
@@ -597,7 +725,10 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
                       ...buildActionButtons(device, actions),
                     if (!simplifiedLayout) ...[
                       SizedBox(height: 20),
-                      Text("Mock Events:", style: TextStyle(fontSize: 16)),
+                      Text(
+                        "Mock Events (not part of the actual UI) :",
+                        style: TextStyle(fontSize: 16),
+                      ),
                       SizedBox(height: 8),
                       buildMockButtons(device),
                     ],
@@ -710,6 +841,15 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
       children: [
         Expanded(
           child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(
+                255,
+                202,
+                150,
+                255,
+              ), // Mock/debug-only button color
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               setState(() {
                 _loadingDevice = device;
@@ -742,6 +882,15 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
         SizedBox(width: 8),
         Expanded(
           child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(
+                255,
+                202,
+                150,
+                255,
+              ), // Mock/debug-only button color
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               setState(() {
                 _loadingDevice = device;
@@ -771,6 +920,15 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
         SizedBox(width: 8),
         Expanded(
           child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(
+                255,
+                202,
+                150,
+                255,
+              ), // Mock/debug-only button color
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               setState(() {
                 _loadingDevice = device;
@@ -793,46 +951,6 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget buildResetButton() {
-    return Center(
-      child: ElevatedButton.icon(
-        onPressed: () {
-          setState(() {
-            // Reset all adaptations
-            buttonScales = {'lamp': 1.0, 'thermostat': 1.0, 'lock': 1.0};
-            fontSizes = {
-              'lamp': 16.0,
-              'thermostat': 16.0,
-              'lock': 16.0,
-              'title': 20.0,
-              'welcome': 20.0,
-            };
-            sliderSizes = {'thermostat': 1.0};
-            elementPositions = {
-              'lamp': Offset.zero,
-              'thermostat': Offset.zero,
-              'lock': Offset.zero,
-            };
-            _switchToNormalTheme();
-            simplifiedLayout = false;
-            deviceStatuses = {
-              'lamp': 'Off',
-              'thermostat': '20°C',
-              'lock': 'Locked',
-            };
-            thermostatValue = 20.0;
-            elementBorders = {'lamp': 1.0, 'lock': 1.0};
-            elementSpacing = {'lamp': 8.0, 'thermostat': 8.0, 'lock': 8.0};
-            isLoading = false;
-            _loadingDevice = null;
-          });
-        },
-        icon: Icon(Icons.refresh),
-        label: Text('Reset UI'),
-      ),
     );
   }
 }
@@ -896,6 +1014,211 @@ class _AnimatedGlowBorderState extends State<_AnimatedGlowBorder>
           child: Padding(padding: const EdgeInsets.all(2.0), child: child!),
         );
       },
+    );
+  }
+}
+
+class ProfileEditorSheet extends StatefulWidget {
+  final UserProfile profile;
+  const ProfileEditorSheet({super.key, required this.profile});
+
+  @override
+  State<ProfileEditorSheet> createState() => _ProfileEditorSheetState();
+}
+
+class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
+  late bool motor;
+  late bool visual;
+  late bool handsFree;
+  late String modality;
+  late double fontSize;
+  late double buttonScale;
+
+  final _formKey = GlobalKey<FormState>();
+  final _modalities = ['touch', 'voice', 'gesture', 'keyboard'];
+  // final TextEditingController _userIdCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    motor = widget.profile.accessibilityNeeds['motor_impaired'] ?? false;
+    visual = widget.profile.accessibilityNeeds['visual_impaired'] ?? false;
+    handsFree =
+        widget.profile.accessibilityNeeds['hands_free_preferred'] ?? false;
+    modality = widget.profile.inputPreferences['preferred_modality'] ?? 'touch';
+    fontSize = (widget.profile.uiPreferences['font_size'] ?? 16).toDouble();
+    buttonScale =
+        (widget.profile.uiPreferences['button_size'] ?? 1.0).toDouble();
+    // _userIdCtrl.text = widget.profile.userId;
+  }
+
+  @override
+  void dispose() {
+    // _userIdCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    final updated = UserProfile(
+      userId: widget.profile.userId,
+      accessibilityNeeds: {
+        'motor_impaired': motor,
+        'visual_impaired': visual,
+        'hands_free_preferred': handsFree,
+      },
+      inputPreferences: {'preferred_modality': modality},
+      uiPreferences: {'font_size': fontSize, 'button_size': buttonScale},
+      interactionHistory: widget.profile.interactionHistory,
+    );
+    Navigator.pop(context, updated);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    return AnimatedPadding(
+      duration: Duration(milliseconds: 200),
+      padding: EdgeInsets.only(bottom: viewInsets),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'User Profile',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                // SizedBox(height: 12),
+                // TextFormField(
+                //   controller: _userIdCtrl,
+                //   decoration: InputDecoration(labelText: 'User ID'),
+                //   textInputAction: TextInputAction.next,
+                //   validator: (v) =>
+                //       (v == null || v.trim().isEmpty) ? 'User ID required' : null,
+                // ),
+                SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    FilterChip(
+                      label: Text('Motor Impaired'),
+                      selected: motor,
+                      onSelected: (v) => setState(() => motor = v),
+                    ),
+                    FilterChip(
+                      label: Text('Visual Impaired'),
+                      selected: visual,
+                      onSelected: (v) => setState(() => visual = v),
+                    ),
+                    FilterChip(
+                      label: Text('Hands-Free Pref'),
+                      selected: handsFree,
+                      onSelected: (v) => setState(() => handsFree = v),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                  value: modality,
+                  decoration: InputDecoration(labelText: 'Preferred Modality'),
+                  items:
+                      _modalities
+                          .map(
+                            (m) => DropdownMenuItem(value: m, child: Text(m)),
+                          )
+                          .toList(),
+                  onChanged: (v) => setState(() => modality = v!),
+                ),
+                SizedBox(height: 16),
+                _LabeledSlider(
+                  label: 'Font Size (${fontSize.toStringAsFixed(0)})',
+                  value: fontSize,
+                  min: 12,
+                  max: 30,
+                  onChanged: (v) => setState(() => fontSize = v),
+                ),
+                // Custom slider here to avoid the (max-min).round() = 1 division issue
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Button Scale (${buttonScale.toStringAsFixed(2)})'),
+                    Slider(
+                      value: buttonScale,
+                      min: 0.8,
+                      max: 2.0,
+                      divisions: 12, // finer control
+                      label: buttonScale.toStringAsFixed(2),
+                      onChanged: (v) => setState(() => buttonScale = v),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'These settings influence adaptive reasoning (e.g., enlarged targets for motor impairment, font sized for visual support).',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Cancel'),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _submit,
+                        icon: Icon(Icons.save),
+                        label: Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LabeledSlider extends StatelessWidget {
+  final String label;
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
+  const _LabeledSlider({
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: (max - min).round(),
+          label: value.toStringAsFixed(0),
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 }

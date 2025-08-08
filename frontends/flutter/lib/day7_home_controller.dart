@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'adapter_layer.dart';
+import 'adaptive_ui_adapter.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(AdaptiveSmartHomeApp());

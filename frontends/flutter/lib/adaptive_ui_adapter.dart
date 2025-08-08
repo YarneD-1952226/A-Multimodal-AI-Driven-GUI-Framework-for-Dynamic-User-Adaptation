@@ -139,7 +139,23 @@ class AdaptiveUIAdapter {
     } catch (e) {}
   }
 
-  //TODO: update profile
+  Future getProfile() async {
+    try {
+      final r = await http.get(Uri.parse('$backendUrl/profile/$userId'));
+      if (r.statusCode == 200) return jsonDecode(r.body);
+    } catch (_) {}
+    return null;
+  }
+
+  Future updateProfile(UserProfile profileData) async {
+    try {
+      await http.post(
+        Uri.parse('$backendUrl/profile'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(profileData.toJson()),
+      );
+    } catch (_) {}
+  }
 
   void sendEvent(Event eventData) {
     eventData.timestamp = DateTime.now().toIso8601String();
