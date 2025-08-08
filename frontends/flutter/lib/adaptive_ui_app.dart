@@ -844,8 +844,8 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(
                 255,
-                202,
-                150,
+                145,
+                90,
                 255,
               ), // Mock/debug-only button color
               foregroundColor: Colors.white,
@@ -885,8 +885,8 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(
                 255,
-                202,
-                150,
+                145,
+                90,
                 255,
               ), // Mock/debug-only button color
               foregroundColor: Colors.white,
@@ -923,8 +923,8 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(
                 255,
-                202,
-                150,
+                145,
+                90,
                 255,
               ), // Mock/debug-only button color
               foregroundColor: Colors.white,
@@ -1142,7 +1142,6 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
                   max: 30,
                   onChanged: (v) => setState(() => fontSize = v),
                 ),
-                // Custom slider here to avoid the (max-min).round() = 1 division issue
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

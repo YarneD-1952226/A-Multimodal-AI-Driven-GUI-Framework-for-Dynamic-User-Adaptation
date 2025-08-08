@@ -78,6 +78,19 @@ crashlytics-build.properties
 /backend/*.env.*
 /backend/*.md
 /backend/*.markdown
+/backend/*.md.*
+/backend/*.markdown.*
+/backend/*.jsonl.*
+/backend/*.jsonl
 
 .github
 .venv
+
+# Track only specific file types inside thesis (ignore everything else)
+thesis/*
+!thesis/**/
+!thesis/**/*.tex
+!thesis/**/*.bib
+!thesis/**/*.pdf
+!thesis/**/*.png
+!thesis/**/*.jpg

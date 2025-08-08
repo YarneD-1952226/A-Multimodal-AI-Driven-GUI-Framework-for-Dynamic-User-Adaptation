@@ -95,7 +95,7 @@ def mock_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
     
     return adaptations
 
-#Multi-Agent Smart Intent Fusion (MA-SIF)
+# Multi-Agent Smart Intent Fusion (MA-SIF)
 def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> List[Dict]:
     """Multi-Agent Smart Intent Fusion using Gemini LLMs"""
     print("---------------------------------")
@@ -105,6 +105,7 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
     profile_json = json.dumps(profile)
     history_json = json.dumps(history)
 
+    # Gemini API call
     def call_gemini_with_timeout(prompt, model, thinking_budget=0, temp=0.2, timeout=15):
         
         def timeout_handler(signum, frame):
@@ -182,19 +183,17 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         if agent_name == "validator":
             continue  # Skip validator for now, handled later
 
-        # print(f"Calling {agent_name} agent")
         agent_prompt = agent_config["prompt"].format(
             event_json=event_json,
             profile_json=profile_json,
             history_json=history_json
         ) + "\nAllowed actions: " + ", ".join(agent_config["allowed_actions"]) + " with as focus: " + ", ".join(agent_config.get("focus", [])) + "\n"
-        # print(f"\033[92m{agent_name} prompt: {agent_prompt}\033[0m")
+        
         # Call Gemini API for each agent
         agent_config_model = agent_config.get("model_settings", {})
         agent_suggestions = call_gemini_with_timeout(agent_prompt, model=agent_config_model.get("model", "gemini-2.5-flash-lite"), thinking_budget=agent_config_model.get("thinking_budget", 0), temp=agent_config_model.get("temperature", 0.2), timeout=agent_config_model.get("timeout", 15))
 
         if agent_suggestions:
-            # Cycle through a list of ANSI color codes for each agent
             colors = ["\033[92m", "\033[94m", "\033[95m", "\033[91m"]
             color = colors[len(all_adaptations) % len(colors)]
             print(f"{color}{agent_name} suggestions: {agent_suggestions}\033[0m")
@@ -213,8 +212,10 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
         history_json=[]
     ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
 
+    # Get model settings for the validator
     validator_model_setting = sif_config["agents"]["validator"].get("model_settings", {})
 
+    # Call Gemini API for the validator
     final_adaptations = call_gemini_with_timeout(validator_prompt, model=validator_model_setting.get("model", "gemini-2.5-flash"), thinking_budget=validator_model_setting.get("thinking_budget", -1), temp=validator_model_setting.get("temperature", 0.3), timeout=validator_model_setting.get("timeout", 30))
 
     if final_adaptations:
