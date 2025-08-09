@@ -1,0 +1,21 @@
+{
+  "ws_latency_ms": {
+    "p50": 9969.99,
+    "p90": 11151.8,
+    "max": 11164.61
+  },
+  "event_suite": {
+    "n": 10,
+    "latency_ms": {
+      "p50": 10988.27,
+      "p90": 14659.71,
+      "max": 15234.09
+    },
+    "classification_pct": {
+      "validated_by_validator": 100.0,
+      "combined_agent_suggestions": 0.0,
+      "mock_rule_fallback": 0.0
+    },
+    "schema_valid_pct": 70.0
+  }
+}

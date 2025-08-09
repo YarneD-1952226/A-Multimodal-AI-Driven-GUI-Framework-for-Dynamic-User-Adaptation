@@ -1,4 +1,3 @@
-from time import time
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -203,20 +202,21 @@ def ma_smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> 
             all_adaptations.extend(agent_suggestions)
         else:
             print(f"\033[91m{agent_name} failed to provide suggestions\033[0m")
-    
-    # Call the validator agent with all adaptations
-    validator_prompt = sif_config["agents"]["validator"]["prompt"].format(
-        adaptations_json=json.dumps(all_adaptations),
-        event_json=event_json,
-        profile_json=profile_json,
-        history_json=[]
-    ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
 
-    # Get model settings for the validator
-    validator_model_setting = sif_config["agents"]["validator"].get("model_settings", {})
+    if all_adaptations:
+        # Call the validator agent with all or some adaptations
+        validator_prompt = sif_config["agents"]["validator"]["prompt"].format(
+            adaptations_json=json.dumps(all_adaptations),
+            event_json=event_json,
+            profile_json=profile_json,
+            history_json=history_json
+        ) + "\nAllowed actions: " + ", ".join(sif_config["agents"]["validator"]["allowed_actions"]) + "\n"
 
-    # Call Gemini API for the validator
-    final_adaptations = call_gemini_with_timeout(validator_prompt, model=validator_model_setting.get("model", "gemini-2.5-flash"), thinking_budget=validator_model_setting.get("thinking_budget", -1), temp=validator_model_setting.get("temperature", 0.3), timeout=validator_model_setting.get("timeout", 30))
+        # Get model settings for the validator
+        validator_model_setting = sif_config["agents"]["validator"].get("model_settings", {})
+
+        # Call Gemini API for the validator
+        final_adaptations = call_gemini_with_timeout(validator_prompt, model=validator_model_setting.get("model", "gemini-2.5-flash"), thinking_budget=validator_model_setting.get("thinking_budget", -1), temp=validator_model_setting.get("temperature", 0.3), timeout=validator_model_setting.get("timeout", 30))
 
     if final_adaptations:
         print(f"\033[96mFinal adaptations: {final_adaptations}\033[0m")
@@ -277,8 +277,8 @@ def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> Lis
                         "description": "The UI element or component to apply the adaptation to, 'all' is also an option, if targeting all elements",
                         },
                         "value": {
-                        "type": ["number", "string"],
-                        "description": "Numeric multiplier for size/speed changes or string value for layout changes (e.g., 1.5 for 50% larger)"
+                        "type": "number",
+                        "description": "Numeric multiplier for size changes (e.g., 1.5 for 50% larger)"
                         },
                         "mode": {
                         "type": "string",
@@ -291,7 +291,7 @@ def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> Lis
                         "intent": {
                         "type": "string",
                         "description": "The inferred user intent, what did you think the user's intent was based on the user input event?"
-                        }
+                        },
                     },
                     "required": ["action", "target", "reason", "intent"],
                     "oneOf": [
@@ -304,7 +304,7 @@ def smart_intent_fusion(event: Event, profile: Dict, history: List[Dict]) -> Lis
                 "required": ["adaptations"]
             },
             temperature=0.2,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            thinking_config=types.ThinkingConfig(thinking_budget=-1),
             system_instruction="You are an expert in multimodal AI-driven GUI adaptation. Analyze user events and suggest UI adaptations based on accessibility needs and interaction history.",
             ),
         )
@@ -356,7 +356,7 @@ async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTask
                 "ui_preferences": {}
             }
             history = profile.get("interaction_history", [])
-            adaptations = ma_smart_intent_fusion(event, profile, history)
+            adaptations = smart_intent_fusion(event, profile, history) #ma_smart_intent_fusion(event, profile, history)
             await append_event(event.user_id, event.model_dump_json())
             await log_adaptation(event, adaptations, background_tasks)
             # print(f"Adaptations: {adaptations}")

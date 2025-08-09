@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "adaptations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "target",
+          "reason",
+          "intent"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "value"
+            ]
+          },
+          {
+            "required": [
+              "mode"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "adaptations"
+  ]
+}
