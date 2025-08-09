@@ -233,55 +233,42 @@ Addressing this requires systems capable of interpreting nuanced, multimodal sig
 % Main accessibility problems
 \section{Research Objectives}
 
-The primary objective of this research is to design and validate a modular framework for AI-driven GUI adaptation that enables dynamic, context-aware UI behavior. This framework will integrate multimodal input interpretation, a structured UI representation layer, and an SIF backend that suggests or performs near real-time adaptations by leveraging multiple data sources, including historical user behavior, contextual input signals, and dynamically evolving user profiles. The work aims to bridge the gap between static UI designs and adaptive, intelligent user experiences, especially for accessibility and personalization use cases. Additionally, the framework is intended to support cross-platform compatibility and scalability, ensuring broad applicability. The effectiveness of the approach will be demonstrated through prototype implementation and user evaluation, focusing on enhancing usability and inclusivity for diverse user groups.
+The primary objective of this research is to design, implement, and validate a modular, multimodal AI-driven framework for dynamic user interface (UI) adaptation, with a strong focus on accessibility and personalisation. The framework aims to move beyond static or one-size-fits-all designs by enabling real-time, context-aware adaptations that respond to diverse user abilities, preferences, and situational needs. It does so by combining multiple input modalities with hybrid reasoning, rule-based logic for predictable low-latency responses, and large language model (LLM) reasoning for complex or ambiguous cases within a unified architecture.  
 
-To achieve this overarching goal, the following specific research objectives are defined:
+The overarching goal is to create a system that is both technically extensible and practically deployable across different platforms, while demonstrating tangible accessibility benefits for key user groups, such as motor-impaired, visually impaired, and hands-free users. This will be validated through a proof-of-concept application and simulated evaluation metrics that assess accuracy, effectiveness, and usability impact.
+
+To achieve this goal, the following specific objectives are defined:
 \begin{enumerate}
-    \item Develop a Cross-Platform UI Framework: Design and implement a modular, scalable user interface framework that supports consistent rendering and dynamic adaptations across Flutter (desktop/mobile), React (web), and SwiftUI (Apple platforms), with extensibility for future platforms like Unity (VR/AR). The framework will include a test UI, the “Art Explorer” application, featuring a vertical scrollable card list with interactive elements (cards, buttons, text).
-    \item Enable Multimodal Input Processing: Integrate support for multimodal user inputs, including touch/tap (via GestureDetector, onClick, .onTapGesture), keyboard (Tab/Enter via RawKeyboardListener, onKeyDown, .onKeyPress), voice (commands like “play” via speech\_to\_text, Web Speech API, or mock events), and gestures (hand movements via MediaPipe or mock events), to capture rich interaction context for accessibility-focused adaptations.
-    \item Support Accessibility-Focused Adaptations: Enable dynamic UI adaptations to enhance accessibility for motor-impaired, visually impaired, and hands-free users, including but not limited to:
-        \begin{itemize}
-            \item Increasing element sizes (cards: 1.2x, buttons: 1.5x, text: 20pt).
-            \item Repositioning elements (e.g., buttons move 20px right).
-            \item Enhancing contrast (e.g., black text on white background).
-            \item Adjusting scroll speed (e.g., higher friction at 0.015).
-            \item Switching to voice navigation mode on repeated miss-taps (simulated if needed).
-        \end{itemize}
-    \item Create a Developer-Friendly expandable SDK: Design a cross-platform SDK with pre-built UI templates and event hooks (e.g., AdaptiveUI.sendEvent) to minimize integration effort (5–10 lines per platform), ensuring compatibility with standard inputs (touch, keyboard) and advanced inputs (voice, gestures) via configuration.
-    \item Evaluate Framework Effectiveness: Assess the framework’s performance using simulated results, focusing on:
-    \begin{itemize}
-        \item Adaptation accuracy (precision/recall of LLM-suggested actions).
-        \item User performance (task completion time, error rate for simulated motor-impaired users).
-        \item System performance (end-to-end latency for cloud-based adaptations).
-    \end{itemize}
+    \item \textbf{Develop a modular, cross-platform architecture:} Design a three-layer framework (Frontend, Input Adapter, and Backend) that can capture, standardise, and process interaction events across Flutter, SwiftUI, and future platforms (e.g., Unity for VR/AR), using a shared JSON-based event and adaptation format.
+    \item \textbf{Implement multimodal input fusion:} Support and combine inputs from touch, keyboard, voice, gestures, and mock or future modalities (e.g., gaze tracking), enabling richer context capture for adaptation decisions.
+    \item \textbf{Integrate Smart Intent Fusion (SIF):} Develop and integrate a hybrid reasoning engine that fuses profile data, interaction history, and live events to generate targeted adaptations, blending deterministic rules with multi-agent LLM reasoning.
+    \item \textbf{Deliver accessibility-focused adaptations:} Provide real-time UI changes such as enlarging targets, enhancing contrast, switching interaction modes, and adjusting layout or navigation flow, driven by the needs of specific user groups.
+    \item \textbf{Provide a developer-friendly integration path:} Expose the framework as an SDK with clear contracts, minimal setup, and reusable patterns, allowing developers to retrofit existing apps or build new ones without major rewrites.
+    \item \textbf{Evaluate system performance and impact:} Measure adaptation accuracy, latency, and perform a feasibility study to demonstrate the framework’s effectiveness on real-life scenarios as well as identify future improvements.
 \end{enumerate}
-\medskip
 
-Together, these objectives form the foundation of a robust and extensible system for AI-driven, context-aware GUI adaptation. By combining multimodal input analysis, platform-agnostic UI rendering, and real-time adaptive intelligence, this research seeks to advance both accessibility and personalization in modern interfaces. The successful implementation and evaluation of this framework will demonstrate the potential for generalized adaptive systems across domains, setting the stage for future integration in more immersive environments such as VR/AR, and domains like Health Care.
-
-% Can auto adaptation help with accessibility needs?
-% 
-%\section{Contributions}
 \newpage 
 
 \section{Thesis Structure}
 This section outlines the organization of the thesis to guide the reader through its content and structure.
 The thesis is structured as follows:
 \begin{itemize}
-    \item \textbf{Chapter 1: Introduction} \\
-    This chapter introduces the research, providing the background and motivation for developing a multimodal AI-driven GUI framework (Section 1.1). It defines the problem of static, non-adaptive user interfaces and their limitations for accessibility (Section 1.2), outlines the research objectives, including the development of the Smart Intent Fusion feature and cross-platform UI support (Section 1.3), and presents the thesis structure (Section 1.4).
+     \item \textbf{Chapter 1: Introduction} \\
+    Introduces the research problem, motivation, and scope of the work. Defines the challenges of static, non-adaptive UIs for accessibility and personalisation, outlines the research objectives, and presents the contributions of the thesis. Concludes with an overview of the thesis structure.
     \item \textbf{Chapter 2: Background and Related Work} \\
     This chapter reviews the state-of-the-art in human-computer interaction (HCI), focusing on adaptive user interfaces, multimodal input processing, and (AI-driven) personalization. It discusses existing frameworks for accessibility, user profile built UIs and limitations of static UIs, and the role of large language models (LLMs) in UI adaptation, positioning the proposed framework’s novelty.
     \item \textbf{Chapter 3: System Design and Architecture} \\
-    This chapter details the proposed framework’s architecture, including the frontend layer (cross-platform UI rendering), input adapter layer (standardizing multimodal inputs), and SIF backend logic (rule-based and LLM-driven Smart Intent Fusion). It describes the “Art Explorer” test UI, user profiles, and adaptation behaviors (e.g., increasing element sizes, adjusting scroll speed) for accessibility.
-    \item \textbf{Chapter 4: Implementation} \\
-    This chapter presents the implementation of the framework, covering the Flutter-based “Art Explorer” UI with touch, keyboard, and simulated voice/gesture inputs, the input adapter layer’s JSON contract, and the FastAPI backend with mock LLM responses. It discusses developer integration via the SDK and simulation strategies for feasibility.
-    \item \textbf{Chapter 5: Evaluation} \\
-    This chapter evaluates the framework using simulated results, focusing on adaptation accuracy (precision/recall of LLM-suggested actions), user performance (task completion time, error rate), and system performance (latency).
-    \item \textbf{Chapter 6: Discussion and Future Work} \\
-    This chapter proposes future work, such as specialized AI models for dynamic UI code generation, Unity VR/AR support, and additional modalities (e.g., eye tracking).
-    \item \textbf{Chapter 7: Conclusion} \\
-    This chapter summarizes the contributions, including the Smart Intent Fusion feature and accessibility improvements, and discusses limitations (e.g., reliance on simulated results)
+    This chapter describes the overall architecture of the framework, including its three-layer design (Frontend Layer, Input Adapter Layer, and Smart Intent Fusion Backend). Explains the role of each layer, the JSON-based event and adaptation contracts, and how the system captures and processes multimodal inputs. It also introduces the Smart Intent Fusion (SIF) architecture, detailing its hybrid reasoning approach that combines rule-based logic with LLM-driven reasoning.
+    \item \textbf{Chapter 4: Smart Intent Fusion (SIF)} \\
+    This chapter delves into the specifics of the Smart Intent Fusion (SIF) component, outlining its architecture, the reasoning processes it employs, and how it integrates with the other layers of the framework. It discusses the challenges of fusing diverse input modalities and the strategies employed to ensure accurate and context-aware adaptations as well as dealing with hallucinations from LLMs.
+    \item \textbf{Chapter 5: An Adaptive Multimodal GUI Framework using LLMs} \\
+    This chapter presents the implementation of a proof-of-concept for the framework, covering the Flutter-based “Adaptive Smart Home Controller” UI with touch, and simulated voice/gesture inputs, the input adapter layer’s JSON contract, and the SIF backend. A backend Flutter-based interface is also introduced for developer insights and debugging.
+    \item \textbf{Chapter 6: Evaluation} \\
+    This chapter discusses the evaluation setup, scenarios, results, and reflects on the implications and limitations of the findings.
+    \item \textbf{Chapter 7: Discussion and Future Work} \\
+    This chapter discusses the broader implications for accessibility and HCI, key findings, and comparison with related work. Addresses limitations and proposes future work, including on-device reasoning, integrated visual UI understanding, reinforcement learning from user feedback, and expanding modality support.
+    \item \textbf{Chapter 8: Conclusion} \\
+    This chapter summarises the thesis contributions and lessons learned from the development process. Reflects on the evaluation results, revisits the research objectives, and outlines how this work can inform future adaptive UI systems.
 \end{itemize}
 
 %Chapter 2
@@ -504,6 +491,21 @@ The high-level diagram of this flow (Figure X) shows the event path from the fro
 \end{itemize}
 
 The most challenging aspect of this design is ensuring seamless communication between layers while maintaining low latency for real-time adaptations, as well as carefully integrating LLMs as a central component for processing and understanding user intents. This will bring challenges on its own such as hallucinations or misinterpretations of user input. Making sure the LLM accurately captures user intent and context is crucial for effective adaptations. Prompt engineering and careful design like fallback options will be essential to mitigate these issues.
+
+\subsection{Accessibility Focus and Target User Groups}
+While the framework is general enough to support a wide range of adaptive UI scenarios, its design in this thesis is intentionally centred on three key user groups: motor-impaired, visually impaired, and hands-free users. These groups were chosen because they represent distinct accessibility challenges that can be addressed effectively through multimodal interaction and real-time adaptation.
+
+\paragraph{Motor-Impaired Users}
+Motor impairments can make precise pointing, dragging, or rapid tapping difficult. For these users, repeated failed attempts at interacting with a UI element (e.g., a small button) can lead to frustration and reduced task completion rates. The framework addresses this by detecting such patterns and applying adaptations like enlarging target sizes, increasing hitbox areas, or enabling alternative input modes such as voice or gesture. These adaptations can be applied temporarily (for the current session) or persistently (as part of the user’s profile), depending on the severity and frequency of the interaction difficulties.
+
+\paragraph{Visually Impaired Users}
+Users with partial vision loss or low contrast sensitivity often struggle with visual elements that rely on small fonts, thin borders, or subtle colour differences. Here, multimodal fusion is key: the system can combine direct interaction data with profile information to infer when visual feedback is insufficient, then automatically apply high-contrast themes, larger font sizes, or additional visual cues such as highlighted borders. Because the framework operates in real time, these adaptations can be triggered dynamically when needed, rather than requiring a static accessibility mode to be enabled manually.
+
+\paragraph{Hands-Free Users}
+Some scenarios, whether due to physical impairment, temporary constraints (e.g., carrying items), or task context (e.g., sterile environments) require interfaces that can be operated without direct touch. For these users, the framework supports voice, gesture, and potentially gaze-based interactions. Multimodal fusion allows these input channels to work in combination, reducing ambiguity and improving accuracy. For example, a voice command like “turn on the lamp” can be paired with a pointing gesture to confirm the target device, speeding up the interaction and avoiding false positives.
+    
+\paragraph{Why These Groups?}
+These three categories were selected because they cover a spectrum of accessibility challenges that benefit significantly from adaptive, multimodal design: precision (motor), perception (visual), and modality flexibility (hands-free). Each presents distinct technical requirements for sensing, reasoning, and adapting the interface, making them strong drivers for evaluating the framework’s capabilities. By focusing on these groups, the system demonstrates how a single architectural approach can address varied accessibility needs while remaining extensible to other user categories in future work.
 
 % class diagrams
 \section{Frontend Layer: UI Design and Interaction}
@@ -1291,9 +1293,9 @@ During testing, we observed that LLMs can misinterpret logical connectors such a
 was intended to mean \textit{at least one of these fields is required for this action type}. However, the model sometimes treated this as an exclusive choice (only one allowed) or as fully optional (neither required), even in cases where one was necessary. This can result in incomplete adaptations. This behaviour aligns with the well-known inclusive–exclusive disjunction ambiguity described in requirements engineering and computational linguistics, where natural language “or” lacks explicit semantic constraints and is prone to misinterpretation. \\
 For example:
 \begin{itemize}
-    \item \lstinline[language=json]|{"action": "increase_button_size", "target": "lamp", "value": 1.23}| — requires \texttt{value} but not \texttt{mode}.
-    \item \lstinline[language=json]|{"action": "switch_mode", "target": "all", "mode": "voice"}| — requires \texttt{mode} but not \texttt{value}.
-    \item \lstinline[language=json]|{"action": "highlight_button_border", "target": "button"}| — valid with neither, as neither field is relevant for this adaptation.
+    \item \lstinline[language=json]|{"action": "increase_button_size", "target": "lamp", "value": 1.23}|: requires \texttt{value} but not \texttt{mode}.
+    \item \lstinline[language=json]|{"action": "switch_mode", "target": "all", "mode": "voice"}|: requires \texttt{mode} but not \texttt{value}.
+    \item \lstinline[language=json]|{"action": "highlight_button_border", "target": "button"}|: valid with neither, as neither field is relevant for this adaptation.
 \end{itemize}
 Having both fields is rather uncommon, but not impossible. This should handled further by the frontend and depends on the developer's implementation choices. Even with this type of prompt engineering, it sometimes still returns a \texttt{mode} field when a \texttt{value} field would be more appropriate, and vice versa.
 To reduce misinterpretation, prompts should explicitly state inclusive meaning when a field is required, such as:
@@ -1331,6 +1333,60 @@ For example, if the geometry agent outputs: \\
 \lstinline[language=json]|{"action": "increase_button_size", "target": "button_unlock"}|\\
 The validator can correct it to:\\
 \lstinline[language=json]|{"action": "increase_button_size", "target": "button_unlock", "value": 1.5}|
+
+\subsection{Importance of a Strict JSON Schema}
+Another critical safeguard against hallucinations and malformed outputs is the use of a strict \texttt{response\_\\json\_schema} in the LLM API call (in this case Gemini). This schema explicitly defines:
+\begin{itemize}
+    \item The \textbf{structure} of the output object.
+    \item The \textbf{allowed fields}, their types, and descriptions.
+    \item The \textbf{required fields} and conditional requirements (e.g., either \texttt{value} or \texttt{mode} must be present depending on the action type).
+\end{itemize}
+
+By embedding this schema in every LLM request, the backend ensures that:
+\begin{enumerate}
+    \item Any response not matching the schema has a higher probability of being rejected before it reaches the frontend.
+    \item Missing critical parameters (such as \texttt{value} for size changes) are caught early.
+    \item Developers integrating the framework can rely on predictable keys, reducing integration errors.
+    \item The LLM is gently “steered” towards valid outputs, as many LLM APIs use the schema as a structural hint during generation.
+\end{enumerate}
+
+The schema used in this framework is shown below:
+
+\begin{lstlisting}[language=json,caption={SIF LLM Output JSON Schema}]
+{
+  "type": "object",
+  "properties": {
+    "adaptations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string",
+            "description": "The type of UI adaptation to perform" },
+          "target": { "type": "string",
+            "description": "UI element or component to apply the adaptation to, 'all' is allowed" },
+          "value": { "type": "number",
+            "description": "Numeric multiplier for size changes (e.g., 1.5 for 50% larger)" },
+          "mode": { "type": "string",
+            "description": "Interaction or visual mode to switch to (e.g., 'voice')" },
+          "reason": { "type": "string",
+            "description": "Why this adaptation was suggested" },
+          "intent": { "type": "string",
+            "description": "Inferred user intent based on the event" }
+        },
+        "required": ["action", "target", "reason", "intent"],
+        "oneOf": [
+          { "required": ["value"] },
+          { "required": ["mode"] }
+        ]
+      }
+    }
+  },
+  "required": ["adaptations"]
+}
+\end{lstlisting}
+
+This schema directly supports accessibility and safety goals: by preventing incomplete or semantically invalid adaptations from being applied, it reduces the risk of unpredictable UI behaviour. Combined with the Validator Agent, it forms a two-layer defence. Furthermore, schema validation stops malformed data at the source, while semantic validation ensures that even structurally valid adaptations are contextually appropriate.
 
 \section{Performance and Evaluation Metrics for AI Logic}
 %TODO
@@ -1463,8 +1519,7 @@ The fusion step supports two paths. A multi‑agent configuration, MA‑SIF, is 
 A single‑agent SIF path is also available. It produces a complete adaptation list in one call and is useful when quick iteration is preferable over agent specialisation. Both paths share the same I/O schema, which keeps the frontend indifferent to which reasoning strategy is currently set to active.
 
 \subsection{Structured outputs and guardrails}
-To reduce hallucinations and schema drift, the backend requests JSON‑typed responses from the LLM with an explicit schema and allowed actions. The prompt defines required fields, expected types, and a one‑of constraint that demands either a numeric \texttt{value} or a categorical \texttt{mode}. Agent prompts are intentionally narrow, which improves determinism. The validator prompt is broader, since it must reconcile conflicting proposals and justify final choices. Despite these controls, invalid outputs still occur occasionally.
-It has a defensive layer that falls back to simple rules if validation fails.
+To reduce hallucinations and schema drift, the backend requests JSON‑typed responses from the LLM with an explicit schema and allowed actions, as described earlier in chapter 4. The prompt defines required fields, expected types, and a one‑of constraint that demands either a numeric \texttt{value} or a categorical \texttt{mode}. Agent prompts are intentionally narrow, which improves determinism. The validator prompt is broader, since it must adjust conflicting suggestions and justify final choices. Despite these controls, invalid outputs still occur occasionally. However, the schema can be enforced at two distinct levels: by the agents and by the validator. This dual-level approach makes it easier for the validator to ensure that the agents' adaptations are compliant. Furthermore, it has a defensive layer that falls back to simple rules if all LLM validation fails.
 
 \subsection{Rule‑based fallback and resilience}
 A lightweight rule engine acts as a safety net when LLM calls time out or the provider is unavailable. It covers essential accessibility behaviours, for example increasing button size after a miss‑tap, switching to voice for users flagged as motor‑impaired, or enabling high‑contrast mode for visually impaired profiles. These rules are intentionally conservative, they guarantee progress without surprising the user, and they keep the implementation usable in environments with unstable connectivity.
@@ -1597,27 +1652,228 @@ In its current state, the implementation demonstrates that the framework can del
 
 
 %Chapter 7
-% intro and summary?
 \chapter{Discussion and Future Work}
+
+\section{Introduction of Discussion and Future Work}
+This chapter interprets the results of this thesis in the broader context of accessibility and human-computer interaction (HCI), drawing connections between the implemented framework, existing research, and practical deployment scenarios. It begins by discussing the implications of the work for adaptive interface design, followed by key findings, a comparison to related work, and an assessment of limitations. The chapter concludes with a detailed roadmap for future work, ranging from near-term extensions such as developer SDKs to a long-term vision for fully autonomous, on-device UI adaptation.
+
 \section{Implications for Accessibility and HCI}
+The work presented in this thesis has direct implications for the design of accessible user interfaces and for HCI research more broadly. By combining rule-based logic with LLM-driven reasoning in a multi-agent framework, Smart Intent Fusion (SIF) demonstrates how multimodal interaction signals can be interpreted and transformed into personalised UI adaptations in real time. This approach shifts the paradigm from reactive, one-size-fits-all accessibility adjustments towards continuous, proactive, and context-aware UI adaptation.
+
+For accessibility, this means that users with motor, visual, or hands-free interaction needs can benefit from a system that learns from their patterns over time and adapts accordingly, without manual configuration. For HCI, the implications extend to generalised adaptive systems capable of running across diverse devices and platforms, creating opportunities for more inclusive design in domains such as healthcare, education, and workplace productivity.
+
+From a design trade-off perspective, the hybrid reasoning approach mitigates latency issues by handling simple cases through deterministic rules while still leveraging the flexibility of LLMs for complex scenarios. However, this also introduces complexity in managing two reasoning pipelines, balancing predictability with adaptability.
+
 \section{Key Findings and Contributions}
+This research contributes to both practical system design and conceptual models for multimodal adaptive UIs:
+\begin{enumerate}
+    \item \textbf{Framework Architecture:} A modular, three-layer architecture that separates input capture, event standardisation, and reasoning, enabling portability across frontend technologies such as Flutter, SwiftUI, and Unity.
+    \item \textbf{Smart Intent Fusion (SIF):} A hybrid reasoning engine combining deterministic rules for guaranteed accessibility fallbacks with LLM-driven reasoning for complex cases.
+    \item \textbf{Multi-Agent Extension (MA-SIF):} Specialised agents for UI, geometry, and input adaptations validated by a dedicated Validator Agent to reduce hallucinations and conflicts.
+    \item \textbf{Developer-Focused Integration:} Standardised JSON contracts and generalised methods for event sending, adaptation handling, and profile management.
+    \item \textbf{Accessibility-Centred Design:} Demonstrated benefits for motor-impaired, visually impaired, and hands-free users through simulated configurations.
+\end{enumerate}
+The evaluation of the framework, though based on simulated metrics, yielded several notable key observations:
+%TODO
+
 \section{Comparison with Related Work}
+
+\paragraph{SUPPLE \cite{Gajos2008SUPPLE}}
+SUPPLE demonstrated the value of generating optimised interfaces for specific motor abilities, but relied primarily on constraint-solving over predefined UI descriptions. In contrast, the framework presented in this thesis performs \emph{real-time} adaptation during active use, using multimodal interaction signals fused by a hybrid rule-based and LLM-driven reasoning process. Whereas SUPPLE required a calibration phase, the proposed approach continuously refines adaptations based on interaction history.
+
+\paragraph{Reflow \cite{Wu2024}}
+Reflow’s pixel-based UI adaptation enables closed-source applications to be optimised without access to source code, but operates primarily at the visual layout level and does not incorporate higher-level semantic reasoning or multimodal fusion. The framework presented here incorporates profile- and history-driven adaptations across UI, geometry, and input modalities, and supports integration for both new and existing applications through standardised JSON contracts.
+
+\paragraph{UICoder \cite{Wu2024}}
+UICoder automates the generation of UI code from textual descriptions, enabling rapid interface creation. The approach taken in this work is complementary rather than competitive: whereas UICoder generates new interfaces at compile time, the proposed framework adapts \emph{existing} live interfaces at runtime, guided by multimodal context and inferred user intent.
+
+\paragraph{GUIDe \cite{kumar2007guide}}
+GUIDe’s gaze-augmented interaction techniques illustrate the potential of combining modalities for improved accuracy and reduced activation errors. This framework generalises that principle by supporting arbitrary modality combinations (e.g., voice + touch, gaze + gesture) and applying them within a cross-platform adaptation pipeline.
+
+\paragraph{Reinforcement Learning-based UI Adaptation \cite{gaspar2023learning}}
+Reinforcement learning approaches can personalise UIs over time using physiological feedback, but often require specialised sensing hardware and extended training periods. The framework presented in this thesis prioritises lightweight integration and immediate adaptation using LLM reasoning, while retaining the potential to incorporate reinforcement learning techniques in future iterations.
+
+\medskip
+Table~\ref{tab:related-comparison} summarises key differences between our framework and representative related work.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of related adaptive UI systems}
+\label{tab:related-comparison}
+\begin{tabular}{p{3cm}p{2.5cm}p{3cm}p{3cm}p{3cm}}
+\toprule
+\textbf{System} & \textbf{Modalities Supported} & \textbf{Reasoning Method} & \textbf{Adaptation Scope} & \textbf{Extensibility} \\
+\midrule
+SUPPLE & Single modality (motor calibration) & Constraint optimisation & Layout generation at compile-time & Requires redesign for new modalities \\
+Reflow & Any (pixel-based only) & Visual analysis + rules & Layout changes only & Limited; no semantic adaptation \\
+UICoder & N/A (code generation) & LLM code synthesis & New UI creation (compile-time) & Extendable via prompt tuning \\
+GUIDe & Gaze + keyboard/mouse & Rule-based & Targeting and scrolling & Limited to gaze/pointing tasks \\
+RL-based UI Adaptation & Depends on sensors & Reinforcement learning & Layout, content & Requires specialised hardware \\
+\textbf{This work} & Touch, voice, gesture, keyboard (+ extensible) & Hybrid rules + multi-agent LLM & UI, geometry, input modes (runtime) & High; JSON contracts + config-based agents \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Overall, while existing systems excel in specific aspects—such as pixel-level adaptation (Reflow), compile-time UI generation (UICoder), or calibration-driven layout optimisation (SUPPLE)—none provide the same combination of:
+\begin{itemize}
+    \item Real-time, multimodal input fusion.
+    \item Modular multi-agent LLM reasoning.
+    \item Cross-platform developer integration via JSON contracts.
+    \item Hybrid deterministic/LLM adaptation for both guaranteed fallbacks and context-aware creativity.
+\end{itemize}
+This positions the framework as a flexible and extensible foundation for next-generation adaptive UI research and deployment.
+\newpage
 \section{Limitations and Challenges}
+Despite its strengths, the framework has several limitations that should be addressed in future work:
+\begin{itemize}
+    \item \textbf{Latency Constraints:} LLM reasoning can introduce delays, especially for multi-agent configurations. Timeout management mitigates this but limits the complexity of reasoning.
+    \item \textbf{Reliance on Cloud-Based APIs:} The current use of the Gemini API means that adaptation depends on stable network connectivity, which may not be viable in offline or privacy-critical contexts.
+    \item \textbf{UI Context Awareness:} While the framework uses interaction history and profiles, it lacks full semantic understanding of the live UI layout beyond pre-defined targets.
+    \item \textbf{Synthetic Evaluation:} Current performance metrics are based on simulated tasks rather than large-scale, real-world user studies.
+    \item \textbf{Developer Adoption:} Integration currently requires implementing the JSON contract and adapter pattern manually; further automation could improve adoption rates.
+\end{itemize}
+
 \section{Future Work} 
-% dev SDK
-    \subsection{Extending to Existing UIs}
-        % Generalized framework + Threads in backend
-    \subsection{UI Component Analyzer}
-    \subsection{Enhancing Multimodal Inputs}
-    \subsection{LLM Agents for Autonomous Adaptation}
-    \subsection{Specialized AI Model for UI Adaptation}
-        % Full Gaze or hand Tracking
-        % threads to async agents and join on validator
+While the framework in its current form demonstrates the feasibility of real-time, multimodal, adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
+
+\subsection{Extending to Existing UIs}
+Currently, the framework is designed for applications built with its SDK (adapter) or adhering to its JSON contracts. A significant future step is retrofitting existing applications with minimal code changes. This could involve:
+\begin{itemize}
+    \item Creating a UI overlay adapter capable of intercepting and adapting components without direct code modification.
+    \item Developing browser extensions or OS-level accessibility hooks to capture events and inject adaptations dynamically.
+\end{itemize}
+
+\subsection{Developer SDK and Ecosystem}
+A natural evolution of this framework is packaging it as a reusable SDK for popular development platforms. This would abstract away the complexity of event standardisation, profile management, and adaptation application, allowing developers to integrate adaptive capabilities with minimal code. The SDK could include:
+\begin{itemize}
+    \item Pre-built adapters for Flutter, SwiftUI, Unity, and web frontends.
+    \item Visual debugging tools for inspecting adaptation decisions in real time.
+    \item Templates for common accessibility adaptations aligned with WCAG guidelines.
+\end{itemize}
+By lowering the integration barrier, this would encourage adoption in both commercial and open-source projects, expanding the framework’s impact.
+
+\subsection{UI Component Analyzer}
+An automated UI Component Analyzer could parse live UI trees (or screenshots) to create a semantic model of the interface, mapping components to accessible adaptation targets. This could leverage:
+\begin{itemize}
+    \item \textbf{Image/vision models} for recognising UI elements from screenshots.
+    \item \textbf{DOM or widget tree parsing} for native apps.
+    \item Integration with the SIF backend so that adaptations are generated based on \textbf{actual UI context}, not just predefined IDs or defined metadata.
+\end{itemize}
+
+\subsection{Enhancing Multimodal Inputs}
+Future versions should expand input modality coverage beyond touch, voice, and gestures:
+\begin{itemize}
+    \item \textbf{Full gaze tracking} to enable more intuitive and hands-free navigation in VR/AR and desktop environments.
+    \item Supporting \textbf{hand tracking} for precise and more natural gesture recognition as well as UI navigation.
+    \item \textbf{Brain-Computer Interface (BCI)} integration for high-accessibility scenarios. This expansion will require updates to the Input Adapter Layer to capture and standardise new modalities without breaking existing ones.
+\end{itemize}
+
+\subsection{LLM Agents for Autonomous Adaptation}
+While MA-SIF improves modularity, agents currently operate on fixed prompts and allowed actions. The next step is autonomous adaptation, where agents:
+\begin{itemize}
+    \item Dynamically update their own prompts based on user feedback and historical success rates.
+    \item Use proposed adaptation actions not initially in the allowed list (hallucinations), subject to developer approval.
+    \item Collaborate with other agents through inter-agent dialogue before validation, enabling more complex adaptation strategies.
+\end{itemize}
+
+\subsection{Specialized AI Model for UI Adaptation}
+Relying on general-purpose LLMs limits the precision and latency of adaptation reasoning. A dedicated, domain-specific model could be trained on:
+\begin{itemize}
+    \item UI adaptation logs generated by SIF.
+    \item Accessibility guidelines (e.g., WCAG 2.1).
+    \item Synthetic data from simulated user impairments.
+\end{itemize}
+This model could be run locally on-device for low-latency, privacy-friendly adaptation, making the framework viable in offline or sensitive deployments.
+
+\subsection{Towards Autonomous, On-Device UI Adaptation Agents}
+A long-term vision for this work is to move beyond general-purpose LLMs and cloud-based reasoning, towards a domain-specialised, reinforcement-learned agent capable of autonomously adapting UIs both at runtime and compile time.
+Such an agent would integrate several capabilities:
+\begin{enumerate}
+    \item \textbf{On-Device AI Reasoning}
+        \begin{itemize}
+            \item Replace the dependency on external LLM APIs with a lightweight, locally hosted model optimised for UI adaptation tasks.
+            \item Reduce latency and remove the need for internet connectivity, improving privacy and enabling use in sensitive domains such as healthcare and defence.
+            \item Models could be quantised and optimised to run efficiently on consumer-grade CPUs, GPUs, or NPUs.
+        \end{itemize}
+    \item \textbf{Integrated Visual UI Understanding}
+        \begin{itemize}
+            \item Couple the reasoning agent with an image-based UI analyser (e.g., a fine-tuned vision transformer or CLIP-like model) to interpret the live UI.
+            \item At runtime, this would allow the system to ``see'' the interface, understanding spatial layouts, colour schemes, element hierarchies, and visibility issues without requiring developer-provided metadata.
+            \item At compile time, the analyser could scan UI code or rendered snapshots to detect accessibility violations, recommend improvements, or auto-inject adaptation hooks.
+        \end{itemize}
+    \item \textbf{Reinforcement Learning from User Feedback}
+        \begin{itemize}
+            \item Continuously learn from user interactions by rewarding effective adaptations and penalising ineffective ones.
+            \item Gradually develop personalised adaptation policies optimised for each user's needs.
+        \end{itemize}
+    \item \textbf{Dual-Mode Adaptation: Compile-Time + Runtime}
+        \begin{itemize}
+            \item Analyse static UIs at compile time to pre-configure accessibility defaults and flag issues.
+            \item Dynamically adapt during runtime based on live user context and environment.
+        \end{itemize}
+    \item \textbf{Continuous Multi-Modal Feedback Loop}
+        \begin{itemize}
+            \item Combine visual UI analysis with interaction history to refine adaptation strategies.
+            \item Maintain an ongoing loop where the system reasons over both the appearance of the UI and the way the user interacts with it.
+        \end{itemize}
+\end{enumerate}
+
+
+
+% dev sdk -> this modular system in to a package
 
 % Chapter 8
+% Chapter 8
 \chapter{Conclusion}
+
+\section{Summary of the Work}
+This thesis set out to design and evaluate a multimodal AI-driven GUI framework capable of dynamically adapting user interfaces in real time. 
+The work was motivated by the growing need for personalised and accessible digital experiences, particularly in health-related applications where users may face motor, visual, or hands-free interaction constraints. 
+To address this challenge, the framework integrates diverse input modalities such as touch, keyboard, voice, and gestures, and fuses them into meaningful adaptation strategies through the \textit{Smart Intent Fusion} (SIF) backend.
+
+The proposed architecture consists of three modular layers: the Input Adapter Layer for capturing and standardising multimodal events as well as other management tasks, the SIF Backend Layer for hybrid rule-based and LLM-driven reasoning, and the Frontend Layer for rendering the UI interface and applying adaptations. 
+A key innovation is the \textit{Multi-Agent Smart Intent Fusion} (MA-SIF) extension, which separates reasoning into specialised agents for UI, geometry, and input adaptations, validated by a dedicated Validator Agent. 
+This modular approach improves reliability, reduces hallucinations, and supports easy configuration through an external JSON config.
+
 \section{Summary of Contributions}
+The main contributions of this work are as follows:
+\begin{enumerate}
+    \item \textbf{A Modular, Cross-Platform Architecture:} Designed to operate across multiple frameworks, including Flutter, SwiftUI, and possibly future Unity-based VR/AR environments.
+    \item \textbf{Smart Intent Fusion (SIF):} A hybrid reasoning approach that combines deterministic rules with LLM-driven adaptation for complex or ambiguous scenarios.
+    \item \textbf{Multi-Agent Extension (MA-SIF):} SIF extension using specialised LLM agents for targeted reasoning, coordinated through a Validator Agent for conflict resolution and validation.
+    \item \textbf{Developer-Friendly Integration:} Standardised JSON contracts for event handling, adaptation application, and profile management, enabling rapid adoption across platforms.
+    \item \textbf{Accessibility-Centred Design:} Demonstrated potential benefits for motor-impaired, visually impaired, and hands-free users through simulated configurations.
+\end{enumerate}
+
+\section{Limitations}
+While the framework achieves its intended goals, several limitations remain:
+\begin{itemize}
+    \item \textbf{LLM API Dependency:} The current reliance on the Gemini API requires stable internet connectivity as well as an API key which comes with limitations.
+    \item \textbf{Synthetic Evaluation:} Results were derived from simulated metrics rather than large-scale, real-world user studies.
+    \item \textbf{UI Context Awareness:} The reasoning process currently depends on predefined metadata and lacks direct semantic understanding of live UI layouts.
+    \item \textbf{Latency Constraints:} Multi-agent LLM reasoning can introduce delays that could be unacceptable for certain high-speed interaction contexts.
+\end{itemize}
+
+\section{Lessons Learned}
+The development of this framework revealed several important insights:
+\begin{itemize}
+    \item \textbf{Balancing complexity and reliability:} While multi-agent LLM reasoning adds flexibility, its latency and unpredictability highlight the importance of having deterministic rule-based fallbacks.
+    \item \textbf{The power of simple, consistent contracts:} JSON-based event and adaptation schemas proved invaluable for keeping the system portable and easier to debug, even as components evolved.
+    \item \textbf{Prompt engineering is critical:} The structure, constraints, and clarity of LLM prompts had a direct impact on adaptation quality, requiring iterative refinement and targeted testing.
+    \item \textbf{Simulation as a design tool:} Even without large-scale user studies, simulated events and controlled profiles provided actionable insights into agent behaviour, timing, and error cases.
+    \item \textbf{Modularity encourages reusability:} Designing each layer as independently replaceable means the system can more easily evolve, whether by swapping the LLM, adding new modalities, or running fully on-device in future versions.
+\end{itemize}
+
+\section{Implications and Broader Impact}
+Beyond accessibility, this framework demonstrates a flexible approach to multimodal interface adaptation. Its modular design and use of JSON contracts make it suitable for integration into other fields, such as education, industrial applications, or collaborative platforms anywhere adaptive UIs can improve user experience. By combining LLM-driven reasoning with reliable rule-based methods, this work offers a practical model for building future adaptive systems in human-computer interaction.
+
 \section{Final Remarks}
+This thesis has demonstrated the feasibility of an AI-driven multi-agent framework for dynamic, personalised UI adaptation across different platforms and modalities. 
+By combining deterministic rules with LLM reasoning, maintaining cross-platform compatibility, and focusing on accessibility, the work addresses a gap in current adaptive UI research. 
+While some limitations remain, the architecture is intentionally designed to evolve, whether by integrating on-device reasoning, vision-based UI understanding, or reinforcement learning from user feedback.
+Ultimately, this work lays the groundwork for future systems capable of autonomously analysing, adapting, and even generating user interfaces that respond to the unique needs of every user in real time. 
+In doing so, it takes a step toward a vision of interfaces that are not only functional, but truly personalised, inclusive, and adaptive to the diversity of human interaction.
+
 
 \printbibliography[title=References]
 

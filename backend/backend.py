@@ -356,7 +356,7 @@ async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTask
                 "ui_preferences": {}
             }
             history = profile.get("interaction_history", [])
-            adaptations = smart_intent_fusion(event, profile, history) #ma_smart_intent_fusion(event, profile, history)
+            adaptations = ma_smart_intent_fusion(event, profile, history)
             await append_event(event.user_id, event.model_dump_json())
             await log_adaptation(event, adaptations, background_tasks)
             # print(f"Adaptations: {adaptations}")
@@ -392,7 +392,6 @@ async def get_profile(user_id: str):
 async def get_full_history():
     history = list(profiles_collection.find({}, {'_id': 0, 'interaction_history': 1, 'user_id': 1}))
     formatted_history = [{"user_id": doc["user_id"], "interaction_history": doc.get("interaction_history", [])} for doc in history]
-    print(f"Full history: {formatted_history}")
     if not history:
         raise HTTPException(404, "No interaction history found")
     return {"history": formatted_history}
