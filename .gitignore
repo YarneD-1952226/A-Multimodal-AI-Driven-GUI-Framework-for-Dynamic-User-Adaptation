@@ -85,6 +85,7 @@ crashlytics-build.properties
 
 .github
 .venv
+.DS_Store
 
 # Track only specific file types inside thesis (ignore everything else)
 thesis/*
