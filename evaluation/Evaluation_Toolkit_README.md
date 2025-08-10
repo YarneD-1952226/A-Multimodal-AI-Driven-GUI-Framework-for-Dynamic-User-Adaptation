@@ -1,47 +1,89 @@
-# Evaluation Toolkit — `extract_profiles.py` & `evaluation.py`
+# Feasibility/Evaluation Toolkit 
 
-A tiny, no-nonsense pipeline to turn your `profile*.jsonl` logs into clean CSVs, quick stats, and thesis-ready figures/tables.
+A minimal pipeline to:
+1) generate feasibility logs by driving the backend with predefined profiles/events, and
+2) aggregate those logs into per-user summaries for Chapter 6.
+
+No pandas/matplotlib required.
 
 ---
 
 ## TL;DR (3 commands)
 
 ```bash
-# 1) Activate your venv (optional) and install deps
-python -m pip install pandas numpy matplotlib pyarrow
+# 1) Create venv (optional) and install deps
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install requests websockets jsonschema
 
-# 2) Extract + flatten all logs into tidy files under ./out
-python extract_profiles.py profiles/*.jsonl --out ./out
+# 2) Generate a feasibility log (requires backend on :8000)
+python evaluation.py   # writes feasibility_log.jsonl
 
-# 3) Run aggregate stats + charts
-python evaluation.py --in ./out/merged/all_events.csv --out ./out/metrics --fig ./out/figures
+# 3) Aggregate one or many JSONL logs into JSON + CSV summaries
+python extract_profiles.py \
+  --glob "feasibility_log.jsonl" \
+  --output-json "chapter6_payload.json" \
 ```
 
 ---
 
 ## What each script does
 
-### `extract_profiles.py`
-- **Reads** multiple newline-delimited JSON files (`.jsonl`) — one event per line.
-- **Flattens** nested fields (event payload, response.adaptations, etc.).
-- **Outputs**:
-  - A **merged NDJSON** and **CSV** of all events.
-  - **Per-profile CSVs**.
-  - **Quick summaries** grouped by profile and by backend config.
+### `evaluation.py` (log generator)
+- Posts a small set of demo profiles to `POST /profile`.
+- Opens a WebSocket to `/ws/adapt`, sends a deterministic event script per profile, and logs each response line-by-line to `feasibility_log.jsonl`.
+- Validates responses against a strict JSON schema (action/target/reason/intent + value|mode) via `jsonschema`.
+- Classifies each response as:
+  - `validated_by_validator` (schema-valid),
+  - `combined_agent_suggestions`, or
+  - `mock_rule_fallback` (heuristic).
+- Prints per-event latency and basic status to stdout.
 
-### `evaluation.py`
-- **Loads** the merged CSV.
-- **Computes** latency percentiles, schema-valid rates, and class breakdowns (validator vs fallback).
-- **Exports**:
-  - Summary CSVs (nice for LaTeX tables).
-  - Optional **PNG charts** (latency dists, per-config comparisons).
+Configuration inside the file:
+- BACKEND_HTTP = http://localhost:8000
+- BACKEND_WS = ws://localhost:8000/ws/adapt
+- PROFILES = six example profiles (P0–P5) you can edit
+- event_script(user_id) = fixed sequence of 7 events per profile
+
+Run:
+```bash
+python evaluation.py
+# Output: feasibility_log.jsonl
+```
+
+### `extract_profiles.py` (log aggregator)
+- Reads one or more NDJSON files matched by `--glob` (each line = one event record).
+- Aggregates per user and emits:
+  - A compact JSON payload (`--output-json`) with:
+    - overall metrics (latency percentiles, schema-valid%),
+    - per-user summaries (counts by event type, latency p50/p90/max, top targets, classification mix, top actions, last N events, and quick recommendations).
+  - A CSV summarizing per-user stats for quick scanning.
+
+CLI:
+```bash
+python extract_profiles.py \
+  --glob "logs/*.jsonl" \
+  --output-json "chapter6_payload.json" \
+  --keep-last-events 10
+```
 
 ---
 
-## Input expectations
+## Dependencies
 
-Each line in your `.jsonl` looks like this (yours matches perfectly):
+- Python 3.10+
+- `requests`, `websockets`, `jsonschema`
+- Backend running locally on port 8000 (FastAPI + WS)
 
+Install:
+```bash
+python -m pip install requests websockets jsonschema
+```
+
+---
+
+## Input expectations (per line in `.jsonl`)
+
+Produced by `evaluation.py`:
 ```json
 {
   "run_id": "e3c76dff-f0bd-48a4-ae54-40fa25f260b6",
@@ -63,10 +105,7 @@ Each line in your `.jsonl` looks like this (yours matches perfectly):
   "response": {
     "adaptations": [
       {"action":"increase_button_border","intent":"improve_tap_accuracy","reason":"...","target":"lamp","value":1.2},
-      {"action":"increase_button_border","intent":"improve_tap_accuracy","reason":"...","target":"lock","value":1.2},
-      {"action":"increase_button_size","intent":"improve_tap_accuracy","reason":"...","target":"all","value":1.2},
-      {"action":"switch_mode","intent":"switch_to_voice_input","reason":"...","target":"lamp","mode":"voice"},
-      {"action":"switch_mode","intent":"switch_to_voice_input","reason":"...","target":"lock","mode":"voice"}
+      {"action":"switch_mode","intent":"switch_to_voice_input","reason":"...","target":"lamp","mode":"voice"}
     ]
   },
   "schema_valid": true,
@@ -77,192 +116,46 @@ Each line in your `.jsonl` looks like this (yours matches perfectly):
 
 ---
 
-## Output layout
+## Outputs
 
-After `extract_profiles.py` runs:
+### From `evaluation.py`
+- `feasibility_log.jsonl` — newline-delimited JSON with one record per event.
 
+### From `extract_profiles.py`
+- JSON (`chapter6_payload.json` by default): includes:
+  - files processed, overall totals,
+  - overall latency percentiles (p50/p90/max),
+  - overall schema-valid percentage,
+  - top actions and backend configs,
+  - per-user blocks with:
+    - event counts by type,
+    - miss_tap rate,
+    - latency p50/p90/max,
+    - top targets and top miss targets,
+    - classification mix,
+    - top actions,
+    - last N events (configurable via `--keep-last-events`),
+    - quick recommendations (e.g., voice-first flow, enlarge buttons).
+- CSV (`profile_summary.csv` by default) with header:
 ```
-out/
-├─ merged/
-│  ├─ all_events.ndjson        # flattened records (NDJSON)
-│  └─ all_events.csv           # same data in CSV (one row per event)
-├─ profiles/
-│  ├─ P0.csv                   # per-profile slice
-│  ├─ P1.csv
-│  └─ ...
-└─ metrics/
-   ├─ summary_by_profile.csv   # groupby(profile_id)
-   └─ summary_by_config.csv    # groupby(backend_config)
-```
-
-After `evaluation.py` runs (defaults shown):
-
-```
-out/
-├─ metrics/
-│  ├─ latency_by_config.csv
-│  ├─ latency_by_profile.csv
-│  ├─ validity_breakdown.csv
-│  └─ classification_mix.csv
-└─ figures/
-   ├─ latency_box_by_config.png
-   ├─ latency_histogram.png
-   └─ validity_by_config.png
-```
-
-> File names may differ slightly depending on the CLI flags you pass, but this is the gist.
-
----
-
-## Key columns you’ll care about
-
-From `merged/all_events.csv`:
-
-- **run_id**, **profile_id**, **backend_config**
-- **run_index**, **event_index**
-- **event_type**, **source**, **target_element**
-- **latency_ms** (float)
-- **schema_valid** (bool)
-- **classification** (`validated_by_validator`, `combined_agent_suggestions`, `mock_rule_fallback`)
-- **adaptation_count** (int; number of suggestions returned)
-- **modes_suggested** (e.g., `voice,gesture` if present)
-
----
-
-## How to use in Chapter 6 (Feasibility Study)
-
-### Tables (LaTeX-ready)
-- Use `out/metrics/summary_by_config.csv` for a quick “per-config” table (p50/p90/max latency, schema-valid%).
-- Use `out/metrics/summary_by_profile.csv` to compare profiles (e.g., motor-impaired vs visual-impaired) under the same config.
-
-Example CSV → LaTeX (minimal):
-
-```tex
-egin{tabular}{lrrrr}
-	oprule
-Config & p50(ms) & p90(ms) & Valid(\%) & n \
-\midrule
-SIF (single) & 8262 & 12034 & 40.0 & 10 \
-MA-SIF (bal) & 10988 & 14660 & 70.0 & 10 \
-MA-SIF (heavy) & 27229 & 30443 & 100.0 & 10 \
-ottomrule
-\end{tabular}
-```
-
-### Figures
-Drop the generated PNGs into your thesis:
-- `latency_box_by_config.png` to visualize the tradeoff (single vs MA-SIF).
-- `validity_by_config.png` for schema-valid % improvements.
-
----
-
-## CLI Reference
-
-### `extract_profiles.py`
-
-```bash
-usage: extract_profiles.py [FILES ...] [--out OUTDIR]
-
-positional arguments:
-  FILES            one or more paths to *.jsonl (supports globs)
-
-options:
-  --out OUTDIR     output directory (default: ./out)
-```
-
-Examples:
-
-```bash
-# Single file
-python extract_profiles.py profiles/profile1.jsonl
-
-# Many files (glob)
-python extract_profiles.py profiles/profile*.jsonl --out ./out
-
-# From different folders
-python extract_profiles.py logs/*.jsonl exports/*.jsonl --out ./results
-```
-
-### `evaluation.py`
-
-```bash
-usage: evaluation.py --in MERGED_CSV [--out OUTDIR] [--fig FIGDIR]
-                     [--group-by {backend_config,profile_id}]
-
-required:
-  --in MERGED_CSV          path to merged CSV from extract step
-
-optional:
-  --out OUTDIR             where to write summary CSVs (default: ./out/metrics)
-  --fig FIGDIR             where to write charts (default: ./out/figures)
-  --group-by ...           grouping key for summaries (default: backend_config)
-```
-
-Examples:
-
-```bash
-# Default: group by backend_config
-python evaluation.py --in ./out/merged/all_events.csv
-
-# Group by profile_id and send outputs elsewhere
-python evaluation.py --in ./out/merged/all_events.csv --group-by profile_id   --out ./reports/metrics --fig ./reports/figures
+user_id,events_total,miss_tap,tap,voice,gesture,key_press,other,schema_valid_pct,latency_p50_ms,latency_p90_ms,latency_max_ms,top_targets,top_miss_targets,backend_top,validated_pct,combined_pct,mock_pct
 ```
 
 ---
 
-## What you’ll see (sample outcomes)
+## Usage in Chapter 6 (Feasibility Study)
 
-- **Latency tradeoff**: MA-SIF(balanced) usually +~2–3s vs SIF(single), MA-SIF(heavy) +~15–20s — but better correctness and richer rationales.
-- **Schema validity**: climbs from ~40% (single) → ~70% (balanced) → ~100% (heavy) in our test data.
-- **Classification**: ideally 100% `validated_by_validator` (fallbacks only when APIs time out / rate-limit).
-
-These numbers will reflect *your* logs, but that’s the pattern we saw.
+- Quote per-user summaries (miss_tap rate, latency p50/p90, top actions).
+- Include the JSON payload snippet for 1–2 representative users.
+- Discuss the quick recommendations as practical guidance (e.g., “Increase button border on top-miss targets; offer voice-first flow”).
 
 ---
 
 ## Troubleshooting
 
-- **Only headers in outputs?**  
-  Usually means the input JSONL failed to parse or the script didn’t match the expected keys. Double-check:
-  - Files aren’t empty.
-  - Each line is valid JSON (no trailing commas).
-  - Keys like `event`, `response.adaptations`, `latency_ms` exist (your sample line is perfect).
-
-- **Zero rows for a profile**  
-  That profile file may only contain comments/empty lines — open it and verify real lines exist.
-
-- **Matplotlib errors**  
-  Install it: `pip install matplotlib`. On headless servers, set `MPLBACKEND=Agg` or just let the script handle defaults.
-
-- **Windows paths**  
-  Use quotes if your path has spaces: `"C:\Users\you\My Logs\profile1.jsonl"`.
-
----
-
-## Nice-to-have add-ons (optional)
-
-- **Makefile**:
-
-```make
-OUT=out
-MERGED=$(OUT)/merged/all_events.csv
-
-extract:
-	python extract_profiles.py profiles/*.jsonl --out $(OUT)
-
-eval:
-	python evaluation.py --in $(MERGED) --out $(OUT)/metrics --fig $(OUT)/figures
-
-all: extract eval
-```
-
-- **Mermaid overview** (for your README):
-
-```mermaid
-flowchart LR
-  A[profile*.jsonl] --> B[extract_profiles.py]
-  B --> C[merged/all_events.csv]
-  C --> D[evaluation.py]
-  D --> E[metrics/*.csv]
-  D --> F[figures/*.png]
-```
+- Empty outputs:
+  - Check your `--glob` pattern; ensure files exist and contain valid JSON lines.
+- `evaluation.py` stalls:
+  - Verify backend is running on `:8000` with `/profile` (HTTP) and `/ws/adapt` (WS).
+- Low schema-valid%:
+  - Your backend responses may not match `ADAPTATIONS_SCHEMA` (missing `value` or

@@ -1,4 +1,4 @@
-# SIF Sequential Benchmark Kit
+# SIF Sequential Benchmark Toolkit
 
 This kit is tailored for a **sequential** FastAPI/WebSocket backend. It sends events **one by one**, classifies responses, and measures round-trip latency.
 

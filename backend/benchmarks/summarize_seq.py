@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Summarize sequential benchmarks into a compact JSON + optional LaTeX tables.
+Summarize sequential benchmarks into a compact JSON.
 
 Assumes you ran:
   - ws_latency_seq.py           -> ws_latency_seq.csv
@@ -12,7 +12,6 @@ Usage:
 
 Outputs:
   - seq_summary.json
-  - (optional) latex tables printed to stdout if --latex is passed
 """
 import csv, json, statistics as stats, argparse, os
 
@@ -46,7 +45,6 @@ def pctl(xs, p):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--latex", action="store_true")
     args = ap.parse_args()
 
     ws_vals = load_ws()
@@ -93,27 +91,6 @@ def main():
     with open("seq_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
     print(json.dumps(summary, indent=2))
-
-    if args.latex:
-        # Table 1: WS latency
-        print("\n% LaTeX table: WebSocket Latency (Sequential)\n")
-        print(r"\begin{tabular}{lccc}")
-        print(r"\toprule")
-        print(r"Metric & p50 (ms) & p90 (ms) & max (ms) \\")
-        print(r"\midrule")
-        print(f"WebSocket round-trip & {ws_p50 or '--'} & {ws_p90 or '--'} & {ws_max or '--'} \\\\")
-        print(r"\bottomrule")
-        print(r"\end{tabular}")
-
-        # Table 2: Event suite
-        print("\n% LaTeX table: Event Suite Results (Sequential)\n")
-        print(r"\begin{tabular}{lcccc}")
-        print(r"\toprule")
-        print(r"N & Validated (\%) & Combined (\%) & Mock (\%) & Schema Pass (\%) \\")
-        print(r"\midrule")
-        print(f"{total or 0} & {validated_pct or 0} & {combined_pct or 0} & {mock_pct or 0} & {schema_pct or 0} \\\\")
-        print(r"\bottomrule")
-        print(r"\end{tabular}")
 
 if __name__ == "__main__":
     main()
