@@ -1,27 +1,9 @@
 #!/usr/bin/env python3
-
-"""
-Sequential event suite runner + classifier.
-
-Sends a deterministic sequence of events to /ws/adapt and classifies the response per-event as:
-  - validated_by_validator
-  - combined_agent_suggestions (validator failed)
-  - mock_rule_fallback (all agents failed, mock_fusion)
-
-It also validates JSON schema per response.
-
-Usage:
-  python run_event_suite_seq.py --ws ws://localhost:8000/ws/adapt --user user_seq --rounds 10
-
-Outputs:
-  - event_suite_seq.csv with columns:
-      idx, event_type, latency_ms, classification, schema_valid
-"""
 import argparse, json, time, csv
 from datetime import datetime
 from websockets.sync.client import connect
+from websockets.exceptions import ConnectionClosedError
 
-# Heuristic signatures for mock_fusion reasons (from backend.py)
 MOCK_REASONS = [
     "Miss-tap detected, increasing target size",
     "Motor impairment detected, enlarging all elements",
@@ -30,21 +12,13 @@ MOCK_REASONS = [
 ]
 
 def classify(adaptations):
-    """
-    Classification rules:
-      - If any adaptation has key 'agent' -> combined_agent_suggestions (validator failed)
-      - Else if any 'reason' matches the mock fusion signatures -> mock_rule_fallback
-      - Else -> validated_by_validator
-    """
     if isinstance(adaptations, list):
         for a in adaptations:
             if isinstance(a, dict) and "agent" in a:
                 return "combined_agent_suggestions"
         for a in adaptations:
-            if isinstance(a, dict):
-                reason = a.get("reason","")
-                if any(sig in reason for sig in MOCK_REASONS):
-                    return "mock_rule_fallback"
+            if isinstance(a, dict) and any(sig in a.get("reason","") for sig in MOCK_REASONS):
+                return "mock_rule_fallback"
     return "validated_by_validator"
 
 def make_event(user_id, i):
@@ -67,34 +41,64 @@ def make_event(user_id, i):
     }
 
 def validate_schema(payload, schema):
-    # very light schema check
     try:
-        from jsonschema import validate, ValidationError
+        from jsonschema import validate
         validate(instance={"adaptations": payload}, schema=schema)
         return True
     except Exception:
         return False
+
+def open_ws(url, args):
+    pi = None if args.ping_interval <= 0 else args.ping_interval
+    pt = None if args.ping_timeout  <= 0 else args.ping_timeout
+    return connect(
+        url,
+        open_timeout=args.open_timeout,
+        close_timeout=args.close_timeout,
+        ping_interval=pi,
+        ping_timeout=pt,
+        max_size=None,   # no cap
+    )
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ws", default="ws://localhost:8000/ws/adapt")
     ap.add_argument("--user", default="user_seq")
     ap.add_argument("--rounds", type=int, default=10)
-    ap.add_argument("--pause", type=float, default=5, help="sleep between events (s)")
+    ap.add_argument("--pause", type=float, default=5.0, help="sleep between events (s)")
     ap.add_argument("--schema", default="adaptation_schema.json")
+    # keepalive / timeouts (set <=0 to disable pings)
+    ap.add_argument("--ping-interval", type=float, default=0.0, help="seconds; <=0 disables keepalive pings")
+    ap.add_argument("--ping-timeout",  type=float, default=0.0, help="seconds; <=0 disables keepalive timeouts")
+    ap.add_argument("--open-timeout",  type=float, default=30.0)
+    ap.add_argument("--close-timeout", type=float, default=120.0)
     args = ap.parse_args()
 
     with open(args.schema, "r") as f:
         schema = json.load(f)
 
     rows = []
-    with connect(args.ws) as ws:
+    ws = open_ws(args.ws, args)
+    try:
         for i in range(args.rounds):
             ev = make_event(args.user, i)
-            t0 = time.perf_counter()
-            ws.send(json.dumps(ev))
-            raw = ws.recv()
-            dt = (time.perf_counter() - t0) * 1000.0
+            while True:
+                t0 = time.perf_counter()
+                try:
+                    ws.send(json.dumps(ev))
+                    raw = ws.recv()
+                    dt = (time.perf_counter() - t0) * 1000.0
+                    break
+                except ConnectionClosedError:
+                    # reconnect and retry this same event
+                    try:
+                        ws = open_ws(args.ws, args)
+                        time.sleep(0.2)
+                        continue
+                    except Exception:
+                        time.sleep(0.5)
+                        continue
+
             try:
                 resp = json.loads(raw)
                 adaps = resp.get("adaptations", [])
@@ -111,6 +115,11 @@ def main():
             })
             if args.pause > 0:
                 time.sleep(args.pause)
+    finally:
+        try:
+            ws.close()
+        except Exception:
+            pass
 
     out = "event_suite_seq.csv"
     with open(out, "w", newline="") as f:

@@ -1,0 +1,7 @@
+i,latency_ms,event_type
+0,26716.47,tap
+1,27613.81,miss_tap
+2,32009.47,voice
+3,27035.51,gesture
+4,24597.93,tap
+5,25304.30,miss_tap

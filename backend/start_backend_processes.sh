@@ -64,4 +64,4 @@ fi
 # Start FastAPI backend (runs in foreground)
 echo "Starting FastAPI backend (uvicorn)..."
 # If backend.py is in this directory and defines 'app'
-uvicorn backend:app --host 0.0.0.0 --port 8000 --reload
+uvicorn backend:app --reload --host 0.0.0.0 --port 8000 --ws websockets --ws-ping-interval 60 --ws-ping-timeout 180

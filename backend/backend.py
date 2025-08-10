@@ -343,6 +343,7 @@ async def load_profile(user_id: str) -> Dict:
 # WebSocket endpoint for real-time adaptation
 @app.websocket("/ws/adapt")
 async def websocket_adapt(websocket: WebSocket, background_tasks: BackgroundTasks):
+    websocket.receive_timeout = 600  # Set timeout to 10 minutes (600 seconds)
     await websocket.accept()
     try:
         while True:

@@ -1,0 +1,11 @@
+idx,event_type,latency_ms,classification,schema_valid
+0,tap,30204.36,validated_by_validator,1
+1,miss_tap,27092.53,validated_by_validator,1
+2,voice,25612.11,validated_by_validator,1
+3,gesture,22954.87,validated_by_validator,1
+4,tap,27365.96,validated_by_validator,1
+5,miss_tap,25776.42,validated_by_validator,1
+6,voice,26358.36,validated_by_validator,1
+7,gesture,30443.48,validated_by_validator,1
+8,tap,29291.91,validated_by_validator,1
+9,miss_tap,31347.16,validated_by_validator,1

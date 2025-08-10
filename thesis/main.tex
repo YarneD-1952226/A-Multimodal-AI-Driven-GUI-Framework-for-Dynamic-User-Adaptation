@@ -291,7 +291,7 @@ Touchscreens expanded on these paradigms, introducing direct manipulation, gestu
 
 Recent research has introduced adaptive techniques, such as "sticky" or magnetic cursor effects, which are already in use today as normal or accessibility features on for example Apple devices. Which help guide the pointer toward interactive elements, reducing effort and error, particularly for users with motor impairments \cite{Cockburn2008Sticky}. These principles guide contemporary accessibility enhancements and encourage advancements in multimodal environments.
 % apple cursor on ipad, apple tv stickyness
-In this thesis, we draw inspiration from those adaptive cursor behaviors to inform dynamic UI element resizing and magnetic effects in multimodal contexts, bridging classical pointing interactions with "smart" AI-driven adaptations.
+In this thesis, inspiration is drawn from those adaptive cursor behaviors to inform dynamic UI element resizing and magnetic effects in multimodal contexts, bridging classical pointing interactions with "smart" AI-driven adaptations.
 
 \subsection{Voice-Driven Interfaces}
 
@@ -1068,7 +1068,7 @@ This contract ensures:
 \begin{itemize}
     \item \textbf{Cross-platform compatibility}: all clients speak the same “language” to the backend.
     \item \textbf{Dynamic field names}: fields like \texttt{event\_type} and \texttt{target\_element} can be extended and modified without breaking existing logic.
-    \item \textbf{Extensibility}: we can add new modalities (like gaze tracking) without breaking existing clients.
+    \item \textbf{Extensibility}: new modalities can be added (like gaze tracking) without breaking existing clients.
 \end{itemize}
 By the time the event reaches SIF, it doesn’t matter whether it came from a phone, desktop, or VR headset, it always adheres to the same format for the backend.
 As said earlier SIF uses a hybrid approach for multimodal input fusion. The Input Adapter handles basic pre-processing (similar to early fusion), but the actual reasoning, deciding what adaptations to apply happens in the backend using late fusion.
@@ -1251,7 +1251,7 @@ The practical implementation of MA-SIF including the \texttt{sif\_config.json} s
 \section{Prompt Engineering for LLMs in SIF}
 One of the most important parts of Smart Intent Fusion is \textbf{how we talk to the LLM}.
 Unlike a traditional rule-based system, where logic is written explicitly in code, here the behaviour of the LLM depends on the instructions it receives, namely the prompt.
-If the prompt, by which we \textbf{query the LLM}, is unclear, missing context, or too open-ended, the output will either be wrong, inconsistent, or impossible to parse in code.
+If the prompt, by which the LLM is queried, is unclear, missing context, or too open-ended, the output will either be wrong, inconsistent, or impossible to parse in code.
 The LLM could also be more prone to hallucinations, which means it generates answers that sound plausible but are actually incorrect or nonsensical. This means the design of the prompt, the model parameters, and the output format all directly affect how useful and reliable the adaptations are. Even though the prompts used in this framework are relatively simple compared to large fine-tuned systems, they still follow a consistent structure and design philosophy that make them work for this use case. In the architecture described in Chapter 3, each event passed to the SIF Backend Layer arrives already standardised, enriched with metadata, and paired with relevant user profile and history context. The following prompt engineering process simply embeds this structured data into the LLM request, ensuring that reasoning always starts from the same reliable, modality-agnostic representation.
 
 \subsection{LLM Prompt Design Principles}
@@ -1288,7 +1288,7 @@ The important elements here are:
 The complete prompt set, agent-specific instructions, and their runtime configuration are detailed in Chapter 5.
 
 \subsection{Disjunction Ambiguity in LLM Interpretation}
-During testing, we observed that LLMs can misinterpret logical connectors such as \textbf{or} and \textbf{and}. For example, the instruction:
+During testing, it was observed that LLMs can misinterpret logical connectors such as \textbf{or} and \textbf{and}. For example, the instruction:
 \mdblockquote{“The adaptation must include a value or a mode field.”}
 was intended to mean \textit{at least one of these fields is required for this action type}. However, the model sometimes treated this as an exclusive choice (only one allowed) or as fully optional (neither required), even in cases where one was necessary. This can result in incomplete adaptations. This behaviour aligns with the well-known inclusive–exclusive disjunction ambiguity described in requirements engineering and computational linguistics, where natural language “or” lacks explicit semantic constraints and is prone to misinterpretation. \\
 For example:
@@ -1307,7 +1307,7 @@ Even with a well-written prompt, model behaviour is strongly affected by:
 \begin{itemize}
     \item \textbf{Temperature}: how random the outputs are. Lower values (0.2–0.3) are better for consistent JSON.
     \item \textbf{Thinking budget}: how many reasoning steps the model takes before output. Too low, and it may skip checks; too high, and it can slow down or get stuck.
-    \item \textbf{Timeout}: how long we wait before falling back to mock or rule-based logic.
+    \item \textbf{Timeout}: waiting time before falling back to mock or rule-based logic.
 \end{itemize}
 The Validator Agent especially needs more time and budget because it has a heavier job. This includes more complex reasoning and validation tasks like checking for inconsistencies in the adaptation or checking every adaptation against allowed actions, as well as removing irrelevant adaptations or merging duplicates.
 In my testing, the validator with a low thinking budget and temperature often got stuck or took a very long time to respond, which is not ideal for real-time adaptations. The goal was to stay under a timeout of max. 30 seconds.
@@ -1389,7 +1389,151 @@ The schema used in this framework is shown below:
 This schema directly supports accessibility and safety goals: by preventing incomplete or semantically invalid adaptations from being applied, it reduces the risk of unpredictable UI behaviour. Combined with the Validator Agent, it forms a two-layer defence. Furthermore, schema validation stops malformed data at the source, while semantic validation ensures that even structurally valid adaptations are contextually appropriate.
 
 \section{Performance and Evaluation Metrics for AI Logic}
-%TODO
+\label{sec:perf-metrics-ai-logic}
+
+This section measures the end-to-end behaviour of the SIF and MA\mbox{-}SIF pipelines:
+\emph{Flutter client $\rightarrow$ WebSocket $\rightarrow$ FastAPI $\rightarrow$ LLM agents $\rightarrow$ validator $\rightarrow$ client}.
+The backend processes \emph{one event at a time} (sequential), so the reported latencies reflect a full round-trip with model inference on the critical path.  
+All runs used the same user identifier (\texttt{user\_seq}). On the very first event, no profile existed, so the server created a default profile; subsequent events appended to the profile’s \texttt{interaction\_history} (capped at 10). Qualitatively, later responses carried slightly richer rationales, consistent with the growing history window.
+
+\subsection*{Method}
+Two lightweight probes were run:
+\begin{enumerate}
+    \item \textbf{WebSocket round-trip}: a minimal ping-pong to capture end-to-end transport + processing overhead.
+    \item \textbf{Deterministic event suite}: \texttt{tap} $\rightarrow$ \texttt{miss\_tap} $\rightarrow$ \texttt{voice} $\rightarrow$ \texttt{gesture}, repeated over a short sequence.
+\end{enumerate}
+Each response was classified as:
+\begin{itemize}
+    \item \texttt{validated\_by\_validator} (final list produced by the validator),
+    \item \texttt{combined\_agent\_suggestions} (validator failed; raw agent outputs returned),
+    \item \texttt{mock\_rule\_fallback} (all agents failed; rule engine response).
+\end{itemize}
+The strict JSON output schema used in the backend was enforced to compute “schema-valid \%”. To avoid artificial timeouts during heavier MA-SIF runs, client keep-alive pings were disabled. Run sizes were intentionally small (6-10 events) due to API free-tier limits; the goal is to surface architectural trends, not saturate the service.
+
+\subsection*{Configuration Snapshots}
+\begin{lstlisting}[language=json,caption={Exact settings used in the three measured configurations.}]
+{
+  "SIF_single_agent": {
+    "agent": "gemini-2.5-flash",
+    "temperature": 0.2,
+    "thinking_budget": "dynamic (-1)",
+    "timeout": "api-default"
+  },
+  "MA-SIF_balanced": {
+    "ui_agent":       {"model":"gemini-2.5-flash-lite","temp":0.2,"thinking_budget":0,"timeout":15},
+    "geometry_agent": {"model":"gemini-2.5-flash-lite","temp":0.2,"thinking_budget":0,"timeout":15},
+    "input_agent":    {"model":"gemini-2.5-flash-lite","temp":0.2,"thinking_budget":0,"timeout":15},
+    "validator":      {"model":"gemini-2.5-flash","temp":0.3,"thinking_budget":"dynamic (-1)","timeout":30}
+  },
+  "MA-SIF_heavy": {
+    "ui_agent":       {"model":"gemini-2.5-flash","temp":0.2,"thinking_budget":2048,"timeout":30},
+    "geometry_agent": {"model":"gemini-2.5-flash","temp":0.2,"thinking_budget":2048,"timeout":30},
+    "input_agent":    {"model":"gemini-2.5-flash","temp":0.2,"thinking_budget":2048,"timeout":30},
+    "validator":      {"model":"gemini-2.5-flash","temp":0.3,"thinking_budget":2048,"timeout":30}
+  }
+}
+\end{lstlisting}
+
+\subsection*{Results}
+\begin{table}[h]
+\centering
+\caption{Latency and correctness across configurations (sequential backend; \texttt{user\_seq} with default profile and growing history).}
+\setlength{\tabcolsep}{4pt}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\textbf{Config} & \textbf{WS p50} & \textbf{WS p90} & \textbf{WS max} & \textbf{Suite p50} & \textbf{Suite p90} & \textbf{Suite max} & \textbf{Schema-valid} & \textbf{n} \\
+ & (ms) & (ms) & (ms) & (ms) & (ms) & (ms) & (\%) &  \\
+\midrule
+SIF (single agent)    &  8240.99 &  9913.63 & 10649.21 &  8261.86 & 12034.12 & 12914.24 &  40.0 & 10 \\
+MA-SIF (balanced)     &  9969.99 & 11151.80 & 11164.61 & 10988.27 & 14659.71 & 15234.09 &  70.0 & 10 \\
+MA-SIF (heavy)        & 26875.99 & 27613.81 & 32009.47 & 27229.24 & 30443.48 & 31347.16 & 100.0 & 10 \\
+\bottomrule
+\end{tabular}%
+}
+\caption*{\textit{Legend.} WS p50/p90/max: WebSocket round-trip latency percentiles and maximum (ms). Suite p50/p90/max: end-to-end latency percentiles and maximum for the deterministic event suite (ms). Schema-valid: share of responses that passed JSON schema validation (\%). \textit{n}: number of events.}
+\end{table}
+
+Across all runs \emph{0\% combined\_agent\_suggestions} and \emph{0\% mock\_rule\_fallback} was observed: the validator returned a final list for every event. In the heavy configuration, some individual agent calls failed (API-side), yet the validator still produced a valid final list, so external behaviour stayed stable.  
+Note: in earlier exploratory tests, fallbacks mainly appeared when the free-tier quota was hit or the validator timed out, which did not occur here. Furthermore, during this evaluation it was observed that the validator agent in the MA-SIF heavy config accepted more suggestions from the agents than in the other more balanced config.
+
+\subsection*{Interpretation}
+The pattern is clear:
+\begin{itemize}
+    \item Moving from \textbf{SIF (single agent)} to \textbf{MA\mbox{-}SIF (balanced)} increases median latency from $\sim$8.3\,s to $\sim$11.0\,s, but schema validity jumps from \textbf{40\%} to \textbf{70\%}. Even with zero thinking budget on the specialist agents, the \emph{validator} is pulling its weight.
+    \item \textbf{MA\mbox{-}SIF (heavy)} pushes median latency to $\sim$27.2\,s, but schema validity reaches \textbf{100\%}, and the \texttt{reason}/\texttt{intent} fields become noticeably richer and more proactive.
+    \item The short history window helps later events rationales get slightly better as context accumulates, although the biggest quality gain clearly comes from the validator’s (higher) thinking budget.
+\end{itemize}
+
+\paragraph{Practical read:} For accessibility-centric flows, a sensible pattern is:
+\begin{enumerate}
+    \item \textbf{Immediate, local rules} for fast feedback (e.g., enlarge target, boost contrast).
+    \item \textbf{MA-SIF in the background} for the smarter, profile-aware follow-ups (e.g., switch to voice, simplify layout).
+\end{enumerate}
+This preserves responsiveness while still getting the benefits of multi-agent reasoning.
+
+\subsection*{Limitations}
+The runs were kept small (6-10 events) due to free-tier limits, so statistical power is modest—though the differences are large and consistent. The backend is sequential, so times reflect worst-case per-event latency with LLM on the critical path. The event suite is deterministic; other UI states can nudge absolute times, but the overall trade-off (latency $\leftrightarrow$ schema quality) is expected to hold.
+
+\subsection*{Compact View (Full Results)}
+\begin{lstlisting}[language=json,caption={Condensed view of settings and outcomes per configuration.}]
+{
+  "SIF_single_agent": {
+    "settings": {"model":"gemini-2.5-flash","temp":0.2,"thinking_budget":"dynamic","timeout":"api-default"},
+    "results": {
+      "ws_latency_ms": {"p50":8240.99,"p90":9913.63,"max":10649.21},
+      "suite_latency_ms": {"p50":8261.86,"p90":12034.12,"max":12914.24},
+      "schema_valid_pct": 40.0,
+      "classification": {"validated_by_validator":100.0,"combined_agent_suggestions":0.0,"mock_rule_fallback":0.0},
+      "profile_note": "user_seq started with default profile; history grew across events"
+    }
+  },
+  "MA-SIF_balanced": {
+    "settings": {"agents":"3x flash-lite (no thinking); validator flash (dynamic thinking, 30s)"},
+    "results": {
+      "ws_latency_ms": {"p50":9969.99,"p90":11151.80,"max":11164.61},
+      "suite_latency_ms": {"p50":10988.27,"p90":14659.71,"max":15234.09},
+      "schema_valid_pct": 70.0,
+      "classification": {"validated_by_validator":100.0,"combined_agent_suggestions":0.0,"mock_rule_fallback":0.0},
+      "profile_note": "same user_seq; short interaction history window provides context"
+    }
+  },
+  "MA-SIF_heavy": {
+    "settings": {"agents":"all flash, thinking_budget=2048, timeouts=30s, temps=0.2/0.3"},
+    "results": {
+      "ws_latency_ms": {"p50":26875.99,"p90":27613.81,"max":32009.47},
+      "suite_latency_ms": {"p50":27229.24,"p90":30443.48,"max":31347.16},
+      "schema_valid_pct": 100.0,
+      "classification": {"validated_by_validator":100.0,"combined_agent_suggestions":0.0,"mock_rule_fallback":0.0},
+      "stability_note": "some agent calls failed; validator still produced final valid list"
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection*{Implications for the Framework}
+Overall, the numbers back the architecture: MA-SIF + a capable validator improves output predictability and schema adherence; latency is tunable via thinking budgets, model choices and timeouts.
+
+\paragraph{Recommended deployment profiles:}
+\begin{itemize}
+    \item \textbf{Tiered response:} apply \emph{deterministic} local adaptations instantly; let MA-SIF deliver deeper, profile-aware changes a few seconds later.
+    \item \textbf{Balanced default:} \emph{gemini-flash-lite} for UI/geometry/input agents (\texttt{thinking\_budget=0}, \texttt{timeout=\\15s}); \emph{gemini-flash} validator with dynamic thinking and \texttt{timeout=30s}.
+    \item \textbf{Heavy mode (opt-in):} enable larger validator thinking budgets for flows that demand airtight structure and richer rationale (e.g., clinical or regulated settings). Expect $\sim$2–3$\times$ latency vs. balanced.
+\end{itemize}
+
+\paragraph{Guidelines for Model Optimization:}
+\begin{itemize}
+    \item \textbf{Enhanced Accuracy and Reduced Schema Errors:} Prioritize increasing the validator thinking budget for optimal cost-effectiveness.
+    \item \textbf{Reduced Latency:} Utilize \emph{gemini-flash-lite} agents with zero thinking time and set a validator timeout cap.
+    \item \textbf{Comprehensive Explanations:} Increment validator thinking budget first, followed by agent budget, while maintaining low temperatures (0.2-0.3).
+\end{itemize}
+
+\paragraph{Failure handling}
+Even with some agent API errors, the validator still made valid final lists. Returning other agent adaptations when the validator fails will provide a great fallback while the mock rule fallback is still the best backup for quota or timeout problems on all agents, although both are barely used in normal situations.
+
+\paragraph{Conclusion}
+Use MA-SIF for better quality and consistency, but only deal with the slower latency when it’s a necessity. Adding local rules will help keep the UI smooth for accessibility needs. As profiles and histories get bigger, there will be small but steady improvements in the reasoning quality over time, although the validator’s budget is still the main way to control accuracy. Using the gemini-pro model could potentially improve adaptations even further in important scenarios.
 
 \section{Limitations and Challenges of LLM Integration}
 Large Language Models make Smart Intent Fusion far more capable than any static rule set, but they also introduce new dependencies, performance constraints, and reliability issues. In this thesis, all reasoning was powered by the Gemini API, and while this enabled rapid development, it also shaped both the strengths and weaknesses of the final system.
