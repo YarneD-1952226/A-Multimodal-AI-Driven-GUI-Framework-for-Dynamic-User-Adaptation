@@ -1,0 +1,1229 @@
+{
+  "files": [
+    "./profile1.jsonl",
+    "./profile2.jsonl",
+    "./profile3.jsonl",
+    "./profile4.jsonl",
+    "./profile5.jsonl",
+    "./profile6.jsonl"
+  ],
+  "overall": {
+    "files": [
+      "./profile1.jsonl",
+      "./profile2.jsonl",
+      "./profile3.jsonl",
+      "./profile4.jsonl",
+      "./profile5.jsonl",
+      "./profile6.jsonl"
+    ],
+    "events_total": 84,
+    "users_total": 6,
+    "latency_ms": {
+      "p50": 13186.26,
+      "p90": 17132.67,
+      "max": 21095.52
+    },
+    "schema_valid_pct": 84.52,
+    "classification_pct": {
+      "validated_by_validator": 100.0
+    },
+    "backend_configs": {
+      "MA-SIF balanced + instant rules": 84
+    },
+    "top_actions": {
+      "switch_mode": 87,
+      "increase_button_size": 74,
+      "increase_button_border": 69,
+      "increase_font_size": 66,
+      "increase_slider_size": 28,
+      "increase_contrast": 19,
+      "trigger_button": 9,
+      "adjust_spacing": 9
+    }
+  },
+  "per_user": [
+    {
+      "user_id": "P0",
+      "profile_ids": [
+        "P0"
+      ],
+      "run_ids": [
+        "1d0933fa-2f34-4e0e-bdbd-01372c0e7a08",
+        "1d730942-ec17-4761-b0fb-1fc698e0f2fb",
+        "1d78aa62-3cb3-45c5-8201-f79fff71cec6",
+        "237be4c3-b08f-4d64-b5a1-3dd899d7a267",
+        "39476266-15cf-4f8d-be02-7284f0cbfa77",
+        "48187251-c65d-42c2-b01d-c7a808628344",
+        "5e724dd8-a9ae-4b3c-80e3-3df28a3adc56",
+        "612c0af1-266a-45bc-b9bf-47b8e569f2a6",
+        "745b5b7c-021b-4d74-b3c7-c209a6b47f19",
+        "a0ae4321-4640-4be0-bcc8-36bbe778b79d",
+        "c3f19181-1c27-4895-8d0e-363b18e4041a",
+        "d9e88614-8dd2-4695-aab5-b87bccb24a3e",
+        "e057826a-98a9-41f2-9395-1690539073d8",
+        "e3c76dff-f0bd-48a4-ae54-40fa25f260b6"
+      ],
+      "events_total": 14,
+      "events_by_type": {
+        "miss_tap": 4,
+        "voice": 6,
+        "gesture": 2,
+        "slider_miss": 2
+      },
+      "miss_tap_rate": 0.2857,
+      "schema_valid_pct": 78.57,
+      "latency_ms": {
+        "p50": 16022.61,
+        "p90": 20232.83,
+        "max": 21095.52
+      },
+      "top_targets": "lamp:6, thermostat:4, lock:4",
+      "top_miss_targets": "lamp:2, lock:2",
+      "backend_top": "MA-SIF balanced + instant rules",
+      "classification_pct": {
+        "validated_by_validator": 100.0,
+        "combined_agent_suggestions": 0.0,
+        "mock_rule_fallback": 0.0
+      },
+      "top_actions": {
+        "switch_mode": 18,
+        "increase_button_border": 16,
+        "increase_button_size": 12,
+        "increase_font_size": 8,
+        "increase_slider_size": 7
+      },
+      "last_events": [
+        {
+          "run_id": "39476266-15cf-4f8d-be02-7284f0cbfa77",
+          "run_index": 1,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:28:55.774852Z",
+          "t_recv": "2025-08-10T10:29:07.887024Z",
+          "latency_ms": 12112.22,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "612c0af1-266a-45bc-b9bf-47b8e569f2a6",
+          "run_index": 1,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:29:07.889893Z",
+          "t_recv": "2025-08-10T10:29:19.217570Z",
+          "latency_ms": 11327.72,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "c3f19181-1c27-4895-8d0e-363b18e4041a",
+          "run_index": 1,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:29:19.220882Z",
+          "t_recv": "2025-08-10T10:29:31.607820Z",
+          "latency_ms": 12386.99,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "a0ae4321-4640-4be0-bcc8-36bbe778b79d",
+          "run_index": 2,
+          "event_index": 1,
+          "t_send": "2025-08-10T10:29:31.611255Z",
+          "t_recv": "2025-08-10T10:29:49.426874Z",
+          "latency_ms": 17815.69,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lamp",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "d9e88614-8dd2-4695-aab5-b87bccb24a3e",
+          "run_index": 2,
+          "event_index": 2,
+          "t_send": "2025-08-10T10:29:49.430101Z",
+          "t_recv": "2025-08-10T10:30:05.607691Z",
+          "latency_ms": 16177.65,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lamp",
+          "adaptations_count": 3
+        },
+        {
+          "run_id": "745b5b7c-021b-4d74-b3c7-c209a6b47f19",
+          "run_index": 2,
+          "event_index": 3,
+          "t_send": "2025-08-10T10:30:05.613987Z",
+          "t_recv": "2025-08-10T10:30:16.768772Z",
+          "latency_ms": 11154.83,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "gesture",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "237be4c3-b08f-4d64-b5a1-3dd899d7a267",
+          "run_index": 2,
+          "event_index": 4,
+          "t_send": "2025-08-10T10:30:16.772064Z",
+          "t_recv": "2025-08-10T10:30:37.026402Z",
+          "latency_ms": 20254.41,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "slider_miss",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "5e724dd8-a9ae-4b3c-80e3-3df28a3adc56",
+          "run_index": 2,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:30:37.031358Z",
+          "t_recv": "2025-08-10T10:30:57.213742Z",
+          "latency_ms": 20182.46,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "48187251-c65d-42c2-b01d-c7a808628344",
+          "run_index": 2,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:30:57.220134Z",
+          "t_recv": "2025-08-10T10:31:14.388496Z",
+          "latency_ms": 17168.43,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "e057826a-98a9-41f2-9395-1690539073d8",
+          "run_index": 2,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:31:14.391740Z",
+          "t_recv": "2025-08-10T10:31:32.563095Z",
+          "latency_ms": 18153.58,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 3
+        }
+      ],
+      "recommendations": [
+        "Increase button size/border and spacing on top-miss targets",
+        "Raise validator thinking budget or relax JSON schema",
+        "Use lighter agent config or async apply for non-critical actions"
+      ]
+    },
+    {
+      "user_id": "P1",
+      "profile_ids": [
+        "P1"
+      ],
+      "run_ids": [
+        "00c2faf5-77d1-4fa1-944b-6d7cbcf9122b",
+        "079f69ab-2c64-4760-97ec-40079f44c9a8",
+        "16057ce4-a1b7-4ee9-9781-2d93e93462ba",
+        "17f5c5cb-945e-4734-ade5-51821e298df9",
+        "1c3d95d2-e320-4b88-9692-2300dd30c351",
+        "38adc52b-bab4-41fb-aa61-cb6170ea4722",
+        "431d554f-9d9e-4d74-b638-b22f300b7f90",
+        "52458325-ecf5-4895-80ea-0aed75f94fe9",
+        "82628cc8-01d4-4ff7-86f8-0547227e6ffc",
+        "87c5a80a-91a9-4d31-9bff-6f4cea2756c6",
+        "9346a366-cefc-4476-9417-2074ceb1214f",
+        "973708b5-7622-4491-9c95-21b5bdec3218",
+        "99cab585-2f3f-4949-9431-87f8fb77604c",
+        "bd8a2b1e-9b00-4187-91bc-4e282bf93bbf"
+      ],
+      "events_total": 14,
+      "events_by_type": {
+        "miss_tap": 4,
+        "voice": 6,
+        "gesture": 2,
+        "slider_miss": 2
+      },
+      "miss_tap_rate": 0.2857,
+      "schema_valid_pct": 85.71,
+      "latency_ms": {
+        "p50": 13186.26,
+        "p90": 16780.89,
+        "max": 17434.45
+      },
+      "top_targets": "lamp:6, thermostat:4, lock:4",
+      "top_miss_targets": "lamp:2, lock:2",
+      "backend_top": "MA-SIF balanced + instant rules",
+      "classification_pct": {
+        "validated_by_validator": 100.0,
+        "combined_agent_suggestions": 0.0,
+        "mock_rule_fallback": 0.0
+      },
+      "top_actions": {
+        "switch_mode": 17,
+        "increase_button_border": 14,
+        "increase_button_size": 11,
+        "increase_font_size": 11,
+        "increase_slider_size": 4
+      },
+      "last_events": [
+        {
+          "run_id": "973708b5-7622-4491-9c95-21b5bdec3218",
+          "run_index": 1,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:32:24.906545Z",
+          "t_recv": "2025-08-10T10:32:36.775078Z",
+          "latency_ms": 11868.32,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "99cab585-2f3f-4949-9431-87f8fb77604c",
+          "run_index": 1,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:32:36.778038Z",
+          "t_recv": "2025-08-10T10:32:50.079324Z",
+          "latency_ms": 13301.16,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 6
+        },
+        {
+          "run_id": "38adc52b-bab4-41fb-aa61-cb6170ea4722",
+          "run_index": 1,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:32:50.084530Z",
+          "t_recv": "2025-08-10T10:33:01.044091Z",
+          "latency_ms": 10959.5,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "431d554f-9d9e-4d74-b638-b22f300b7f90",
+          "run_index": 2,
+          "event_index": 1,
+          "t_send": "2025-08-10T10:33:01.047762Z",
+          "t_recv": "2025-08-10T10:33:18.097048Z",
+          "latency_ms": 17049.22,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "bd8a2b1e-9b00-4187-91bc-4e282bf93bbf",
+          "run_index": 2,
+          "event_index": 2,
+          "t_send": "2025-08-10T10:33:18.101468Z",
+          "t_recv": "2025-08-10T10:33:35.535975Z",
+          "latency_ms": 17434.45,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lamp",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "16057ce4-a1b7-4ee9-9781-2d93e93462ba",
+          "run_index": 2,
+          "event_index": 3,
+          "t_send": "2025-08-10T10:33:35.538654Z",
+          "t_recv": "2025-08-10T10:33:51.693502Z",
+          "latency_ms": 16154.8,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "gesture",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "1c3d95d2-e320-4b88-9692-2300dd30c351",
+          "run_index": 2,
+          "event_index": 4,
+          "t_send": "2025-08-10T10:33:51.696855Z",
+          "t_recv": "2025-08-10T10:34:06.171373Z",
+          "latency_ms": 14474.48,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "slider_miss",
+          "target_element": "thermostat",
+          "adaptations_count": 2
+        },
+        {
+          "run_id": "9346a366-cefc-4476-9417-2074ceb1214f",
+          "run_index": 2,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:34:06.173949Z",
+          "t_recv": "2025-08-10T10:34:19.793113Z",
+          "latency_ms": 13619.13,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "17f5c5cb-945e-4734-ade5-51821e298df9",
+          "run_index": 2,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:34:19.795951Z",
+          "t_recv": "2025-08-10T10:34:31.392224Z",
+          "latency_ms": 11596.24,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "82628cc8-01d4-4ff7-86f8-0547227e6ffc",
+          "run_index": 2,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:34:31.394855Z",
+          "t_recv": "2025-08-10T10:34:42.407276Z",
+          "latency_ms": 11012.39,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 6
+        }
+      ],
+      "recommendations": [
+        "Increase button size/border and spacing on top-miss targets",
+        "Use lighter agent config or async apply for non-critical actions"
+      ]
+    },
+    {
+      "user_id": "P2",
+      "profile_ids": [
+        "P2"
+      ],
+      "run_ids": [
+        "0779aef4-384b-4b41-bb6f-565208d0d21b",
+        "0c55f616-8e13-4298-b2e8-0bea1707271a",
+        "294db23c-3fae-4987-9bea-0b241476be3a",
+        "34b68f6a-271b-48c7-a38d-9f2d189a3df8",
+        "5bf848aa-83a0-4b21-be51-bd6c15891fef",
+        "60fcb779-46a6-48b4-84a6-5302074c84c0",
+        "8e74eed2-5375-4029-b030-ef4b349522fe",
+        "a18746a6-44d3-46e8-8f9a-6704fa17c745",
+        "b7247d19-5835-4f3b-8053-8003482a271d",
+        "be65fe44-8b51-4dcf-acc2-fc0e0bbeb364",
+        "c152a9af-cf6d-40bd-a5d9-5f14174bdbc4",
+        "c785e68d-b321-4b65-ae9f-fda110d2d590",
+        "cbc287f4-f748-4615-99b9-c25a7c07d680",
+        "e6113345-1369-44f5-b9f5-82541d4245bb"
+      ],
+      "events_total": 14,
+      "events_by_type": {
+        "miss_tap": 4,
+        "voice": 6,
+        "gesture": 2,
+        "slider_miss": 2
+      },
+      "miss_tap_rate": 0.2857,
+      "schema_valid_pct": 85.71,
+      "latency_ms": {
+        "p50": 13651.44,
+        "p90": 16461.16,
+        "max": 19035.59
+      },
+      "top_targets": "lamp:6, thermostat:4, lock:4",
+      "top_miss_targets": "lamp:2, lock:2",
+      "backend_top": "MA-SIF balanced + instant rules",
+      "classification_pct": {
+        "validated_by_validator": 100.0,
+        "combined_agent_suggestions": 0.0,
+        "mock_rule_fallback": 0.0
+      },
+      "top_actions": {
+        "increase_font_size": 12,
+        "increase_button_size": 12,
+        "increase_button_border": 10,
+        "switch_mode": 10,
+        "increase_contrast": 5
+      },
+      "last_events": [
+        {
+          "run_id": "a18746a6-44d3-46e8-8f9a-6704fa17c745",
+          "run_index": 1,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:35:27.481347Z",
+          "t_recv": "2025-08-10T10:35:41.820372Z",
+          "latency_ms": 14338.99,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "be65fe44-8b51-4dcf-acc2-fc0e0bbeb364",
+          "run_index": 1,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:35:41.826846Z",
+          "t_recv": "2025-08-10T10:35:52.463773Z",
+          "latency_ms": 10636.9,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 7
+        },
+        {
+          "run_id": "0779aef4-384b-4b41-bb6f-565208d0d21b",
+          "run_index": 1,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:35:52.467739Z",
+          "t_recv": "2025-08-10T10:36:03.522968Z",
+          "latency_ms": 11055.2,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 3
+        },
+        {
+          "run_id": "cbc287f4-f748-4615-99b9-c25a7c07d680",
+          "run_index": 2,
+          "event_index": 1,
+          "t_send": "2025-08-10T10:36:03.527129Z",
+          "t_recv": "2025-08-10T10:36:17.330931Z",
+          "latency_ms": 13803.77,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "c152a9af-cf6d-40bd-a5d9-5f14174bdbc4",
+          "run_index": 2,
+          "event_index": 2,
+          "t_send": "2025-08-10T10:36:17.333881Z",
+          "t_recv": "2025-08-10T10:36:31.079659Z",
+          "latency_ms": 13745.74,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "34b68f6a-271b-48c7-a38d-9f2d189a3df8",
+          "run_index": 2,
+          "event_index": 3,
+          "t_send": "2025-08-10T10:36:31.088127Z",
+          "t_recv": "2025-08-10T10:36:48.067804Z",
+          "latency_ms": 16979.64,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "gesture",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "c785e68d-b321-4b65-ae9f-fda110d2d590",
+          "run_index": 2,
+          "event_index": 4,
+          "t_send": "2025-08-10T10:36:48.071848Z",
+          "t_recv": "2025-08-10T10:37:02.921498Z",
+          "latency_ms": 14849.61,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "slider_miss",
+          "target_element": "thermostat",
+          "adaptations_count": 2
+        },
+        {
+          "run_id": "5bf848aa-83a0-4b21-be51-bd6c15891fef",
+          "run_index": 2,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:37:02.928686Z",
+          "t_recv": "2025-08-10T10:37:21.964321Z",
+          "latency_ms": 19035.59,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "8e74eed2-5375-4029-b030-ef4b349522fe",
+          "run_index": 2,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:37:21.969318Z",
+          "t_recv": "2025-08-10T10:37:37.220715Z",
+          "latency_ms": 15251.36,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "e6113345-1369-44f5-b9f5-82541d4245bb",
+          "run_index": 2,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:37:37.224906Z",
+          "t_recv": "2025-08-10T10:37:50.021524Z",
+          "latency_ms": 12796.58,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        }
+      ],
+      "recommendations": [
+        "Increase button size/border and spacing on top-miss targets",
+        "Use lighter agent config or async apply for non-critical actions"
+      ]
+    },
+    {
+      "user_id": "P3",
+      "profile_ids": [
+        "P3"
+      ],
+      "run_ids": [
+        "062849b6-3b2f-4710-93e6-835ff50d0022",
+        "07ef872b-3010-4dba-beac-8ab74a833b41",
+        "2a3088f0-2120-4e13-b181-9aebd832394a",
+        "4464522d-1a43-4be1-ad70-3dbca0521dc4",
+        "55640e82-9e29-4e32-81f8-c046b56092e1",
+        "712d4ea3-74f6-4496-9e51-691edcf71f52",
+        "7eee5e67-964b-493a-9a7f-b340f1b25c49",
+        "8110c4e4-b0b1-45a7-9601-1a9b874cbdf9",
+        "873b2c57-f54b-4395-a6dc-6f9c82af42d3",
+        "ab063de5-f223-4e10-96ee-5e4aab86d1fc",
+        "b164174c-a60a-48bb-a4f1-af4b81c7e3b2",
+        "b2530a6c-eb7f-4be1-88f6-3d5b736cbf8c",
+        "f5934a72-4dbe-4991-a5fc-cac64b48a9ba",
+        "fa24a5d8-9011-41ae-837d-22a53f56f21d"
+      ],
+      "events_total": 14,
+      "events_by_type": {
+        "miss_tap": 4,
+        "voice": 6,
+        "gesture": 2,
+        "slider_miss": 2
+      },
+      "miss_tap_rate": 0.2857,
+      "schema_valid_pct": 71.43,
+      "latency_ms": {
+        "p50": 11819.79,
+        "p90": 14680.87,
+        "max": 16486.06
+      },
+      "top_targets": "lamp:6, thermostat:4, lock:4",
+      "top_miss_targets": "lamp:2, lock:2",
+      "backend_top": "MA-SIF balanced + instant rules",
+      "classification_pct": {
+        "validated_by_validator": 100.0,
+        "combined_agent_suggestions": 0.0,
+        "mock_rule_fallback": 0.0
+      },
+      "top_actions": {
+        "switch_mode": 14,
+        "increase_font_size": 12,
+        "increase_button_size": 10,
+        "increase_button_border": 9,
+        "increase_slider_size": 5
+      },
+      "last_events": [
+        {
+          "run_id": "fa24a5d8-9011-41ae-837d-22a53f56f21d",
+          "run_index": 1,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:38:35.386250Z",
+          "t_recv": "2025-08-10T10:38:49.266147Z",
+          "latency_ms": 13879.86,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "b2530a6c-eb7f-4be1-88f6-3d5b736cbf8c",
+          "run_index": 1,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:38:49.276166Z",
+          "t_recv": "2025-08-10T10:39:04.019735Z",
+          "latency_ms": 14743.53,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 6
+        },
+        {
+          "run_id": "07ef872b-3010-4dba-beac-8ab74a833b41",
+          "run_index": 1,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:39:04.027142Z",
+          "t_recv": "2025-08-10T10:39:14.089907Z",
+          "latency_ms": 10062.74,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "7eee5e67-964b-493a-9a7f-b340f1b25c49",
+          "run_index": 2,
+          "event_index": 1,
+          "t_send": "2025-08-10T10:39:14.092774Z",
+          "t_recv": "2025-08-10T10:39:27.462508Z",
+          "latency_ms": 13369.7,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lamp",
+          "adaptations_count": 3
+        },
+        {
+          "run_id": "f5934a72-4dbe-4991-a5fc-cac64b48a9ba",
+          "run_index": 2,
+          "event_index": 2,
+          "t_send": "2025-08-10T10:39:27.465467Z",
+          "t_recv": "2025-08-10T10:39:38.065108Z",
+          "latency_ms": 10599.61,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "4464522d-1a43-4be1-ad70-3dbca0521dc4",
+          "run_index": 2,
+          "event_index": 3,
+          "t_send": "2025-08-10T10:39:38.068727Z",
+          "t_recv": "2025-08-10T10:39:49.730097Z",
+          "latency_ms": 11661.34,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "gesture",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "55640e82-9e29-4e32-81f8-c046b56092e1",
+          "run_index": 2,
+          "event_index": 4,
+          "t_send": "2025-08-10T10:39:49.736872Z",
+          "t_recv": "2025-08-10T10:40:01.297243Z",
+          "latency_ms": 11560.34,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "slider_miss",
+          "target_element": "thermostat",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "2a3088f0-2120-4e13-b181-9aebd832394a",
+          "run_index": 2,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:40:01.301040Z",
+          "t_recv": "2025-08-10T10:40:17.787151Z",
+          "latency_ms": 16486.06,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 6
+        },
+        {
+          "run_id": "8110c4e4-b0b1-45a7-9601-1a9b874cbdf9",
+          "run_index": 2,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:40:17.793103Z",
+          "t_recv": "2025-08-10T10:40:32.327796Z",
+          "latency_ms": 14534.65,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "062849b6-3b2f-4710-93e6-835ff50d0022",
+          "run_index": 2,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:40:32.334257Z",
+          "t_recv": "2025-08-10T10:40:41.439497Z",
+          "latency_ms": 9105.22,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        }
+      ],
+      "recommendations": [
+        "Increase button size/border and spacing on top-miss targets",
+        "Raise validator thinking budget or relax JSON schema"
+      ]
+    },
+    {
+      "user_id": "P4",
+      "profile_ids": [
+        "P4"
+      ],
+      "run_ids": [
+        "0cebfc0d-9524-49c8-8770-490fe128f967",
+        "1020bbc9-9229-4c65-9527-6d4fe4128126",
+        "1ce5a8b7-11f5-4360-97db-7591fdb9e1f6",
+        "3c96d6f2-3d27-4d3b-8c73-31f53212daa7",
+        "6634d08f-c668-4003-91a7-cb43fbd79135",
+        "931b590c-02f0-4d3c-b23c-31b25d62f0b1",
+        "9d3ac171-8002-4977-8d43-8dc72acbfb68",
+        "ae62c966-0c7b-4cc7-bb35-1395fa83ebcd",
+        "cf4ef13e-38b6-424f-9afd-85731634adcd",
+        "d91840b4-0595-44fc-be80-6d97542d4f31",
+        "dd49ec23-d787-45e0-86d3-570e851ff2ab",
+        "e0778437-c70e-4c70-a34e-d5ec734c704f",
+        "ea1601e3-411b-4405-807e-65b87b1f550a",
+        "fc05a024-0793-4c1b-b3a1-3fb248d23d12"
+      ],
+      "events_total": 14,
+      "events_by_type": {
+        "miss_tap": 4,
+        "voice": 6,
+        "gesture": 2,
+        "slider_miss": 2
+      },
+      "miss_tap_rate": 0.2857,
+      "schema_valid_pct": 85.71,
+      "latency_ms": {
+        "p50": 13625.15,
+        "p90": 15757.03,
+        "max": 17906.42
+      },
+      "top_targets": "lamp:6, thermostat:4, lock:4",
+      "top_miss_targets": "lamp:2, lock:2",
+      "backend_top": "MA-SIF balanced + instant rules",
+      "classification_pct": {
+        "validated_by_validator": 100.0,
+        "combined_agent_suggestions": 0.0,
+        "mock_rule_fallback": 0.0
+      },
+      "top_actions": {
+        "switch_mode": 14,
+        "increase_button_size": 13,
+        "increase_font_size": 10,
+        "increase_button_border": 9,
+        "increase_slider_size": 4
+      },
+      "last_events": [
+        {
+          "run_id": "e0778437-c70e-4c70-a34e-d5ec734c704f",
+          "run_index": 1,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:41:29.990298Z",
+          "t_recv": "2025-08-10T10:41:47.896761Z",
+          "latency_ms": 17906.42,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "9d3ac171-8002-4977-8d43-8dc72acbfb68",
+          "run_index": 1,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:41:47.900114Z",
+          "t_recv": "2025-08-10T10:42:03.406696Z",
+          "latency_ms": 15506.54,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "d91840b4-0595-44fc-be80-6d97542d4f31",
+          "run_index": 1,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:42:03.409453Z",
+          "t_recv": "2025-08-10T10:42:17.286736Z",
+          "latency_ms": 13877.25,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "1020bbc9-9229-4c65-9527-6d4fe4128126",
+          "run_index": 2,
+          "event_index": 1,
+          "t_send": "2025-08-10T10:42:17.289739Z",
+          "t_recv": "2025-08-10T10:42:31.929107Z",
+          "latency_ms": 14639.33,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "cf4ef13e-38b6-424f-9afd-85731634adcd",
+          "run_index": 2,
+          "event_index": 2,
+          "t_send": "2025-08-10T10:42:31.932826Z",
+          "t_recv": "2025-08-10T10:42:44.014194Z",
+          "latency_ms": 12081.34,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "ea1601e3-411b-4405-807e-65b87b1f550a",
+          "run_index": 2,
+          "event_index": 3,
+          "t_send": "2025-08-10T10:42:44.017071Z",
+          "t_recv": "2025-08-10T10:42:57.426486Z",
+          "latency_ms": 13409.38,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "gesture",
+          "target_element": "lamp",
+          "adaptations_count": 3
+        },
+        {
+          "run_id": "ae62c966-0c7b-4cc7-bb35-1395fa83ebcd",
+          "run_index": 2,
+          "event_index": 4,
+          "t_send": "2025-08-10T10:42:57.429226Z",
+          "t_recv": "2025-08-10T10:43:12.485154Z",
+          "latency_ms": 15055.89,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "slider_miss",
+          "target_element": "thermostat",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "931b590c-02f0-4d3c-b23c-31b25d62f0b1",
+          "run_index": 2,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:43:12.492332Z",
+          "t_recv": "2025-08-10T10:43:28.356754Z",
+          "latency_ms": 15864.38,
+          "schema_valid": false,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "fc05a024-0793-4c1b-b3a1-3fb248d23d12",
+          "run_index": 2,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:43:28.363668Z",
+          "t_recv": "2025-08-10T10:43:39.410710Z",
+          "latency_ms": 11047.01,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "dd49ec23-d787-45e0-86d3-570e851ff2ab",
+          "run_index": 2,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:43:39.413360Z",
+          "t_recv": "2025-08-10T10:43:50.369001Z",
+          "latency_ms": 10955.61,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        }
+      ],
+      "recommendations": [
+        "Increase button size/border and spacing on top-miss targets",
+        "Use lighter agent config or async apply for non-critical actions"
+      ]
+    },
+    {
+      "user_id": "P5",
+      "profile_ids": [
+        "P5"
+      ],
+      "run_ids": [
+        "0af3fe11-a879-4447-a827-438d96272807",
+        "1d3f060a-e07d-4f2f-9b8d-d508fbad9695",
+        "2b235d15-878b-4eb2-9eef-10868a4ec2cf",
+        "42a153a7-ef37-47fa-8610-f352b76b2a69",
+        "52a46164-affc-4caa-9a46-46a99bc221af",
+        "56c44d4a-8985-40a0-a150-e78fbee87896",
+        "5895e4b9-ac26-4ad3-8cea-ba6035b918e9",
+        "5e3ab16a-1358-4018-892a-409bbdd934ff",
+        "6d755da8-52c6-46d3-b158-72a0a7f53acc",
+        "7fe4cae9-0c98-4ebb-beaf-39db540954ca",
+        "a9c7dfbe-4ede-4852-a966-19cf9a12f970",
+        "adea2e53-2b81-4df1-bbec-f1bf34875f04",
+        "cfbb9543-e4cd-4b39-b1df-64cc0185157d",
+        "e32c223d-5aa8-4b8f-bbc6-6ea28e48dc6f"
+      ],
+      "events_total": 14,
+      "events_by_type": {
+        "miss_tap": 4,
+        "voice": 6,
+        "gesture": 2,
+        "slider_miss": 2
+      },
+      "miss_tap_rate": 0.2857,
+      "schema_valid_pct": 100.0,
+      "latency_ms": {
+        "p50": 12699.09,
+        "p90": 16249.51,
+        "max": 16603.19
+      },
+      "top_targets": "lamp:6, thermostat:4, lock:4",
+      "top_miss_targets": "lamp:2, lock:2",
+      "backend_top": "MA-SIF balanced + instant rules",
+      "classification_pct": {
+        "validated_by_validator": 100.0,
+        "combined_agent_suggestions": 0.0,
+        "mock_rule_fallback": 0.0
+      },
+      "top_actions": {
+        "increase_button_size": 16,
+        "switch_mode": 14,
+        "increase_font_size": 13,
+        "increase_button_border": 11,
+        "increase_contrast": 8
+      },
+      "last_events": [
+        {
+          "run_id": "42a153a7-ef37-47fa-8610-f352b76b2a69",
+          "run_index": 1,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:44:39.326755Z",
+          "t_recv": "2025-08-10T10:44:51.293925Z",
+          "latency_ms": 11967.14,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 6
+        },
+        {
+          "run_id": "6d755da8-52c6-46d3-b158-72a0a7f53acc",
+          "run_index": 1,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:44:51.299331Z",
+          "t_recv": "2025-08-10T10:45:07.475515Z",
+          "latency_ms": 16176.14,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "52a46164-affc-4caa-9a46-46a99bc221af",
+          "run_index": 1,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:45:07.478212Z",
+          "t_recv": "2025-08-10T10:45:19.865928Z",
+          "latency_ms": 12387.68,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "1d3f060a-e07d-4f2f-9b8d-d508fbad9695",
+          "run_index": 2,
+          "event_index": 1,
+          "t_send": "2025-08-10T10:45:19.868592Z",
+          "t_recv": "2025-08-10T10:45:36.149597Z",
+          "latency_ms": 16280.96,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lamp",
+          "adaptations_count": 6
+        },
+        {
+          "run_id": "5895e4b9-ac26-4ad3-8cea-ba6035b918e9",
+          "run_index": 2,
+          "event_index": 2,
+          "t_send": "2025-08-10T10:45:36.153356Z",
+          "t_recv": "2025-08-10T10:45:47.319717Z",
+          "latency_ms": 11166.33,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lamp",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "a9c7dfbe-4ede-4852-a966-19cf9a12f970",
+          "run_index": 2,
+          "event_index": 3,
+          "t_send": "2025-08-10T10:45:47.323569Z",
+          "t_recv": "2025-08-10T10:45:58.471590Z",
+          "latency_ms": 11147.99,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "gesture",
+          "target_element": "lamp",
+          "adaptations_count": 5
+        },
+        {
+          "run_id": "5e3ab16a-1358-4018-892a-409bbdd934ff",
+          "run_index": 2,
+          "event_index": 4,
+          "t_send": "2025-08-10T10:45:58.474897Z",
+          "t_recv": "2025-08-10T10:46:11.047891Z",
+          "latency_ms": 12572.96,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "slider_miss",
+          "target_element": "thermostat",
+          "adaptations_count": 4
+        },
+        {
+          "run_id": "56c44d4a-8985-40a0-a150-e78fbee87896",
+          "run_index": 2,
+          "event_index": 5,
+          "t_send": "2025-08-10T10:46:11.053434Z",
+          "t_recv": "2025-08-10T10:46:27.656661Z",
+          "latency_ms": 16603.19,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "miss_tap",
+          "target_element": "lock",
+          "adaptations_count": 6
+        },
+        {
+          "run_id": "e32c223d-5aa8-4b8f-bbc6-6ea28e48dc6f",
+          "run_index": 2,
+          "event_index": 6,
+          "t_send": "2025-08-10T10:46:27.660418Z",
+          "t_recv": "2025-08-10T10:46:43.630681Z",
+          "latency_ms": 15970.22,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "lock",
+          "adaptations_count": 7
+        },
+        {
+          "run_id": "2b235d15-878b-4eb2-9eef-10868a4ec2cf",
+          "run_index": 2,
+          "event_index": 7,
+          "t_send": "2025-08-10T10:46:43.633363Z",
+          "t_recv": "2025-08-10T10:46:58.672293Z",
+          "latency_ms": 15038.89,
+          "schema_valid": true,
+          "classification": "validated_by_validator",
+          "backend_config": "MA-SIF balanced + instant rules",
+          "event_type": "voice",
+          "target_element": "thermostat",
+          "adaptations_count": 6
+        }
+      ],
+      "recommendations": [
+        "Increase button size/border and spacing on top-miss targets",
+        "Use lighter agent config or async apply for non-critical actions"
+      ]
+    }
+  ]
+}
