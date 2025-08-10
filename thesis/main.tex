@@ -19,11 +19,13 @@
     \usepackage{listings,xcolor}
     \usepackage[most]{tcolorbox}     
     \usepackage{pgfplots}
+    \usepackage{tikz}
     \usepackage[
     backend=biber,
     style=numeric,
 ]{biblatex}
 
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.misc}
 
 \addbibresource{refs.bib}
 
@@ -37,9 +39,7 @@
     borderline west={2pt}{0pt}{gray!50}
 }
 
-
 \newcommand{\CaptionFontSize}{\small}
-% \newcommand{\comment}[1]{}
 \newcommand{\mdblockquote}[1]{  \begin{myquote}  #1  \end{myquote}  }
 
 \makeglossaries
@@ -144,11 +144,6 @@
         \large \textit{Promotor}:\vspace*{0.5cm} \\
         Prof. Dr. Kris Luyten\\
         \vspace*{0.5cm}
-        %\large \textit{Co-promotor}:\vspace*{0.5cm} \\
-        %\\
-        %\vspace*{0.5cm}
-        %\large \textit{Begeleider(s)}:\vspace*{0.5cm} \\
-        %Dr. Eva Geurts\\
     \end{flushright}
 \end{minipage}
 
@@ -172,31 +167,28 @@
 
 \end{titlepage}
 
-
 \chapter*{Abstract}
 This thesis presents a multimodal AI-driven GUI framework for dynamic user interface adaptation, enabling real-time, personalised accessibility enhancements across platforms such as Flutter, SwiftUI, and beyond. Designed with a focus on the health domain, the framework supports motor-impaired, visually impaired, and hands-free users by integrating diverse input modalities including touch, keyboard, voice, and gestures.
 At its core is Smart Intent Fusion (SIF), a multi-agent architecture powered by large language models (LLMs) via the Google Gemini API. SIF fuses user inputs, events, profiles, and interaction history to infer intent and propose targeted UI adaptations such as button enlargement, contrast enhancement, and navigation mode switching. The reasoning engine combines rule-based logic for predictable, low-latency responses with LLM-driven reasoning for complex or ambiguous cases.
-The framework provides developer-friendly integration through standardised JSON contracts and a FastAPI backend, making it portable across domains and platforms. Its feasibility is demonstrated through varied configurations and simulated metrics including adaptation accuracy, task completion time, and latency showing measurable improvements in accessibility. By addressing the gap in intelligent, multimodal UI adaptation, this work helps advance human–computer interaction and lays the foundation for future AI models capable of autonomously rewriting UI code, offering a scalable and extensible solution for personalised user experiences.
+The framework provides developer-friendly integration through standardised JSON contracts and a FastAPI backend, making it portable across domains and platforms. Its feasibility was evaluated using six diverse user profiles, each representing different accessibility needs. For each profile, two sequential runs of seven multimodal interaction events were executed, allowing the system to adapt both to immediate interaction errors (e.g., miss-taps, slider overshoots) and to evolving user histories. Configurations were assessed for schema validity, action alignment with profile needs, and latency distribution, supported by per-profile breakdowns and global action analysis. This study demonstrated that the system consistently produced accessibility-targeted adaptations, with measurable strengths and areas for refinement in personalisation and latency handling.
+By addressing the gap in intelligent, multimodal UI adaptation, this work helps advance human-computer interaction and lays the foundation for future AI models capable of autonomously rewriting UI code, offering a scalable and extensible solution for personalised user experiences.
 
 \chapter*{Acknowledgments}
 I would like to express my deepest appreciation to all those who have supported and guided me throughout the course of my master’s thesis.
 
 First and foremost, I am sincerely grateful to Prof. Dr. Kris Luyten, my thesis supervisor, for his invaluable guidance, constructive feedback, practical tips, and continuous support.
 
-I would also like to thank my fellow students for their encouragement, collaboration, and support during this journey. Special thanks go to my two dogs, Tobias and Casper, whose company during countless late-night coding sessions, and gentle reminders to take breaks helped keep me grounded.
-
 My heartfelt gratitude extends to my family, especially my sister Phaedra, my brother-in-law Dennis, and my parents for their unwavering support, patience, and help with proofreading.
+
+I would also like to thank my fellow students for their encouragement, collaboration, and support during this journey. Special thanks go to my two dogs, Tobias and Casper, whose company during countless late-night coding sessions, and gentle reminders to take breaks helped keep me grounded.
 
 Finally, I am thankful to my friends for their motivation, belief in my abilities, and for making this challenging journey a rewarding one.
 
 This work would not have been possible without the contribution and support of all these people, to whom I am deeply grateful.
 
-
-
 \tableofcontents
 \listoffigures
 \listoftables
-
 \glsaddall
 \printglossary[type=\acronymtype, title=List of Abbreviations]
 
@@ -218,20 +210,16 @@ Large Language Models (LLMs) like GPT have revolutionized natural language under
 In the context of adaptive UIs, LLMs can act as intelligent controllers that translate diverse and complex user interactions into actionable interface adaptations. For example, an LLM can understand a voice command like “make buttons bigger” or interpret hesitation in gestures to trigger UI changes that enhance usability for motor-impaired users. Furthermore, LLMs can dynamically generate or modify UI elements by turning the interface itself into an API enabling on-the-fly customization that is both personalized and context-aware.
 
 Despite growing research and technological capabilities, adaptive user interfaces remain rare in practical use, often due to complexity in implementation and lack of robust frameworks. This gap motivated this thesis, inspired in part by emerging ideas on treating UIs as APIs controlled by intelligent models, an approach highlighted in recent discussions in the AI and HCI communities. Large Language Models (LLMs), in particular, offer a promising interface for driving these intelligent UI adaptations due to their ability to reason over context and user intent. However, current LLMs also come with challenges: latency when used via APIs, potential for hallucinations, a lack of specialization for GUI reasoning tasks or coding like rewriting UIs at runtime. These limitations highlight the need for a structured framework that can integrate intelligent models into adaptive UI systems while managing their weaknesses effectively. Rather than seeing LLMs as perfect agents, this thesis treats them as powerful, context-aware assistants that when properly guided and constrained, can significantly improve how interfaces adapt to users' real-time accessibility needs.
-% X -> tweet
-% Apple -> vision pro accessibility
-% VR hand usage/controller -> difficult in Health related applications
-    % Accessiblity needs -> patients
+
 \section{Problem Statement}
 Despite increasing attention on accessibility and personalization in user interfaces, most applications remain static and poorly adapted to users' changing contexts or abilities. While current interfaces can adapt in high-level ways such as adjusting to screen size, orientation or theme, these adaptations are mostly cosmetic. They do not address the deeper challenge of understanding and responding to the user's intent, cognitive state, or physical limitations in real time.
 
 Designing truly adaptive UIs remains uncommon, in part due to the technical difficulty of modeling dynamic behavior and the lack of robust, general-purpose frameworks. Furthermore, real-world interaction is often messy and unpredictable: small variations in input such as a mistap, delayed reaction, or environmental noise can result in significantly different needs or outcomes. This non-linearity mirrors the principles of chaos theory, where minor initial differences lead to divergent results, making rule-based UI design fragile.
 
-Addressing this requires systems capable of interpreting nuanced, multimodal signals and adapting accordingly, a task well suited to modern AI techniques such as large language models (LLMs). Yet existing UI frameworks rarely integrate such models in a way that supports real-time, intelligent adaptation, leaving a significant gap between the potential of adaptive interfaces and their current practical application.
+Addressing this requires systems capable of interpreting nuanced, multimodal signals and adapting accordingly, a task well suited to modern AI techniques such as large language models (LLMs). Nevertheless existing UI frameworks rarely integrate such models in a way that supports real-time, intelligent adaptation, leaving a significant gap between the potential of adaptive interfaces and their current practical application.
 
 \newpage
 
-% Main accessibility problems
 \section{Research Objectives}
 
 The primary objective of this research is to design, implement, and validate a modular, multimodal AI-driven framework for dynamic user interface (UI) adaptation, with a strong focus on accessibility and personalisation. The framework aims to move beyond static or one-size-fits-all designs by enabling real-time, context-aware adaptations that respond to diverse user abilities, preferences, and situational needs. It does so by combining multiple input modalities with hybrid reasoning, rule-based logic for predictable low-latency responses, and large language model (LLM) reasoning for complex or ambiguous cases within a unified architecture.  
@@ -259,7 +247,7 @@ The thesis is structured as follows:
     \item \textbf{Chapter 2: Background and Related Work} \\
     This chapter reviews the state-of-the-art in human-computer interaction (HCI), focusing on adaptive user interfaces, multimodal input processing, and (AI-driven) personalization. It discusses existing frameworks for accessibility, user profile built UIs and limitations of static UIs, and the role of large language models (LLMs) in UI adaptation, positioning the proposed framework’s novelty.
     \item \textbf{Chapter 3: System Design and Architecture} \\
-    This chapter describes the overall architecture of the framework, including its three-layer design (Frontend Layer, Input Adapter Layer, and Smart Intent Fusion Backend). Explains the role of each layer, the JSON-based event and adaptation contracts, and how the system captures and processes multimodal inputs. It also introduces the Smart Intent Fusion (SIF) architecture, detailing its hybrid reasoning approach that combines rule-based logic with LLM-driven reasoning.
+    This chapter describes the overall architecture of the framework, including its three-layer design (Frontend Layer, Input Adapter Layer, and Smart Intent Fusion Backend). Explains the role of each layer, the JSON-based event and adaptation contracts, and how the system captures and processes multimodal inputs. It also introduces the Smart Intent Fusion (SIF) architecture and adaptation pipeline.
     \item \textbf{Chapter 4: Smart Intent Fusion (SIF)} \\
     This chapter delves into the specifics of the Smart Intent Fusion (SIF) component, outlining its architecture, the reasoning processes it employs, and how it integrates with the other layers of the framework. It discusses the challenges of fusing diverse input modalities and the strategies employed to ensure accurate and context-aware adaptations as well as dealing with hallucinations from LLMs.
     \item \textbf{Chapter 5: An Adaptive Multimodal GUI Framework using LLMs} \\
@@ -314,9 +302,6 @@ As user interfaces evolve to support an increasing variety of input modalities a
 
 Adaptation can take many forms. For example, a GUI might increase button sizes for users with motor impairments, change color schemes to improve contrast for users with visual impairments, or rearrange content based on the user's task context or dominant hand. On desktop and mobile devices for example, adaptivity has often focused on supporting accessibility and optimizing layouts for different screen sizes or resolutions. Responsive design frameworks, which automatically adjust content and element placement across devices, represent one form of early structural adaptivity. More advanced adaptive systems might learn user habits over time and present solutions based on the users context by for example integrating large language models (LLMs) and advanced AI reasoning \cite{Gajos2008SUPPLE}.
 
-%In contrast, VR and AR systems demand a higher level of adaptivity because of their inherently dynamic and immersive nature. Unlike flat 2D screens, VR environments require spatially distributed UI elements that accommodate 3D space and head or body movement. Adaptive GUIs in these settings can adjust positions, scales, and even interaction modalities in real time to reduce fatigue, improve comfort, and account for tracking inaccuracies \cite{Jerald2015VRBook}. For example, virtual buttons can become larger and more accessible when they are frequently missed or when the system detects shaking or erratic hand movements.
-
-% freeform 
 \subsection{VR Health Applications}
 Virtual reality offers unique opportunities for healthcare applications by enabling immersive, engaging, and personalized experiences for therapy, rehabilitation, and training \cite{Rizzo2017VRHealthcare}. Adaptive GUIs in VR can tailor the interface to the user’s physical and cognitive abilities, dynamically adjusting element sizes, positions, or interaction techniques to accommodate motor impairments, fatigue, or sensory limitations \cite{Freeman2020AdaptiveVR}.  
 For example, VR systems have been developed to assist stroke patients in motor rehabilitation by adjusting the difficulty and interactivity of tasks in real time, providing immediate feedback and encouragement \cite{Laver2017VRStroke}. Adaptive UI elements also support elderly users or individuals with limited VR experience by simplifying controls and enhancing legibility \cite{Slater2020Usability}.  
@@ -478,10 +463,85 @@ At the top, the frontend layer is responsible for rendering the user interface, 
 The system is built around a feedback loop. Each user interaction is captured, processed, and logged along with the resulting adaptation. This log contributes to the user’s profile and informs future adaptation decisions, allowing the interface to become progressively more personalised over time.
 
 To illustrate this flow in practice, consider a motor-impaired user attempting to press a “Lock” button. If the tap misses its target, the event is sent through the adapter, recognised as a miss-tap, and forwarded to the backend. SIF responds by generating an adaptation that increases the size and spacing of the button. The frontend receives this instruction and animates the change in real time. For a hands-free user, the process might begin with a spoken command to “turn on the lamp.” The voice input is captured, standardised, and sent to the backend, which returns instructions to switch the UI into voice mode and activate the lamp control.
+\\\\
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.93,
+    font=\sffamily,
+    node distance=8mm,
+    layer/.style={rounded corners, draw=black!60, very thick, fill=black!3, inner sep=8pt},
+    box/.style={rounded corners, draw=black!70, very thick, fill=white, inner sep=8pt, align=center},
+    arrow/.style={-Latex, line width=0.9pt, shorten >=2pt, shorten <=2pt},
+    ws/.style={arrow, dashed},
+    http/.style={arrow, dotted},
+    note/.style={draw=black!40, fill=black!4, rounded corners, inner sep=4pt, font=\footnotesize},
+    >=Latex
+]
 
-\emph{[Diagram Placeholder]}
+% --- LAYERS -------------------------------------------------------------
+\node[layer, minimum width=16cm, minimum height=4.8cm] (frontend) {};
+\node[anchor=north west] at ([xshift=4pt,yshift=-4pt]frontend.north west) {\small\bfseries Frontend Layer};
 
-The high-level diagram of this flow (Figure X) shows the event path from the frontend to the backend and back again, using WebSocket connections for low-latency adaptations and HTTP for profile management and batch operations. Extensibility points are built into the architecture so that new modalities, reasoning methods, or frontend platforms can be introduced without altering the core event–adaptation pipeline.
+\node[layer, minimum width=16cm, minimum height=4.2cm, below=10mm of frontend] (adapter) {};
+\node[anchor=north west] at ([xshift=4pt,yshift=-4pt]adapter.north west) {\small\bfseries Input Adapter Layer};
+
+\node[layer, minimum width=16cm, minimum height=5.2cm, below=10mm of adapter] (backend) {};
+\node[anchor=north west] at ([xshift=4pt,yshift=-4pt]backend.north west) {\small\bfseries Backend Layer};
+
+% --- FRONTEND CONTENT ---------------------------------------------------
+\node[box, minimum width=3.6cm, minimum height=1.2cm] (ui) at ([xshift=-6cm,yshift=8pt]frontend.center)
+    {UI \\\footnotesize Cards, Buttons, Sliders};
+
+\node[box, minimum width=4.2cm, minimum height=1.2cm, right=17mm of ui] (hooks)
+    {Event Hooks \\\footnotesize onTap / Voice / Gesture};
+
+\node[box, minimum width=4.2cm, minimum height=1.2cm, right=5mm of hooks] (apply)
+    {Apply Adaptations \\\footnotesize Size, Contrast, Navigation mode};
+
+% --- ADAPTER CONTENT ----------------------------------------------------
+\node[box, minimum width=3.8cm, minimum height=1.2cm] (std) at ([xshift=-5.0cm]adapter.center)
+    {Standardise Events \\\footnotesize JSON schema};
+
+\node[box, minimum width=4.2cm, minimum height=1.4cm, right=12mm of std] (transport)
+    {Transport \\\footnotesize WebSocket / HTTP};
+
+% --- BACKEND CONTENT ----------------------------------------------------
+\node[box, minimum width=5.2cm, minimum height=1.6cm, anchor=center] (sif)
+    at (backend.center) {\textbf{Smart Intent Fusion (SIF)} \\\footnotesize Rules + LLM Fusion};
+
+\node[box, minimum width=3.2cm, minimum height=1.2cm, left=10mm of sif] (profiles)
+    {Profile \& History};
+
+\node[box, minimum width=3.2cm, minimum height=1.2cm, right=10mm of sif] (adaptations)
+    {Adaptation Output \\\footnotesize standardised JSON schema};
+
+% --- FLOWS --------------------------------------------------------------
+\draw[arrow] (ui) -- node[above,sloped]{\scriptsize interactions} (hooks);
+\draw[arrow] (hooks.south) -- node[midway,left]{\scriptsize raw inputs} (std.north);
+\draw[arrow] (std) -- (transport);
+
+\draw[ws] (transport.south) -- (sif.north);
+\draw[arrow] (profiles.east) -- (sif.west);
+\draw[arrow] (sif.east) -- (adaptations.west);
+
+\draw[ws] (adaptations.north) |- (transport.east);
+\draw[arrow] (transport.north) -- ([yshift=8mm]transport.north) -| (apply.south);
+
+% --- LEGEND -------------------------------------------------------------
+\node[draw=black!40, rounded corners, inner sep=6pt, below=10mm of backend.south] (legend) {
+    \begin{tikzpicture}[scale=1]
+        \draw[arrow] (0,0) -- (1.0,0) node[right=2pt] {\scriptsize in-process};
+        \draw[ws] (2.8,0) -- (3.8,0) node[right=2pt] {\scriptsize WebSocket};
+    \end{tikzpicture}
+};
+
+\end{tikzpicture}
+\caption{High-level architecture flow: frontend events are standardised and sent to the backend, where reasoning fuses user context and generates adaptation outputs for the UI.}
+\label{fig:architecture-flow}
+\end{figure}
+\newpage
+The high-level architecture diagram (Figure~\ref{fig:architecture-flow}) illustrates the event flow from the frontend layer, where user interactions are captured, through the input adapter layer that standardises events into a JSON schema, and onward to the backend layer for Smart Intent Fusion (SIF) reasoning. Adaptation outputs are sent back to the frontend via WebSocket for real-time UI updates, while HTTP endpoints handle profile management and non-interactive operations. The diagram highlights clear separation of responsibilities, modular extensibility for new modalities or reasoning agents, and platform-agnostic communication, ensuring that the event-adaptation pipeline remains robust and easily extendable across domains.
 
 \textbf{Key Design Principles:}
 \begin{itemize}
@@ -508,7 +568,6 @@ Some scenarios, whether due to physical impairment, temporary constraints (e.g.,
 \paragraph{Why These Groups?}
 These three categories were selected because they cover a spectrum of accessibility challenges that benefit significantly from adaptive, multimodal design: precision (motor), perception (visual), and modality flexibility (hands-free). Each presents distinct technical requirements for sensing, reasoning, and adapting the interface, making them strong drivers for evaluating the framework’s capabilities. By focusing on these groups, the system demonstrates how a single architectural approach can address varied accessibility needs while remaining extensible to other user categories in future work.
 
-% class diagrams
 \section{Frontend Layer: UI Design and Interaction}
 The frontend layer is the user-facing component of the framework, responsible for rendering an adaptive and personalised interface that adjusts dynamically to user needs. Designed for cross-platform deployment, it captures multimodal interactions such as touch, keyboard, voice, or gestures and applies adaptations returned from the backend in real time.
 
@@ -536,7 +595,7 @@ While the precise mechanics of how these adaptations are implemented, triggered 
 \section{Input Adapter Layer: Multimodal Input Processing}
 The Input Adapter Layer acts as the middleware between the user-facing frontend and the reasoning backend, it takes care of bidirectional communication between both layers. Its main role is to take raw interaction data from any modality such as touch, keyboard, voice, or gestures and transform it into a standardised format that the backend can process consistently and vice versa for the frontend. By separating input capture from input interpretation, this layer allows the rest of the system to operate independently of how the input was generated, making it easier to add new modalities in the future.
 
-Central to this layer is the \textbf{JSON Event Contract}, architecturally this is exposed through the \texttt{AdaptiveUI\\Adapter} class, which defines the public interface for sending interaction data to the backend. The primary entry point is the \texttt{sendEvent(Event eventData)} method. This method accepts an \texttt{Event} object the framework’s internal representation of a user interaction, and is responsible for enriching it with contextual information before forwarding it to the backend.
+Central to this layer is the \textbf{JSON Event Contract}, architecturally this is exposed through the \texttt{Adaptive\\UIAdapter} class, which defines the public interface for sending interaction data to the backend. The primary entry point is the \texttt{sendEvent(Event eventData)} method. This method accepts an \texttt{Event} object—the framework’s internal representation of a user interaction—and is responsible for enriching it with contextual information before forwarding it to the backend.
 
 The \texttt{Event} class acts as the architectural contract for interaction data. While its exact schema is defined in the implementation (Chapter 5), at the design level it contains:
 \begin{itemize}
@@ -553,19 +612,74 @@ By enforcing this structure, the adapter guarantees that all events passed to th
 
 The adapter also handles profile verification and creation before sending events. This step ensures that the backend always has a corresponding user profile for contextual reasoning. If the profile does not exist, the adapter triggers its creation using default accessibility settings or a new user profile. These profiles are also bound by a JSON contract to ensure consistency, this design is described in chapter 4. Furthermore, for low-latency adaptation feedback, events are transmitted via a persistent WebSocket connection, while non-real-time operations such as profile updates, HTTP endpoints are used instead.
 
-Lastly, the adapter manages adaptations returned by the SIF backend layer by listening to the WebSocket channel. When the backend sends adaptation instructions which is represented in its own JSON contract (in more detail described later), the adapter maps it to an internal representation based off of the JSON contract that can be easily processed by the frontend. This Adapter pattern design is deliberately chosen and platform-agnostic. Although the current implementation is in Dart for Flutter, the architectural pattern can be replicated in any language or platform by implementing the same \texttt{sendEvent()} contract and adhering to the same event object structure. This separation means that adding a new modality, such as eye tracking or brain-computer interfaces, only requires implementing the modality’s input capture and mapping it to the existing \texttt{Event} format, no changes are needed to the backend or reasoning logic.
-%Diagram?
+Lastly, the adapter manages adaptations returned by the SIF backend layer by listening to the WebSocket channel. When the backend sends adaptation instructions, which is represented in its own JSON contract (in more detail described later), the adapter maps it to an internal representation based off of the JSON contract that can be easily processed by the frontend. This Adapter pattern design is deliberately chosen and platform-agnostic. Although the current implementation is in Dart for Flutter, the architectural pattern can be replicated in any language or platform by implementing the same \texttt{sendEvent()} contract and adhering to the same event object structure. This separation means that adding a new modality, such as eye tracking or brain-computer interfaces, only requires implementing the modality’s input capture and mapping it to the existing \texttt{Event} format, no changes are needed to the backend or reasoning logic.
 
-% \item \textbf{Description:} The diagram illustrates the flow of multimodal inputs through the Input Adapter Layer.
-%     \begin{itemize}
-%         \item \textbf{Inputs:} Icons for touch (finger), keyboard (key), voice (mic), gesture (hand), and future modalities (eye).
-%         \item \textbf{Processing:} A block for \texttt{AdaptiveUIAdapter}, showing input standardization into JSON contract format.
-%         \item \textbf{Outputs:} Arrows to SIF Backend Layer via WebSocket/HTTP, labeled ``Standardized JSON Events''.
-%         \item \textbf{Profile Check:} Connection to MongoDB via \texttt{GET/POST /profile}, labeled ``Profile Validation''.
-%     \end{itemize}
-%     \item \textbf{Purpose:} Visualizes the layer’s role as a modular bridge between the frontend and backend, emphasizing its extensibility and accessibility focus.
-% \end{itemize}
-    
+% High-level Input Adapter Layer diagram (with AdaptiveUIAdapter internals)
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.77, font=\footnotesize, >=latex]
+% Styles
+\tikzset{
+    sbox/.style={draw, rounded corners, align=center, minimum height=6mm, inner sep=2pt, fill=white},
+    pill/.style={draw, rounded corners=2mm, align=center, inner sep=1pt, fill=white},
+    flow/.style={->, thick},
+    ws/.style={flow, dashed},
+    http/.style={flow, dotted},
+    every node/.style={font=\footnotesize}
+}
+
+% --- Left: inputs -------------------------------------------------------
+\node[sbox, minimum width=2.2cm] (touch) {Touch};
+\node[sbox, minimum width=2.2cm, below=1mm of touch] (kb) {Keyboard};
+\node[sbox, minimum width=2.2cm, below=1mm of kb] (voice) {Voice};
+\node[sbox, minimum width=2.2cm, below=1mm of voice] (gest) {Gesture};
+\node[anchor=south west] at ([yshift=1mm]touch.north west) {\footnotesize\bfseries Frontend Inputs};
+
+% --- Center: adapter ----------------------------------------------------
+\node[sbox, minimum width=3.2cm, minimum height=10mm, right=8mm of kb] (adapter)
+    {\textbf{Event} \\ \footnotesize timestamp, user\_id, target \\ \footnotesize JSON Contract};
+
+\node[pill, minimum width=3.2cm, below=3mm of adapter] (enrich)
+    {sendEvent(Event)};
+
+\node[pill, minimum width=3.2cm, below=3mm of enrich] (transport)
+    {Transport\\ \footnotesize WS / HTTP};
+
+\node[anchor=south] at ([yshift=1mm]adapter.north) {\footnotesize\bfseries Input Adapter Layer};
+
+% --- Right: backend + frontend apply -----------------------------------
+\node[sbox, minimum width=3.2cm, minimum height=8mm, right=10mm of adapter] (backend)
+    {\textbf{SIF Backend}};
+
+\node[sbox, minimum width=3.2cm, minimum height=6mm, above=6mm of adapter] (apply)
+    {Frontend Apply\\ \footnotesize Map adaptations};
+
+\node[anchor=south] at ([yshift=1mm]apply.north) {\footnotesize\bfseries Output to UI};
+
+\node[anchor=south] at ([yshift=2mm, xshift=6mm]backend.north) {\footnotesize\bfseries Backend};
+
+% --- Flows --------------------------------------------------------------
+\foreach \n in {touch,kb,voice,gest} {\draw[flow] (\n.east) -- ++(4mm,0) |- (adapter.west);}
+\draw[flow] (adapter.south) -- (enrich.north);
+\draw[flow] (enrich.south) -- (transport.north);
+\draw[ws] (transport.east) -- ++(6mm,0) |- node[pos=0.3, below]{\scriptsize events} (backend.west);
+\draw[ws] (backend.north) -- ++(0,4mm) -| node[pos=0.25, above]{\scriptsize adaptations} (apply.east);
+
+% --- Legend -------------------------------------------------------------
+\node[draw=black!40, rounded corners, inner sep=2pt, below=4mm of transport.south] (legend) {
+    \begin{tikzpicture}[>=latex, scale=0.8]
+        \draw[flow] (0,0) -- (0.7,0) node[right=2pt] {\scriptsize in-process};
+        \draw[ws] (3,0) -- (3.7,0) node[right=2pt] {\scriptsize WebSocket};
+        \draw[http] (6,0) -- (6.7,0) node[right=2pt] {\scriptsize HTTP};
+    \end{tikzpicture}
+};
+
+\end{tikzpicture}
+\caption{High-level flow of the Input Adapter Layer}
+\label{fig:input-adapter-mini}
+\end{figure}
+
+    \newpage
 \section{SIF Backend Layer: Smart Intent Fusion (SIF)}
 
 The SIF backend layer is the reasoning core of the framework, responsible for turning raw user interactions and contextual information into targeted UI adaptations. Operating behind the input adapter, it receives events in the standard JSON contract format and turns them into an internal structured representation (\texttt{Event} object), combines them with the user’s profile and recent interaction history. This forms the basis for the LLM prompts, next it determines the most appropriate changes to apply to the interface using LLM reasoning.
@@ -579,62 +693,6 @@ From an architectural perspective, this layer has two main responsibilities:
 The backend is designed to support multiple reasoning strategies. In its current form, it combines deterministic rules with a multi-agent LLM process called Smart Intent Fusion. Rules handle straightforward accessibility needs; for example, increasing button size after a miss-tap, while the LLM process enables more context-aware adaptations that consider multiple factors simultaneously.
 
 Although the underlying logic is covered in detail in Chapter 4, the architectural position of this layer is central in this framework: it serves as the decision-making hub, fed by standardised events from the input adapter, and returning validated adaptations to the frontend in near real time. This separation allows the reasoning configuration to be changed easily; for example, by swapping models, refining prompts, or integrating new agents without changing the structure of the rest of the framework.
-
-% \textbf{Agent-Based Architecture:}
-% To maximize flexibility and maintainability, the backend employs a multi-agent extension architecture (MA-SIF), where specialized LLM agents are responsible for different adaptation domains: \begin{itemize} \item \textbf{UI Agent:} Focuses on visual and interactive adaptations, such as increasing font size, contrast, or button scale for accessibility. \item \textbf{Geometry Agent:} Handles spatial adaptations, including element resizing, spacing adjustments, and layout simplification. \item \textbf{Input Agent:} Manages input modality switching (e.g., from touch to voice), gesture interpretation, and error recovery for hands-free or motor-impaired users. \item \textbf{Validator Agent:} Always required. Ensures that suggested adaptations are valid, non-conflicting, and compliant with accessibility guidelines. It can change or add fields, but not remove nor add adaptations.
-%  \end{itemize} Each agent is configured via domain-specific prompts in \texttt{sif\_config.json}, enabling rapid iteration and extensibility for new adaptation strategies or modalities. This design allows the backend to evolve without major architectural changes, simply by updating agent prompts or adding new agents as needed to accommodate the developer's needs. The validation agent plays a crucial role in ensuring that adaptations proposed by the other agents do not conflict or duplicate efforts, maintaining a coherent user experience and is thus required.
-
-% \textbf{Basic example of a 2-agent configuration (validator excluded):}
-% \begin{lstlisting}[language=json,firstnumber=1]
-% {
-%   "ui_agent": {
-%     "focus": "visual adaptations",
-%     "model": "gemini-1.5-flash",
-%     "allowed_actions": ["increase_size", "increase_contrast", "reposition_element"],
-%     "prompt": "Given the event data, suggest UI adaptations for accessibility. Consider user profile and interaction history."
-%   },
-%   "geometry_agent": {
-%     "focus": "spatial adaptations",
-%     "model": "gemini-1.5-flash",
-%     "allowed_actions": ["resize_element", "adjust_spacing", "simplify_layout"],
-%     "prompt": "Analyze the UI layout and suggest spatial adaptations to improve usability for motor-impaired users."
-%   },
-%   "validator_agent": {
-%     "model": "gemini-1.5-pro",
-%     "allowed_actions": ["switch_to_voice", "interpret_gesture", "recover_from_error", "increase_size", "increase_contrast", "reposition_element","resize_element", "adjust_spacing", "simplify_layout"],
-%     "prompt": "Validate proposed adaptations for conflicts, duplicates and inconsistencies based on user context, events and interaction history."
-%   }
-% }
-% \end{lstlisting}
-
-% \textbf{Contextual Reasoning and Personalization:}
-% The LLM agents do not operate in isolation; they fuse real-time events with user profiles and interaction history stored in MongoDB. This enables the backend to personalize adaptation decisions based on individual preferences, accessibility flags, and behavioral trends. For example, if a user with motor impairments repeatedly misses a button, the UI agent may suggest enlarging the button, while the input agent may recommend switching to voice mode. The validator agent then ensures these adaptations are compatible and beneficial.
-
-% \textbf{Handling Ambiguity and Edge Cases:}
-% LLMs excel at interpreting ambiguous or incomplete input, making them ideal for accessibility scenarios where user intent may not be clearly expressed. The backend can handle vague voice commands, noisy gesture data, or conflicting input events by leveraging the LLM’s reasoning capabilities and fallback rules. In cases where the LLM is unable to generate a confident adaptation, deterministic rule-based logic ensures baseline accessibility is maintained.
-
-% \textbf{Extensibility and Future-Proofing:}
-% The agent-based LLM design allows the backend to easily incorporate new modalities (e.g., eye tracking, bio-signals) and adaptation strategies without major architectural changes. By updating agent prompts and event schemas, the system can evolve to support emerging accessibility technologies and user needs.
-
-% \textbf{Summary:}
-% Overall, the LLM-driven backend transforms static UI adaptation into a dynamic, context-aware process. By fusing multimodal input, user context, and agent-based reasoning, it delivers personalized, robust, and extensible accessibility solutions for a wide range of users and platforms.
-
-% \subsection{Heatmap Analysis}
-
-% To further refine adaptation decisions, the backend can analyze interaction heatmaps derived from user event logs. By aggregating tap coordinates and gesture paths, the system identifies problematic UI regions (e.g., frequently missed buttons) and adapts layouts or element sizes accordingly. This data-driven approach supports continuous improvement and personalization, especially for users with evolving accessibility needs. By using tap frequency, the backend can suggest adaptations like repositioning elements or enlarging hit areas, enhancing usability.
-
-% \subsection{Integration with Profiles and History}
-
-% User profiles, stored in MongoDB, encapsulate accessibility needs, input preferences, UI settings, and recent interaction history. Upon receiving an event, the backend retrieves the relevant profile and fuses it with real-time input to contextualize adaptation decisions. Interaction history enables the backend to learn from past behavior, supporting progressive personalization (e.g., permanently switching to voice mode after repeated motor-impaired interactions).
-
-% \subsection{Communication and Endpoints}
-
-% The backend exposes WebSocket (\texttt{/ws/adapt}) and HTTP (\texttt{/profile}, \texttt{/context}) endpoints for real-time and batch processing. Events are validated, enriched, and processed asynchronously, with adaptation actions returned to the frontend for immediate UI updates. Profile management endpoints ensure user context is always available, supporting seamless onboarding and continuous learning.
-
-% \subsection{Key Design Considerations}
-
-% \begin{itemize} \item \textbf{Accessibility Focus:} All adaptation logic prioritizes WCAG-compliant features and user-specific needs. \item \textbf{Extensibility:} Modular agent design and JSON contracts allow easy integration of new modalities and adaptation strategies. \item \textbf{Reliability:} Rule-based logic ensures robust baseline adaptations; LLMs provide creative, context-aware enhancements. \item \textbf{Continuous Learning:} Feedback loops and history-driven updates enable the system to evolve with user behavior. \item \textbf{Scalability:} Asynchronous processing and MongoDB storage support high event volumes and large user bases. \end{itemize}
-
 
 \section{User Profiles and Context Modeling}
 User profiles form the backbone of the framework’s personalisation capability. They store accessibility preferences, interaction patterns, and contextual data that allow the system to adapt the interface to an individual’s needs over time. The profile is not a static record, it evolves as the user interacts with the system, incorporating both explicit configuration and implicit observations from their behaviour.
@@ -655,60 +713,6 @@ The architecture treats profiles as a shared resource between all layers:
 \end{itemize}
 By integrating profile and context information into every stage of the adaptation pipeline, the framework moves beyond static changes and supports continuous, data-driven personalisation. The specific data schema, storage mechanisms, and update strategies are described in detail in Chapters 4 and 5.
 
-% \subsection{Profile Structure}
-% User profiles are stored in MongoDB’s \texttt{profiles} collection, indexed by \texttt{user\_id} for efficient retrieval. Each profile is a JSON document with the following structure:
-% \begin{itemize}
-%     \item \textbf{user\_id:} A unique identifier (e.g., UUID or username) to associate events and adaptations with a specific user.
-%     \item \textbf{accessibility\_needs:} Boolean flags indicating specific requirements, such as \texttt{motor\_impaired: true}, \texttt{visual\_impaired: false}, \texttt{hands\_free\_preferred: true}. These guide adaptation prioritization (e.g., larger buttons for motor-impaired users).
-%     \item \textbf{input\_preferences:} Specifies the preferred input modality (e.g., \texttt{preferred\_modality: "voice"}), influencing mode-switching decisions (e.g., enabling voice navigation for hands-free users).
-%     \item \textbf{ui\_preferences:} Stores UI settings like \texttt{font\_size} (e.g., 16), \texttt{contrast\_mode} (e.g., ``normal''), and \texttt{button\_size} (e.g., 1.0), serving as defaults for rendering and adaptation.
-%     \item \textbf{interaction\_history:} A capped array (10 events) of past interactions of the user with the UI. This stores all the \texttt{Event} data for those 10 events.
-%     This supports continuous learning by tracking user behavior.
-% \end{itemize}
-% \textbf{Example of a user profile:}
-% \begin{lstlisting}[language=json,firstnumber=1]
-% {
-%   "user_id": "user_123",
-%   "accessibility_needs": {
-%     "motor_impaired": true,
-%     "visual_impaired": false,
-%     "hands_free_preferred": true
-%   },
-%   "input_preferences": {
-%     "preferred_modality": "voice"
-%   },
-%   "ui_preferences": {
-%     "font_size": 16,
-%     "contrast_mode": "normal",
-%     "button_size": 1.0
-%   },
-%   "interaction_history": [
-%     {"event_type": "miss_tap", "target_element": "lamp",
-%     "timestamp": "2025-08-04T14:41:00Z"},
-%     {"event_type": "voice", "target_element": "lock",
-%     "metadata": {"UI_element": "button", "command": "unlock"}, "timestamp": "2025-08-04T14:42:00Z"}
-%   ]
-% }
-% \end{lstlisting}
-
-% \subsection{Context Modeling and Usage}
-% Context modeling integrates user profiles with real-time events to provide a comprehensive view for \textbf{Smart Intent Fusion}:
-% \begin{itemize}
-%     \item \textbf{Profile Retrieval:} On receiving an event (via \texttt{/ws/adapt} or \texttt{/context}), the backend queries MongoDB for the user’s profile using \texttt{user\_id}. If absent, a default profile is created via \texttt{POST /profile}.
-    
-%     \item \textbf{History Management:} Interaction history is updated asynchronously using MongoDB’s \texttt{\$push} and \texttt{\$slice} operators to append new events while capping at 20 entries for efficiency. This ensures relevant context without excessive storage.
-
-%     \item \textbf{Intent Contextualization:} The SIF Backend Layer uses profile data (e.g., \texttt{motor\_impaired: true}) and history (e.g., frequent miss-taps) to inform LLM reasoning.
-%     \begin{itemize}
-%         \item For example, repeated miss-taps on the Thermostat slider for a motor-impaired user may trigger \texttt{increase\_slider\_size} or \texttt{switch\_mode: voice}.
-%     \end{itemize}
-
-%     \item \textbf{Continuous Learning:} Events are logged in the history, enabling the system to refine future suggestions.
-%     \begin{itemize}
-%         \item For example, permanently switching to voice mode after increasing button size multiple times.
-%     \end{itemize}
-% \end{itemize}
-
 \section{Dynamic Adaptation Mechanisms}
 The dynamic adaptation mechanisms are the part of the framework responsible for translating reasoning outputs from the backend into real-time, personalised changes for the user interface. Operating within the SIF backend layer, they take standardised events from the input adapter, combine them with profile and context data, and decide on the most suitable adaptation. These decisions are returned as structured actions to the input adapter, which maps the JSON contract to an internal representation that is then applied immediately by the frontend using callbacks.
 
@@ -728,22 +732,31 @@ The adaptation pipeline follows a structured lifecycle from input capture to UI 
     \item \textbf{Application and logging:} The frontend applies the adaptations immediately, while the backend logs both the event and its outcome for future learning.
 \end{enumerate}
 
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=0.05\textwidth,
+    font=\small,
+    >=latex,
+    every node/.style={draw, rounded corners, fill=gray!10, minimum width=0.18\textwidth, minimum height=1cm, align=center}
+]
+    % Nodes
+    \node (input) {Input Event \\ + Context Gathering};
+    \node[right=of input] (reason) {Intent Interpretation\\(rules + LLM)};
+    \node[right=of reason] (adapt) {Adaptation Generation\\(actions)};
+    \node[right=of adapt] (apply) {Apply \& Log\\(UI update, logging)};
+
+    % Arrows
+    \draw[->, thick] (input) -- (reason);
+    \draw[->, thick] (reason) -- (adapt);
+    \draw[->, thick] (adapt) -- (apply);
+\end{tikzpicture}
+\caption{Adaptation pipeline flow.}
+\label{fig:adaptation-pipeline-flow}
+\end{figure}
+
 \subsection{Supported Adaptation Actions}
-The framework supports a defined set of adaptation types that cover common accessibility needs. These include scaling or spacing adjustments for improved touch accuracy, font and contrast changes for better readability, and modality switches for hands-free interaction. The action set is deliberately kept broad enough to handle varied contexts, yet constrained enough to ensure reliable rendering across platforms.
-% The framework supports a set of predefined actions designed for accessibility in the Adaptive Smart Home Controller, designed to ensure compatibility with the Frontend Layer’s rendering capabilities and partial alignment with WCAG 2.1 guidelines (e.g., 1.4.3 Contrast Minimum, 2.5.5 Target Size). These actions are generated by Smart Intent Fusion (SIF) and its multi-agent extension (MA-SIF), leveraging rule-based logic, Gemini LLM reasoning, user profiles and interaction history to address the needs of motor-impaired, visually impaired, and hands-free users.
-% \begin{itemize}
-%     \item \textbf{increase\_button\_size}: Scales buttons (e.g., Lamp’s On/Off toggle) by a factor (e.g., 1.5x) to increase hit areas, aiding motor-impaired users with dexterity challenges. Applied via smooth animations (e.g., Flutter’s \texttt{AnimatedScale}) for seamless user experience.
-%     \item \textbf{increase\_font\_size}: Increases text size (e.g., status “Locked” from 16pt to 18pt) to improve readability for visually impaired users, ensuring compliance with WCAG’s text resizing guidelines.
-%     \item \textbf{increase\_slider\_size}: Enlarges slider thumbs (e.g., Thermostat’s temperature control) to enhance precision for motor-impaired users, using custom rendering for visual feedback.
-%     \item \textbf{increase\_contrast}: Switches to high-contrast mode (e.g., black backgrounds for buttons and text) to improve visibility for visually impaired users, aligning with WCAG contrast requirements.
-%     \item \textbf{highlight\_border}: Applies a bolder border to buttons, aiding visually impaired and motor-impaired users by enhancing element visibility (WCAG 2.4.7 Focus Visible).
-%     \item \textbf{adjust\_spacing}: Increases spacing between UI elements (e.g., device cards in the ListView) to reduce accidental taps for motor-impaired users, improving target accessibility (WCAG 2.5.5 Target Size).
-%     \item \textbf{show\_tooltip}: Displays contextual tooltips (e.g., “Try saying ‘Unlock’”) near UI elements when modality struggles are detected (e.g., repeated miss-taps), guiding hands-free or motor-impaired users to alternative inputs like voice (WCAG 2.5.3 Label in Name).
-%     \item \textbf{switch\_mode}: Shifts to keyboard, voice or gesture navigation mode for hands-free users (e.g., after repeated miss-taps), enabling more seamless interaction without physical input.
-%     \item \textbf{trigger\_button}: Automatically activates buttons (e.g., toggles Lamp to “On”) when intent is clear from multimodal inputs (e.g., voice “Turn on” + gesture), reducing interaction barriers.
-%     \item \textbf{simplify\_layout}: Reduces UI complexity (e.g., fewer UI elements) for hands-free or cognitively impaired users, streamlining interaction for accessibility.
-% \end{itemize}
-% These adaptation actions form the cornerstone of the framework’s accessibility-driven approach, addressing diverse user needs in the smart home controller. Each action is carefully designed to align with WCAG 2.1 guidelines, ensuring inclusivity for motor-impaired users (e.g., larger buttons/sliders, increased spacing), visually impaired users (e.g., high-contrast modes, highlighted borders), and hands-free users (e.g., tooltips, mode switching).
+The framework supports a defined set of adaptation types that cover common accessibility needs. These include scaling or spacing adjustments for improved touch accuracy, font and contrast changes for better readability, and modality switches for hands-free interaction. The action set is deliberately kept broad enough to handle varied contexts, yet constrained enough to ensure reliable rendering across platforms (more details in Section 5.7).
 
 \subsection{Continuous Learning and Feedback Loop}
 A central design principle is that adaptations are not static changes. The system maintains a history of recent interactions for each user, enabling it to identify recurring patterns such as frequent miss-taps or repeated modality switches. When such patterns are detected, the backend can suggest persistent adjustments; for example, permanently enlarging a frequently used UI element, reducing the need for smaller repeated actions.
@@ -756,12 +769,6 @@ A central design principle is that adaptations are not static changes. The syste
     \item \textbf{Extensibility:} The action set and event format are flexible enough to incorporate new adaptation types and modalities in future deployments.
 \end{itemize}
 By combining immediate, context-aware changes with a persistent feedback loop, the dynamic adaptation mechanisms give the framework its ability to evolve alongside the user’s needs, making it more effective over time.
-
-% A core strength of the framework lies in its continuous learning and feedback loop, which enables dynamic refinement of adaptation strategies over time. Every user interaction is systematically logged in MongoDB (within the \texttt{logs} collection and mirrored in \texttt{adaptation\_log.jsonl}), ensuring that contextual details—such as a miss-tap on the Thermostat—are persistently captured for analysis. These events are not only stored for traceability but are also appended to the user’s profile history, maintained as a capped array to preserve the most recent interactions while optimizing storage and retrieval efficiency.
-
-% This historical data serves as a foundation for the learning mechanism. The large language model (LLM) regularly analyzes patterns within the interaction history, identifying trends such as frequent miss-taps or repeated modality switches. By recognizing these behavioral signals, the system can proactively suggest and implement permanent UI adaptations, such as simplifying the layout or switching to a more suitable input mode for the user.
-
-% Furthermore, the feedback loop supports ongoing evaluation of the framework’s effectiveness. By correlating logged events with adaptation outcomes, the system can compute metrics like adaptation accuracy (e.g., the proportion of correct button triggers) and user performance improvements (e.g., reduction in miss-taps over time). This data-driven approach not only validates the impact of adaptations but also guides future refinements, ensuring that the framework evolves in response to real user needs and behaviors.
 
 \section{Chapter Summary}
 This chapter has presented the system design and architecture of the multimodal AI-driven framework for dynamic UI adaptation, focusing on its ability to deliver personalised, accessibility-oriented solutions for motor-impaired, visually impaired, and hands-free users. The framework is built around a modular three-layer architecture: the Frontend Layer, Input Adapter Layer, and SIF Backend Layer that enables the seamless integration of multiple input modalities, including touch, voice, and gestures, and the delivery of real-time UI adaptations.
@@ -805,11 +812,30 @@ For example:
 
 In the context of this thesis, SIF is not only an internal backend feature, it is the core research contribution.
 The remainder of this chapter expands on the theoretical underpinnings of SIF, its integration with user profiles and multimodal fusion, the prompt engineering strategies for guiding LLM behaviour, the architecture of its multi-agent extension, and the performance metrics used to evaluate its effectiveness.
-% Event Flow Diagram: This diagram should be abstract, without method names
-    % Input from the adapter (via JSON contract)
-    % Context/profile retrieval from MongoDB
-    % Rule-based + LLM + MA-SIF processing
-    % Adaptation output sent to the frontend
+% Event Flow Diagram: Abstract SIF Reasoning Pipeline (Vertical Layout)
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=1.8cm,
+    font=\small,
+    >=latex,
+        every node/.style={font=\footnotesize},
+    sbox/.style={draw, rounded corners, fill=gray!10, minimum width=5.5cm, minimum height=1.1cm, align=center}
+]
+    % Nodes (vertical stack)
+        \node [sbox] (adapter) {Input Adapter Layer \\ \footnotesize (JSON event)};
+        \node [sbox, below=of adapter] (profile) {Profile \& History \\ \footnotesize (MongoDB)};
+        \node [sbox, below=of profile] (reason) {SIF Reasoning \\ \footnotesize (Rules + LLM + MA-SIF)};
+        \node [sbox, below=of reason] (output) {Adaptation Output \\ \footnotesize (JSON to adapter to Frontend)};
+
+        % Arrows
+        \draw[->, thick] (adapter) -- (profile) node[midway,right]{event};
+        \draw[->, thick] (profile) -- (reason) node[midway,right]{enrich context};
+        \draw[->, thick] (reason) -- (output) node[midway,right]{adaptation(s)};
+\end{tikzpicture}
+\caption{Abstract event flow in Smart Intent Fusion: events from the Input Adapter are enriched with profile/context, processed by rule-based and LLM/MA-SIF reasoning, and returned as adaptation outputs to the frontend.}
+\label{fig:sif-event-flow}
+\end{figure}
 
 \section{Theoretical Foundations of Smart Intent Fusion}
 The idea behind Smart Intent Fusion is simple:
@@ -905,7 +931,7 @@ In the backend, each profile is a JSON document in the \texttt{profiles} collect
 }
 \end{lstlisting}
 The full schema with all supported fields and metadata is given in Chapter 5.
-\newpage
+
 This design keeps it simple but flexible. Architecturally, each profile contains:
 \begin{itemize}
     \item \texttt{accessibility\_needs}: flags that tell SIF what kind of adaptations to prioritise.
@@ -927,6 +953,7 @@ Some examples of influenced decisions:
 
 \textbf{Example 1: Motor-impaired user with repeated miss-taps}\\
 If the last three events in history are miss-taps on the same “Unlock/Lock” button, and \texttt{motor\_impaired} is true in their profile, SIF might do two things at once:
+\newpage
 \begin{lstlisting}[language=json, caption={Possible motor-impaired user adaptations}]
 [
   {"action": "increase_button_size", "target": "button_unlock", "value": 1.5, "reason": "Multiple miss-taps detected, enlarging button for better accessibility"},
@@ -1139,6 +1166,10 @@ In practice, SIF doesn’t fully choose between the two, it blends them:
 \end{enumerate}
 This ensures that basic accessibility features always work, while still allowing for creative, context-aware adaptations when needed. In other words, the rules form the “floor” of the system (the minimum guaranteed level of accessibility) while the LLM can raise the ceiling by adapting to more complex, ambiguous, or novel situations. Users are never left waiting for AI responses that might never come, and the system remains responsive even in worst-case scenarios.
 
+\subsection{Heatmap Analysis}
+
+To further refine adaptation decisions, the backend can analyze interaction heatmaps derived from user event logs. By aggregating tap coordinates and gesture paths, the system identifies problematic UI regions (e.g., frequently missed buttons) and adapts layouts or element sizes accordingly. This data-driven approach supports continuous improvement and personalization, especially for users with evolving accessibility needs. By using tap frequency, the backend can suggest adaptations like repositioning elements or enlarging hit areas, enhancing usability.
+
 \section{Multi-Agent Smart Intent Fusion (MA-SIF)}
 While a single LLM can process events and suggest adaptations, it often tries to “do everything” at once.
 That makes it harder to constrain, more prone to hallucinations, less predictable and in some cases slower (depending on workload).
@@ -1179,6 +1210,71 @@ Once each agent has processed the event, their suggestions are collected. Import
 
 If the validator itself fails, either due to malformed output or a processing error, the system does not discard all results. Instead, it falls back to returning the raw, unvalidated suggestions from the agents since the output may still be more useful than rule-based alternatives. Only if all agents fail to produce output does the framework revert to the rule-based \texttt{mock\_fusion} fallback. This layered approach ensures that useful adaptations are preserved whenever possible, rather than being lost due to a single point of failure.
 
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    scale=0.93,
+    font=\small,
+    >=Latex,
+    node distance=6mm and 10mm,
+    block/.style={draw, rounded corners=4pt, thick, align=center, minimum height=6mm, minimum width=27mm, inner sep=1mm},
+    input/.style={block, fill=blue!15},
+    agent/.style={block, fill=green!15, minimum width=30mm},
+    validator/.style={block, fill=yellow!20, minimum width=34mm},
+    fallback/.style={block, fill=gray!15, minimum width=30mm},
+    suggest/.style={block, fill=gray!20, minimum width=34mm},
+    final/.style={block, fill=pink!20, minimum width=34mm},
+    line/.style={->, thick},
+    dline/.style={->, thick, dashed}
+]
+
+% Inputs (left column)
+\node[input] (events) {User Events};
+\node[input, below=3mm of events] (profile) {User Profile\\+ History};
+
+% Agents (middle column)
+\node[agent, right=10mm of events] (ui) {UI Agent\\(Visual)};
+\node[agent, below=1.5mm of ui] (geo) {Geometry Agent\\(Spatial)};
+\node[agent, below=1.5mm of geo] (inp) {Input Agent\\(Modality)};
+
+% Validator + fallback (right column)
+\node[validator, right=10mm of geo] (val) {Validator Agent\\(Validate, Resolve)};
+\node[fallback, below=5mm of val] (fb) {Rule-Based Fallback};
+
+% Results (far right)
+\node[suggest, right=8mm of val, yshift=4mm] (comb) {Combined Suggestions\\(Validator Fail)};
+\node[final, right=8mm of val, yshift=-8mm] (final) {Final Adaptations};
+
+% Inputs to agents (direct arrows)
+\draw[line] (events.east) -- (ui.west);
+\draw[line] (events.east) -- (geo.west);
+\draw[line] (events.east) -- (inp.west);
+
+\draw[line] (profile.east) -- (ui.west);
+\draw[line] (profile.east) -- (geo.west);
+\draw[line] (profile.east) -- (inp.west);
+
+% Agents to validator
+\draw[line] (ui.east) -- (val.west);
+\draw[line] (geo.east) -- (val.west);
+\draw[line] (inp.east) -- (val.west);
+
+% All agents fail -> fallback
+\draw[dline] ([xshift=2mm]geo.east) to[out=-15,in=170] node[above,pos=0.7,xshift=4.5mm]{All fail} (fb.west);
+
+% Validator success/fail
+\draw[line] (val.east) -- node[above,pos=0.6, xshift=4.5mm]{Success} (final.west);
+\draw[dline] (val.north east) --  node[above,pos=0.3]{Fail} (comb.west);
+
+% Combined/fallback to final
+\draw[line] (comb.south) -- (final.north);
+\draw[line] (fb.east) -- (final.west);
+
+\end{tikzpicture}
+\caption{Multi-agent SIF adaptation flow: user events and profile/history are processed by specialised agents, validated, and merged into final adaptations. Fallbacks ensure robustness.}
+\label{fig:ma-sif-flow}
+\end{figure}
+
 \subsection{Dynamic Configuration}
 A key advantage of MA-SIF is that it is configured almost entirely through the \texttt{sif\_config.json}, making it very adaptable without requiring backend code changes. Each agent’s behaviour can be fine-tuned individually including its allowed actions, model type, temperature, thinking budget, and timeout, simply by editing the configuration file. This flexibility extends to the ability to add new agents or duplicate existing ones with different focuses.
 
@@ -1188,7 +1284,42 @@ This externalised configuration is particularly valuable in accessibility resear
 For example, during a live user study, the prompt for the UI Agent can be adjusted to emphasise high-contrast themes over font scaling without redeploying the backend. 
 Similarly, experimental agents for new modalities such as gaze tracking or haptic feedback can be added in minutes, allowing researchers or developers to test new adaptation strategies with minimal downtime.
 
-%config? + model settings or in chapter 3
+\begin{lstlisting}[language=json,firstnumber=1, caption={Basic example of a 2-agent (+ validator) configuration}]
+{
+  "ui_agent": {
+    "model_settings": {
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2,
+        "thinking_budget": 0
+    },
+    "focus": ["visual adaptations"],
+    "allowed_actions": ["increase_size", "increase_contrast", "reposition_element"],
+    "prompt": "Given the event data, suggest UI adaptations for accessibility. Consider user profile and interaction history."
+  },
+  "geometry_agent": {
+    "model_settings": {
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2,
+        "thinking_budget": 0
+    },
+    "focus": ["spatial adaptations"],
+    "model": "gemini-2.5-flash-lite",
+    "allowed_actions": ["resize_element", "adjust_spacing", "simplify_layout"],
+    "prompt": "Analyze the UI layout and suggest spatial adaptations to improve usability for motor-impaired users."
+  },
+  "validator_agent": {
+    "model_settings": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.3,
+        "thinking_budget": -1,
+        "timeout": 30
+    },
+    "allowed_actions": ["switch_to_voice", "interpret_gesture", "recover_from_error", "increase_size", "increase_contrast", "reposition_element","resize_element", "adjust_spacing", "simplify_layout"],
+    "prompt": "Validate proposed adaptations for conflicts, duplicates and inconsistencies based on user context, events and interaction history."
+  }
+}
+\end{lstlisting}
+Each agent configuration above specifies its model, temperature, and thinking budget, which control the LLM's behavior and output style. The \texttt{focus} field describes the agent's adaptation domain, while \texttt{allowed\_actions} restricts the set of suggestions to ensure predictable outputs. The \texttt{prompt} guides the agent's reasoning, and is dynamically extended at runtime with the current event (see Chapter 5), user profile, and interaction history. This enables agents to generate personalized adaptation suggestions based on live user context, rather than relying solely on static instructions.
 
 \subsection{Example in Action}
 Consider a user with both \texttt{visual\_impaired: true} and \texttt{hands\_free\_preferred: true} in their profile. They attempt to turn on the lights by tapping near the “Turn on” button but miss slightly, then say “Turn on the lights” almost immediately afterwards. The UI Suggestion Agent, informed by the user’s visual impairment, recommends switching to high-contrast mode and displaying a tooltip to make it easier to know the app's workings next time. The Geometry Suggestion Agent identifies the repeated miss and proposes increasing the button size. The Input Suggestion Agent recognises the voice command and suggests both switching to voice mode and triggering the button directly.
@@ -1365,7 +1496,7 @@ Each response was classified as:
     \item \texttt{mock\_rule\_fallback} (all agents failed; rule engine response).
 \end{itemize}
 The strict JSON output schema used in the backend was enforced to compute “schema-valid \%”. To avoid artificial timeouts during heavier MA-SIF runs, client keep-alive pings were disabled. Run sizes were intentionally small (6-10 events) due to API free-tier limits; the goal is to surface architectural trends, not saturate the service.
-\newpage
+
 \subsection*{Configurations}
 \begin{table}[h]
 \centering
@@ -1496,7 +1627,7 @@ Even with some agent API errors, the validator still made valid final lists. Ret
 \paragraph{Conclusion}
 Use MA-SIF for better quality and consistency, but only deal with the slower latency when it’s a necessity. Adding local rules will help keep the UI smooth for accessibility needs. As profiles and histories get bigger, there will be small but steady improvements in the reasoning quality over time, although the validator’s budget is still the main way to control accuracy. Using the gemini-pro model could potentially improve adaptations even further in important scenarios.
 
-\section{Limitations and Challenges of LLM Integration}
+\section{Limitations and Solutions of LLM Integration}
 Large Language Models make Smart Intent Fusion far more capable than any static rule set, but they also introduce new dependencies, performance constraints, and reliability issues. In this thesis, all reasoning was powered by the Gemini API, and while this enabled rapid development, it also shaped both the strengths and weaknesses of the final system.
 
 \subsection{LLM selection}
@@ -1544,7 +1675,7 @@ Overall, Smart Intent Fusion was presented not just as an algorithm, but as a mo
 % diagrams!
 % Move to Chapter 5 (implementation)
     % Full, unabridged prompts for each agent from sif_config.json.
-    % Exact numeric parameter configs for all agents — here in 4.7, keep just the validator’s example as you have it, but put the full table or config file in Chapter 5.
+    % Exact numeric parameter configs for all agents + defaults -> tabel
     % Any concrete backend code for prompt injection.
 \chapter{An Adaptive Multimodal GUI Framework using LLMs}
 
@@ -1591,7 +1722,7 @@ As a loading indicator, the frontend displays rotating linear gradient border ar
 
 \textbf{Input Capture}: The frontend layer captures raw inputs from multiple modalities, including touch, voice, and gestures. Each modality is handled through specific Flutter widgets and event listeners:
 \begin{itemize}
-    \item \textbf{Touch}: Taps or miss-taps on buttons/sliders, detected via for example Flutter’s \verb|GestureDetector| or \verb|onPressed| callbacks.
+    \item \textbf{Touch}: Taps or miss-taps on buttons/sliders, detected via Flutter’s \verb|GestureDetector| or \verb|onPressed| callbacks. Miss-taps are mocked.
     \item \textbf{Voice}: Commands like “Turn on lamp” or “Unlock door”, mocked for this thesis but extensible to libraries like \verb|speech_to_text| or Web Speech API.
     \item \textbf{Gestures}: Hand movements (e.g., point, swipe) via mock events, with future support for MediaPipe.
 \end{itemize}
@@ -1662,11 +1793,16 @@ The fusion step supports two paths. A multi‑agent configuration, MA‑SIF, is 
 
 A single‑agent SIF path is also available. It produces a complete adaptation list in one call and is useful when quick iteration is preferable over agent specialisation. Both paths share the same I/O schema, which keeps the frontend indifferent to which reasoning strategy is currently set to active.
 
+% config + default values and stuff
+
 \subsection{Structured outputs and guardrails}
 To reduce hallucinations and schema drift, the backend requests JSON‑typed responses from the LLM with an explicit schema and allowed actions, as described earlier in chapter 4. The prompt defines required fields, expected types, and a one‑of constraint that demands either a numeric \texttt{value} or a categorical \texttt{mode}. Agent prompts are intentionally narrow, which improves determinism. The validator prompt is broader, since it must adjust conflicting suggestions and justify final choices. Despite these controls, invalid outputs still occur occasionally. However, the schema can be enforced at two distinct levels: by the agents and by the validator. This dual-level approach makes it easier for the validator to ensure that the agents' adaptations are compliant. Furthermore, it has a defensive layer that falls back to simple rules if all LLM validation fails.
 
 \subsection{Rule‑based fallback and resilience}
 A lightweight rule engine acts as a safety net when LLM calls time out or the provider is unavailable. It covers essential accessibility behaviours, for example increasing button size after a miss‑tap, switching to voice for users flagged as motor‑impaired, or enabling high‑contrast mode for visually impaired profiles. These rules are intentionally conservative, they guarantee progress without surprising the user, and they keep the implementation usable in environments with unstable connectivity.
+
+\subsection{Heatmap Analysis}
+Due to time constraints, heatmap analysis is not implemented. This is a potential area for future work, as understanding user interaction patterns and frequent touch points, could further enhance the system's adaptability. Heatmap analysis has a big potential in the repositioning of UI elements based on the heatmap data, this could improve accessibility for users with specific needs like gesture-based inputs. Since the repositioning of elements is not supported in this first iteration, the focus remains on immediate adaptation strategies, which made heatmap analysis out of scope.
 
 \subsection{Latency, partial results, and error handling}
 The WebSocket loop is designed to return something useful as quickly as possible. Agent calls run in sequence within short time budgets. If one agent fails to respond, the validator operates on the remaining suggestions rather than waiting indefinitely. The backend aims to keep per‑event processing below the threshold where users notice a lag on interaction, which is important for accessibility, particularly when enlarging targets immediately after an error. In practice, most adaptations are returned quickly by the smaller suggestion agents, while validation can become the slowest step in complex scenes. When validation exceeds its budget the backend returns the best available subset, then continues to append the event to the user’s history so future interactions benefit from the context.
@@ -1688,10 +1824,25 @@ To optimise performance and safety, all profile mutations are atomic, relying on
 
 This implementation ensures that every adaptation decision, whether produced by a static rule or the multi-agent LLM pipeline, is grounded in the user’s persisted profile and immediate interaction context, enabling consistent, personalised, and stateful UI behaviour across sessions.
 
-\section{Dynamic Adaptation Mechanisms: Implementation Details}
+\section{Dynamic Adaptation Mechanisms Implementation}
 The dynamic adaptation mechanism is the final stage in the interaction pipeline, where decisions made by the backend are translated into immediate and visible changes in the user interface. In the current implementation, this process is tightly integrated with Flutter’s reactive widget system, allowing adaptation actions to be applied without forcing full UI rebuilds or navigation resets.
 
 When the backend sends an adaptation list over the WebSocket connection, the frontend parses each action and routes it to the relevant UI element. Actions are defined in the strict JSON schema described earlier, containing the \texttt{action} type, a \texttt{target} identifier, a \texttt{value} or \texttt{mode}, and a human-readable \texttt{reason} and \texttt{intent} it inferred from the adaptation. This standardisation allows the same adaptation handler to process diverse actions without requiring modality-specific logic.
+
+The framework supports a set of predefined actions designed for accessibility in the Adaptive Smart Home Controller and partial alignment with WCAG 2.1 guidelines (e.g., 1.4.3 Contrast Minimum, 2.5.5 Target Size). These actions are generated by Smart Intent Fusion (SIF) and its multi-agent extension (MA-SIF), leveraging rule-based logic, Gemini LLM reasoning, user profiles and interaction history to address the needs of motor-impaired, visually impaired, and hands-free users.
+\begin{itemize}
+    \item \textbf{increase\_button\_size}: Scales buttons (e.g., Lamp’s On/Off toggle) by a factor (e.g., 1.5x) to increase hit areas, aiding motor-impaired users with dexterity challenges. Applied via smooth animations (e.g., Flutter’s \texttt{AnimatedScale}) for seamless user experience.
+    \item \textbf{increase\_font\_size}: Increases text size (e.g., status “Locked” from 16pt to 18pt) to improve readability for visually impaired users, ensuring compliance with WCAG’s text resizing guidelines.
+    \item \textbf{increase\_slider\_size}: Enlarges slider thumbs (e.g., Thermostat’s temperature control) to enhance precision for motor-impaired users, using custom rendering for visual feedback.
+    \item \textbf{increase\_contrast}: Switches to high-contrast mode (e.g., black backgrounds for buttons and text) to improve visibility for visually impaired users, aligning with WCAG contrast requirements.
+    \item \textbf{highlight\_border}: Applies a bolder border to buttons, aiding visually impaired and motor-impaired users by enhancing element visibility (WCAG 2.4.7 Focus Visible).
+    \item \textbf{adjust\_spacing}: Increases spacing between UI elements (e.g., device cards in the ListView) to reduce accidental taps for motor-impaired users, improving target accessibility (WCAG 2.5.5 Target Size).
+    \item \textbf{show\_tooltip}: Displays contextual tooltips (e.g., “Try saying ‘Unlock’”) near UI elements when modality struggles are detected (e.g., repeated miss-taps), guiding hands-free or motor-impaired users to alternative inputs like voice (WCAG 2.5.3 Label in Name).
+    \item \textbf{switch\_mode}: Shifts to keyboard, voice or gesture navigation mode for hands-free users (e.g., after repeated miss-taps), enabling more seamless interaction without physical input.
+    \item \textbf{trigger\_button}: Automatically activates buttons (e.g., toggles Lamp to “On”) when intent is clear from multimodal inputs (e.g., voice “Turn on” + gesture), reducing interaction barriers.
+    \item \textbf{simplify\_layout}: Reduces UI complexity (e.g., fewer UI elements) for hands-free or cognitively impaired users, streamlining interaction for accessibility.
+\end{itemize}
+These adaptation actions form the cornerstone of the framework’s accessibility-driven approach, addressing diverse user needs in the smart home controller. Each action is carefully designed to align with WCAG 2.1 guidelines, ensuring inclusivity for motor-impaired users (e.g., larger buttons/sliders, increased spacing), visually impaired users (e.g., high-contrast modes, highlighted borders), and hands-free users (e.g., tooltips, mode switching).
 
 The application of adaptations begins with a lookup to determine whether the \texttt{target} element exists in the current view. If it does, the corresponding widget state is updated directly. For example, an \texttt{increase\_button\_size} action adjusts the scale factor property of the button widget, and an \texttt{increase\_font\_size} action updates the text style parameter. Where appropriate, changes are animated using Flutter’s \texttt{AnimatedScale} or \texttt{AnimatedContainer} to make the transition noticeable without distracting the user. This animation step is particularly important for accessibility, as it helps the user understand that the interface has been modified intentionally. The loading indicator displayed around the card being interacted is now also triggered to stop playing.
 
@@ -1712,7 +1863,7 @@ The design of the Adaptive Multimodal GUI Framework using LLMs reflects a series
 
 \textbf{Reasoning:}
 \begin{itemize}
-    \item \textbf{Flexibility:} Each layer can be updated or replaced independently, enabling deployment across different platforms such as Flutter, SwiftUI, or Unity without reworking the entire system.
+    \item \textbf{Flexibility:} Each layer can be updated or replaced independently, enabling deployment across different platforms such as Flutter, SwiftUI, or future platforms without reworking the entire system.
     \item \textbf{Extensibility:} The JSON contract in the Input Adapter Layer allows new modalities (e.g., eye tracking) to be integrated without modifying backend logic.
     \item \textbf{Developer accessibility:} Modularity simplifies integration, requiring minimal code for event handling and adaptation application.
 \end{itemize}
@@ -1786,7 +1937,7 @@ In its current state, the implementation demonstrates that the framework can del
 % Feasibility Study and System Demonstration
 
 \section{Evaluation Overview}
-The goal of evaluating the implementation is by feasibility study, to check whether the multimodal, AI-driven adaptation pipeline works end-to-end under realistic interaction traces, and whether it does so in a way that is useful for accessibility. Concretely:
+The goal of evaluating the implementation is by feasibility study, to check whether the multimodal AI-driven adaptation pipeline works end-to-end under realistic interaction traces, and whether it does so in a way that is useful for accessibility. Concretely:
 \begin{enumerate}
     \item \textbf{Adaptation validity:} Does the backend return schema-valid adaptation objects across different user profiles and modalities?
     \item \textbf{Accessibility relevance:} Do the proposed adaptations match the user’s needs (motor, visual, hands-free) and the observed errors (e.g., miss-taps, slider overshoot)?
@@ -1865,7 +2016,7 @@ The Adaptive Smart Home Controller using LLMs was evaluated by executing the 7-e
 \end{itemize}
 
 \paragraph{Hardware and Environment:}
-All experiments in this thesis were executed on a single development machine in a controlled environment (no network contention). Latency is end-to-end from event send to response receipt on the client.
+All experiments in this thesis were executed on a single development machine in a controlled home environment (none to low network contention). Latency is end-to-end from event send to response received on the client.
 Hardware configuration:
 \begin{itemize}
     \item \textbf{Hardware:} MacBook Pro, M1 Max CPU, 32\,GB RAM, 32-core GPU
@@ -2027,7 +2178,7 @@ For accessibility, this reduces manual configuration and supports users with mot
 \section{Key Findings and Contributions}
 This research contributes to both practical system design and conceptual models for multimodal adaptive UIs:
 \begin{enumerate}
-    \item \textbf{Framework Architecture:} A modular, three-layer architecture separating input capture, event standardisation, and reasoning, enabling portability across Flutter, SwiftUI, and Unity.
+    \item \textbf{Framework Architecture:} A modular, three-layer architecture separating input capture, event standardisation, and reasoning, enabling portability across Flutter, SwiftUI, and future platforms (e.g., Unity).
     \item \textbf{Smart Intent Fusion (SIF):} A hybrid engine combining deterministic rules for guaranteed accessibility fallbacks with LLM-driven reasoning for complex scenarios.
     \item \textbf{Multi-Agent Extension (MA-SIF):} Specialised agents for UI, geometry, and input, validated by a dedicated Validator Agent to reduce conflicts and hallucinations.
     \item \textbf{Developer-Focused Integration:} Standardised JSON contracts and generalised methods for event sending, adaptation handling, and profile management.
@@ -2059,7 +2210,7 @@ Table~\ref{tab:related-comparison} summarises key differences between the framew
 \small
 \caption{Comparison of related adaptive UI systems}
 \label{tab:related-comparison}
-\begin{tabular}{p{3cm}p{2.5cm}p{3cm}p{3cm}p{3cm}}
+\begin{tabular}{p{2cm}p{3cm}p{3cm}p{3cm}p{3cm}}
 \toprule
 \textbf{System} & \textbf{Modalities Supported} & \textbf{Reasoning Method} & \textbf{Adaptation Scope} & \textbf{Extensibility} \\
 \midrule
@@ -2072,15 +2223,6 @@ RL-based UI Adaptation & Depends on sensors & Reinforcement learning & Layout, c
 \bottomrule
 \end{tabular}
 \end{table}
-
-\section{Limitations and Challenges}
-\begin{itemize}
-    \item \textbf{Latency Constraints:} LLM reasoning adds delay, especially in multi-agent settings. Timeouts bound worst cases but cap reasoning depth.
-    \item \textbf{Reliance on Cloud APIs:} Current Gemini usage ties performance to network availability; offline/privacy-critical contexts need on-device options.
-    \item \textbf{UI Context Awareness:} Reasoning depends on predefined targets and metadata; there is no full semantic model of the live UI yet.
-    \item \textbf{Synthetic Evaluation:} Metrics are based on controlled, simulated tasks rather than large-scale, real-world studies.
-    \item \textbf{Developer Adoption:} Integration requires implementing the JSON contract and adapter pattern; more automation would help.
-\end{itemize}
 
 \section{Future Work} 
 While the framework in its current form demonstrates the feasibility of real-time, multimodal, adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
@@ -2192,7 +2334,7 @@ This work demonstrates that a modular framework can (i) adapt UIs in real time, 
 
 \section{Summary of Contributions}
 \begin{enumerate}
-    \item \textbf{Modular, cross-platform architecture:} Designed to work across Flutter and SwiftUI, with a clear path to Unity/VR.
+    \item \textbf{Modular, cross-platform architecture:} Designed to work across Flutter and SwiftUI, with a clear path to future platforms like Unity/VR.
     \item \textbf{Smart Intent Fusion (SIF):} A hybrid engine that mixes deterministic rules with LLM reasoning for ambiguous cases.
     \item \textbf{MA-SIF extension:} Specialised agents (UI/geometry/input) plus a Validator Agent for conflict resolution and schema adherence.
     \item \textbf{Developer-friendly integration:} Consistent JSON contracts for events, adaptations, and profiles; minimal glue code.
@@ -2214,7 +2356,7 @@ This work demonstrates that a modular framework can (i) adapt UIs in real time, 
     \item \textbf{Schemas are leverage:} Stable JSON contracts made the system portable and easy to debug as components evolved.
     \item \textbf{Prompts and validation matter:} Constraint-heavy prompts plus a Validator Agent noticeably improved output quality.
     \item \textbf{Simulation is useful:} Synthetic profiles/events were enough to tune reasoning and latency trade-offs before user studies.
-    \item \textbf{Modularity pays off:} Loose coupling made it straightforward to swap models/modalities and iterate quickly.
+    \item \textbf{Modularity is beneficial:} Loose coupling made it straightforward to swap models/modalities and iterate quickly.
 \end{itemize}
 
 \section{Evaluation Results: Conclusion}
