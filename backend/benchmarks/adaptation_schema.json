@@ -1,52 +1,43 @@
 {
-  "type": "object",
-  "properties": {
-    "adaptations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "type": "string"
-          },
-          "target": {
-            "type": "string"
-          },
-          "value": {
-            "type": "number"
-          },
-          "mode": {
-            "type": "string"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "intent": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "action",
-          "target",
-          "reason",
-          "intent"
-        ],
-        "oneOf": [
-          {
-            "required": [
-              "value"
-            ]
-          },
-          {
-            "required": [
-              "mode"
-            ]
-          }
-        ]
-      }
-    }
-  },
-  "required": [
-    "adaptations"
-  ]
-}
+                "type": "object",
+                "properties": {
+                "adaptations": {
+                    "type": "array",
+                    "items": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                        "type": "string",
+                        "description": "The type of UI adaptation to perform"
+                        },
+                        "target": {
+                        "type": "string",
+                        "description": "The UI element or component to apply the adaptation to, 'all' is also an option, if targeting all elements"
+                        },
+                        "value": {
+                        "type": "number",
+                        "description": "Numeric multiplier for size changes (e.g., 1.5 for 50% larger)"
+                        },
+                        "mode": {
+                        "type": "string",
+                        "description": "Interaction mode or visual mode to switch to (e.g., 'voice', 'gesture', 'high' for contrast)"
+                        },
+                        "reason": {
+                        "type": "string",
+                        "description": "Human-readable explanation of why this adaptation was suggested based on the user event and context"
+                        },
+                        "intent": {
+                        "type": "string",
+                        "description": "The inferred user intent, what did you think the user's intent was based on the user input event?"
+                        }
+                    },
+                    "required": ["action", "target", "reason", "intent"],
+                    "oneOf": [
+                        {"required": ["value"]},
+                        {"required": ["mode"]}
+                    ]
+                    }
+                }
+                },
+                "required": ["adaptations"]
+            }

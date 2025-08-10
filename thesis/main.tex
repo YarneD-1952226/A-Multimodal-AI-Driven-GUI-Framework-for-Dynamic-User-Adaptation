@@ -461,7 +461,7 @@ Furthermore, combining health and accessibility perspectives opens opportunities
 
 %Chapter 3
 \chapter{System Design and Architecture}
-% idea it comes from -> LLM as UI api 
+
 \section{Introduction to System Design}
 The adaptive multimodal GUI framework developed in this thesis is designed to deliver personalised, accessibility-focused interface adaptations in real time. It builds on the idea that different users have different needs, and that these needs can change depending on context, device, and input modality. By combining multiple input channels such as touch, voice, and gestures with AI-driven reasoning, the framework can adapt interfaces in a way that is both responsive and context-aware.
 
@@ -564,51 +564,6 @@ Lastly, the adapter manages adaptations returned by the SIF backend layer by lis
 %     \end{itemize}
 %     \item \textbf{Purpose:} Visualizes the layer’s role as a modular bridge between the frontend and backend, emphasizing its extensibility and accessibility focus.
 % \end{itemize}
-
-
-
-% \subsection{Event Handling}
-%     Event handling in the Input Adapter Layer is structured to process multimodal inputs efficiently and reliably:
-%     \begin{enumerate}
-%         \item \textbf{Input Capture}: The layer captures raw inputs from the Frontend Layer, such as:
-%         \begin{itemize}
-%             \item \textbf{Touch}: Taps or miss-taps on buttons/sliders, detected via for example Flutter’s \\
-%             \verb|GestureDetector|. These can act as a form of bounding box collider to catch miss taps close to the UI element like a button for example.
-%             \item \textbf{Keyboard}: Navigation (e.g., Tab) or selection (e.g., Enter) events via a \\
-%             \verb|RawKeyboardListener|.
-%             \item \textbf{Voice}: Commands like “Turn on lamp” or “Unlock door”, mocked for this thesis but extensible to libraries like \verb|speech_to_text| or Web Speech API.
-%             \item \textbf{Gestures}: Hand movements (e.g., point, swipe) via mock events, with future support for MediaPipe.
-%             \item \textbf{Future Modalities}: Eye tracking or BCI inputs, integrated via custom event handlers (e.g., \verb|sendEyeTrackingEvent|).
-%         \end{itemize}
-
-%         \item \textbf{Event Standardization}: Each input is transformed into a JSON contract format:
-%         \begin{lstlisting}[language=json,firstnumber=1]
-%         {
-%           "event_type": "tap",
-%           "source": "touch",
-%           "timestamp": "2025-08-04T14:41:00Z",
-%           "user_id": "user_123",
-%           "target_element": "lamp",
-%           "coordinates": {"x": 100, "y": 200},
-%           "confidence": 0.9,
-%           "metadata": {"command": "turn_on"}
-%         }
-%         \end{lstlisting}
-%         The layer validates required fields \verb|(event_type, source, timestamp, user_id)| and enriches events with optional metadata (e.g., gesture type, voice command).
-%         \item \textbf{Event Forwarding}: Standardized events are sent to the SIF Backend Layer via WebSocket \\ (\verb|/ws/adapt|) for real-time processing or HTTP (\verb|/context|) for batch operations. The adapter ensures profile existence by querying \verb|GET /profile/{user_id}| before sending events, prompting a \verb|POST /profile| if needed.
-%         \item \textbf{Error Handling}: The layer detects and flags erroneous inputs (e.g., miss-tap if coordinates miss a target) and validates all inputs, as well as includes confidence scores to aid backend reasoning. It also handles network failures by queuing events locally for retry.
-%     \end{enumerate}
-    
-%     \subsection{Example: UIAdapterAPI Implementation}
-%     The \verb|AdaptiveUIAdapter| class serves as the core implementation of the Input Adapter Layer, designed as a modular template for extensibility. A typical implementation includes:
-%     \begin{itemize}
-%         \item \textbf{Initialization}: Configures the adapter with a \verb|user_id| and a callback for handling adaptations (e.g., \verb|onAdaptations| to apply backend responses directly to the frontend).
-%         \item \textbf{Profile Management}: Checks profile existence (\verb|GET /profile/{user_id}|) and creates default profiles (\verb|POST /profile|) if absent.
-%         \item \textbf{Event Sending}: Provides a \verb|sendEvent| method to standardize and send events, taking an \\ \verb|Event eventData| parameter. The detailed implementation of the \verb|Event| class and the \verb|sendEvent| method is discussed in the next chapter.
-%         \item \textbf{Extensibility}: Supports new modalities via additional methods \\ (e.g., \verb|sendEyeTrackingEvent(target, gazeCoords)|) without altering any core logic.
-%         \item \textbf{Integration}: Embeds in the Frontend Layer with minimal setup (e.g., 1 line to initialize, 1 line per event).
-%     \end{itemize}
-%     This API minimizes developer effort while ensuring robust event handling, making it reusable across platforms and domains.
     
 \section{SIF Backend Layer: Smart Intent Fusion (SIF)}
 
@@ -1628,7 +1583,14 @@ The application is structured around a scrollable list of device “cards,” ea
 When a user pressed on an mockup event in the test panel underneath each device, the frontend captures the event along with metadata such as the element’s type for UI context, the interaction type, and any relevant parameters. This data is sent through the Input Adapter Layer, which standardises the event into the framework’s JSON contract before forwarding it to the backend via WebSocket. The choice of WebSocket ensures that adaptations can be returned and applied in near real time, a critical requirement for maintaining a smooth user experience in accessibility scenarios.
 As a loading indicator, the frontend displays rotating linear gradient border around the card being interacted with, until the adaptations are received and applied.
 
-Adaptations received from the backend are applied immediately using Flutter’s reactive state management. For example, a \texttt{increase\_button\_size} action triggers an \texttt{AnimatedScale} widget update, enlarging the targeted button over a short animation to make the change more noticeable without disrupting the user’s flow. Similarly, a \texttt{increase\_contrast} action adjusts the application’s color scheme by updating theme parameters, while text-related adaptations update font sizes dynamically. This direct mapping between adaptation actions and Flutter widget properties allows the frontend to respond flexibly to a wide range of changes without requiring hardcoded layouts.
+\textbf{Input Capture}: The frontend layer captures raw inputs from multiple modalities, including touch, voice, and gestures. Each modality is handled through specific Flutter widgets and event listeners:
+\begin{itemize}
+    \item \textbf{Touch}: Taps or miss-taps on buttons/sliders, detected via for example Flutter’s \verb|GestureDetector| or \verb|onPressed| callbacks.
+    \item \textbf{Voice}: Commands like “Turn on lamp” or “Unlock door”, mocked for this thesis but extensible to libraries like \verb|speech_to_text| or Web Speech API.
+    \item \textbf{Gestures}: Hand movements (e.g., point, swipe) via mock events, with future support for MediaPipe.
+\end{itemize}
+
+Adaptations received from the backend after being processed by the Input Adapter Layer are applied immediately using Flutter’s reactive state management. For example, a \texttt{increase\_button\_size} action triggers an \texttt{AnimatedScale} widget update, enlarging the targeted button over a short animation to make the change more noticeable without disrupting the user’s flow. Similarly, a \texttt{increase\_contrast} action adjusts the application’s color scheme by updating theme parameters, while text-related adaptations update font sizes dynamically. This direct mapping between adaptation actions and Flutter widget properties allows the frontend to respond flexibly to a wide range of changes without requiring hardcoded layouts.
 
 The current implementation focuses on touch-based interaction as the primary live modality, with voice and gesture inputs simulated for demonstration purposes. These mock events are triggered through test buttons in the interface, allowing the adaptation pipeline to be validated end-to-end without requiring physical input hardware. This approach enables reliable testing of adaptation logic while keeping the system architecture ready for integration with real voice or gesture recognition modules in the future.
 
@@ -1639,6 +1601,38 @@ Overall, \texttt{adaptive\_ui\_app.dart} demonstrates how the frontend layer of 
 The Input Adapter Layer is responsible for bridging the gap between raw user interactions in the frontend and the structured event format required by the backend. It ensures that all inputs, regardless of modality, are represented consistently, allowing the backend’s adaptation logic to operate on a predictable and schema-compliant data structure. This layer also manages user profile checks before events are transmitted, ensuring that adaptation decisions are always made in the context of the most up-to-date profile information.
 
 In the current implementation, the adapter intercepts mock events generated by the frontend, such as missed button presses, missed slider adjustments, or simulated voice commands. Each event is enriched with metadata, including the user’s identifier, a timestamp, the type of interaction, and any target element references. The adapter then converts this information into the JSON event contract high-level defined in Chapter 3, which serves as the standard interface between the frontend and backend. This contract includes fields for event type, source modality, target element, coordinates if applicable, confidence level, time stamp, user\_id and additional metadata such as the spoken command in the case of voice input.
+
+    % Event handling in the Input Adapter Layer is structured to process multimodal inputs efficiently and reliably:
+    % \begin{enumerate}
+    %     \item \textbf{Future Modalities}: Eye tracking or BCI inputs, integrated via custom event handlers (e.g., \verb|sendEyeTrackingEvent|).
+    %     \item \textbf{Event Standardization}: Each input is transformed into a JSON contract format:
+    %     \begin{lstlisting}[language=json,firstnumber=1]
+    %     {
+    %       "event_type": "tap",
+    %       "source": "touch",
+    %       "timestamp": "2025-08-04T14:41:00Z",
+    %       "user_id": "user_123",
+    %       "target_element": "lamp",
+    %       "coordinates": {"x": 100, "y": 200},
+    %       "confidence": 0.9,
+    %       "metadata": {"command": "turn_on"}
+    %     }
+    %     \end{lstlisting}
+    %     The layer validates required fields \verb|(event_type, source, timestamp, user_id)| and enriches events with optional metadata (e.g., gesture type, voice command).
+    %     \item \textbf{Event Forwarding}: Standardized events are sent to the SIF Backend Layer via WebSocket \\ (\verb|/ws/adapt|) for real-time processing or HTTP (\verb|/context|) for batch operations. The adapter ensures profile existence by querying \verb|GET /profile/{user_id}| before sending events, prompting a \verb|POST /profile| if needed.
+    %     \item \textbf{Error Handling}: The layer detects and flags erroneous inputs (e.g., miss-tap if coordinates miss a target) and validates all inputs, as well as includes confidence scores to aid backend reasoning. It also handles network failures by queuing events locally for retry.
+    % \end{enumerate}
+    
+    % \subsection{Example: UIAdapterAPI Implementation}
+    % The \verb|AdaptiveUIAdapter| class serves as the core implementation of the Input Adapter Layer, designed as a modular template for extensibility. A typical implementation includes:
+    % \begin{itemize}
+    %     \item \textbf{Initialization}: Configures the adapter with a \verb|user_id| and a callback for handling adaptations (e.g., \verb|onAdaptations| to apply backend responses directly to the frontend).
+    %     \item \textbf{Profile Management}: Checks profile existence (\verb|GET /profile/{user_id}|) and creates default profiles (\verb|POST /profile|) if absent.
+    %     \item \textbf{Event Sending}: Provides a \verb|sendEvent| method to standardize and send events, taking an \\ \verb|Event eventData| parameter. The detailed implementation of the \verb|Event| class and the \verb|sendEvent| method is discussed in the next chapter.
+    %     \item \textbf{Extensibility}: Supports new modalities via additional methods \\ (e.g., \verb|sendEyeTrackingEvent(target, gazeCoords)|) without altering any core logic.
+    %     \item \textbf{Integration}: Embeds in the Frontend Layer with minimal setup (e.g., 1 line to initialize, 1 line per event).
+    % \end{itemize}
+    % This API minimizes developer effort while ensuring robust event handling, making it reusable across platforms and domains.
 
 Before forwarding an event, the adapter queries the backend via HTTP to check whether a profile exists for the given user. If no profile is found, it prompts the frontend to initiate a profile creation request, using default parameters or pre-filled accessibility preferences where available. This mechanism prevents situations where adaptation requests are processed without the necessary user context, which could lead to ineffective or even counterproductive UI changes.
 
@@ -1764,7 +1758,7 @@ One of the most persistent challenges was ensuring that the multi-agent LLM pipe
 Adaptation latency was a critical factor for usability, particularly in accessibility scenarios where delayed feedback can reduce trust in the system. Smaller LLM models were assigned to the suggestion agents to keep their execution time within fractions of a second, while the validator, which required more context and reasoning, used a larger model with a higher timeout budget. Even so, occasional slowdowns occurred due to network latency or provider-side delays. The backend was therefore designed to apply partial results if all agents did not respond in time, ensuring that at least some adaptations reached the user quickly.
 
 \subsection{Safeguards against malicious or replay attacks}
-In its current form, the system does not include strong safeguards against replay attacks or intentionally crafted events designed to trigger disruptive adaptations. This is acceptable in a controlled research environment but would require strict validation and authentication for production deployment. Measures such as signing WebSocket messages, verifying sequence numbers, and rejecting stale or malformed events would be necessary to prevent exploitation as well as extra protections in the adapter or frontend. Furthermore is user\_id hijacking, where an attacker submits events under a different user’s profile possible. This was intentional for the scope and development time constraints of this research.
+In its current form, the system does not include strong safeguards against replay attacks or intentionally crafted events designed to trigger disruptive adaptations. This is acceptable in a controlled research environment but would require strict validation and authentication for production deployment. Measures such as signing WebSocket messages, verifying sequence numbers, and rejecting stale or malformed events would be necessary to prevent exploitation as well as extra protections in the adapter or frontend. Furthermore is \texttt{user\_id} hijacking, where an attacker submits events under a different user’s profile possible, since no \texttt{user\_id} checks are done on returning adaptations. Future mitigations such as implementing \texttt{user\_id} verification and event signing will be necessary to address these vulnerabilities. This was intentional for the scope and development time constraints of this research.
 
 \subsection{Testing with incomplete modalities}
 Live gesture tracking and voice inputs were not integrated in this iteration, which meant that related adaptations had to be tested using simulated events. While this allowed the adaptation logic to be validated end-to-end, it did not account for the noise, recognition errors, or latency introduced by real input devices. Future work will need to focus on replacing these simulated events with actual input sources to fully evaluate performance in realistic conditions.
