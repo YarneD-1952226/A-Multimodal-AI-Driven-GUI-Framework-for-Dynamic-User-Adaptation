@@ -577,6 +577,7 @@ Furthermore, combining health and accessibility perspectives opens opportunities
 
 %Chapter 3
 \chapter{System Design and Architecture}
+\label{ch:chapter3}
 
 \section{Introduction to System Design}
 The adaptive multimodal GUI framework developed in this thesis is designed to deliver personalised, accessibility-focused interface adaptations in real time. It builds on the idea that different users have different needs, and that these needs can change depending on context, device, and input modality. By combining multiple input channels such as touch, voice, and gestures with AI-driven reasoning, the framework can adapt interfaces in a way that is both responsive and context-aware.
@@ -589,7 +590,7 @@ This chapter presents the framework at a conceptual level, focusing on its archi
 \section{Overview of the System Architecture}
 The framework follows a three-layer architecture that was chosen and designed to be modular, scalable, and adaptable to diverse accessibility needs. Each layer has a clearly defined role and communicates with the others through a common JSON-based event and adaptation format. This separation of responsibilities makes it possible to extend or replace individual components without disrupting the rest of the system, and ensures that adaptations can be applied consistently across platforms and modalities.
 
-At the top, the frontend layer is responsible for rendering the user interface, capturing interactions, and applying adaptations received from the backend. The input adapter layer sits between the frontend and backend, converting raw interaction data from multiple modalities into the shared JSON schema so that all events are processed in the same way. The backend layer implements the Smart Intent Fusion (SIF) process, combining event data, user profiles, and recent interaction history to produce personalised adaptation actions. The backend can rely on both deterministic rules and multi-agent LLM reasoning, described in detail in Chapter 4. 
+At the top, the frontend layer is responsible for rendering the user interface, capturing interactions, and applying adaptations received from the backend. The input adapter layer sits between the frontend and backend, converting raw interaction data from multiple modalities into the shared JSON schema so that all events are processed in the same way. The backend layer implements the Smart Intent Fusion (SIF) process, combining event data, user profiles, and recent interaction history to produce personalised adaptation actions. The backend can rely on both deterministic rules and multi-agent LLM reasoning, described in detail in Chapter~\ref{ch:chapter4}. 
 The system is built around a feedback loop. Each user interaction is captured, processed, and logged along with the resulting adaptation. This log contributes to the user’s profile and informs future adaptation decisions, allowing the interface to become progressively more personalised over time.
 
 To illustrate this flow in practice, consider a motor-impaired user attempting to press a “Lock” button. If the tap misses its target, the event is sent through the adapter, recognised as a miss-tap, and forwarded to the backend. SIF responds by generating an adaptation that increases the size and spacing of the button. The frontend receives this instruction and animates the change in real time. For a hands-free user, the process might begin with a spoken command to “turn on the lamp.” The voice input is captured, standardised, and sent to the backend, which returns instructions to switch the UI into voice mode and activate the lamp control.
@@ -719,15 +720,14 @@ For this thesis and its implementation, adaptations in the frontend can be under
     \item \textbf{Geometry-Level Adaptations:} which adjust layout and spacing to reduce input errors or simplify navigation.
     \item \textbf{Input-Level Adaptations:} which alter the way users interact with the interface, for example by switching to a voice-driven mode.
 \end{enumerate}
-While the precise mechanics of how these adaptations are implemented, triggered and applied are described in Chapter 5, the design principle remains the same: each change should be both functional and clearly communicated to the user, reinforcing trust and improving interaction efficiency. These high-level principles guide the implementation of the SIF framework, ensuring that adaptations are user-centered and context-aware.
-% Diagram?
+While the precise mechanics of how these adaptations are implemented, triggered and applied are described in Chapter~\ref{ch:chapter5}, the design principle remains the same: each change should be both functional and clearly communicated to the user, reinforcing trust and improving interaction efficiency. These high-level principles guide the implementation of the SIF framework, ensuring that adaptations are user-centered and context-aware.
 
 \section{Input Adapter Layer: Multimodal Input Processing}
-The Input Adapter Layer acts as the middleware between the user-facing frontend and the reasoning backend, it takes care of bidirectional communication between both layers. Its main role is to take raw interaction data from any modality such as touch, keyboard, voice, or gestures and transform it into a standardised format that the backend can process consistently and vice versa for the frontend. By separating input capture from input interpretation, this layer allows the rest of the system to operate independently of how the input was generated, making it easier to add new modalities in the future.
+The Input Adapter Layer acts as the middleware between the user-facing frontend and the reasoning backend, it takes care of bidirectional communication between both layers. Its main role is to take raw interaction data from any modality such as touch, keyboard, voice, or gestures and transform it into a standardised format that the backend can process consistently and vice versa for the frontend. By separating input capture from input interpretation, this layer allows the rest of the system to operate independently of how the input was generated, making it easier to add new modalities in the future  (see Figure~\ref{fig:input-adapter-mini} for high-level flow diagram).
 
-Central to this layer is the \textbf{JSON Event Contract}, architecturally this is exposed through the \texttt{Adaptive\\UIAdapter} class, which defines the public interface for sending interaction data to the backend. The primary entry point is the \texttt{sendEvent(Event eventData)} method. This method accepts an \texttt{Event} object—the framework’s internal representation of a user interaction—and is responsible for enriching it with contextual information before forwarding it to the backend.
+Central to this layer is the \textbf{JSON Event Contract}, architecturally this is exposed through the \texttt{Adaptive\\UIAdapter} class, which defines the public interface for sending interaction data to the backend. The primary entry point is the \texttt{sendEvent(Event eventData)} method. This method accepts an \texttt{Event} object, the framework’s internal representation of a user interaction, and is responsible for enriching it with contextual information before forwarding it to the backend.
 
-The \texttt{Event} class acts as the architectural contract for interaction data. While its exact schema is defined in the implementation (Chapter 5), at the design level it contains:
+The \texttt{Event} class acts as the architectural contract for interaction data. While its exact schema is defined in the implementation (Chapter~\ref{ch:chapter5}), at the design level it contains:
 \begin{itemize}
     \item \textbf{Event type:}  the category of interaction, such as a tap, miss-tap, slider miss, or voice command.
     \item \textbf{User ID:} a unique identifier for the user interacting with the system.
@@ -740,7 +740,7 @@ The \texttt{Event} class acts as the architectural contract for interaction data
 \end{itemize}
 By enforcing this structure, the adapter guarantees that all events passed to the backend follow the same rules, whether they come from Flutter, SwiftUI, or a future Unity-based frontend.
 
-The adapter also handles profile verification and creation before sending events. This step ensures that the backend always has a corresponding user profile for contextual reasoning. If the profile does not exist, the adapter triggers its creation using default accessibility settings or a new user profile. These profiles are also bound by a JSON contract to ensure consistency, this design is described in chapter 4. Furthermore, for low-latency adaptation feedback, events are transmitted via a persistent WebSocket connection, while non-real-time operations such as profile updates, HTTP endpoints are used instead.
+The adapter also handles profile verification and creation before sending events. This step ensures that the backend always has a corresponding user profile for contextual reasoning. If the profile does not exist, the adapter triggers its creation using default accessibility settings or a new user profile. These profiles are also bound by a JSON contract to ensure consistency, this design is described in Chapter~\ref{ch:chapter4}. Furthermore, for low-latency adaptation feedback, events are transmitted via a persistent WebSocket connection, while non-real-time operations such as profile updates, HTTP endpoints are used instead.
 
 Lastly, the adapter manages adaptations returned by the SIF backend layer by listening to the WebSocket channel. When the backend sends adaptation instructions, which is represented in its own JSON contract (in more detail described later), the adapter maps it to an internal representation based off of the JSON contract that can be easily processed by the frontend. This Adapter pattern design is deliberately chosen and platform-agnostic. Although the current implementation is in Dart for Flutter, the architectural pattern can be replicated in any language or platform by implementing the same \texttt{sendEvent()} contract and adhering to the same event object structure. This separation means that adding a new modality, such as eye tracking or brain-computer interfaces, only requires implementing the modality’s input capture and mapping it to the existing \texttt{Event} format, no changes are needed to the backend or reasoning logic.
 
@@ -822,7 +822,7 @@ From an architectural perspective, this layer has two main responsibilities:
 
 The backend is designed to support multiple reasoning strategies. In its current form, it combines deterministic rules with a multi-agent LLM process called Smart Intent Fusion. Rules handle straightforward accessibility needs; for example, increasing button size after a miss-tap, while the LLM process enables more context-aware adaptations that consider multiple factors simultaneously.
 
-Although the underlying logic is covered in detail in Chapter 4, the architectural position of this layer is central in this framework: it serves as the decision-making hub, fed by standardised events from the input adapter, and returning validated adaptations to the frontend in near real time. This separation allows the reasoning configuration to be changed easily; for example, by swapping models, refining prompts, or integrating new agents without changing the structure of the rest of the framework.
+Although the underlying logic is covered in detail in Chapter~\ref{ch:chapter4}, the architectural position of this layer is central in this framework: it serves as the decision-making hub, fed by standardised events from the input adapter, and returning validated adaptations to the frontend in near real time. This separation allows the reasoning configuration to be changed easily; for example, by swapping models, refining prompts, or integrating new agents without changing the structure of the rest of the framework.
 
 \section{User Profiles and Context Modeling}
 User profiles form the backbone of the framework’s personalisation capability. They store accessibility preferences, interaction patterns, and contextual data that allow the system to adapt the interface to an individual’s needs over time. The profile is not a static record, it evolves as the user interacts with the system, incorporating both explicit configuration and implicit observations from their behaviour.
@@ -849,7 +849,7 @@ The dynamic adaptation mechanisms are the part of the framework responsible for 
 At the architectural level, the adaptation process follows a continuous feedback loop. Every interaction is captured, processed, and logged, with the resulting adaptations influencing how the interface behaves in the future. This allows the system to progressively refine its responses, ensuring that changes are not only reactive but also shaped by longer-term usage patterns.
 
 \subsection{Adaptation Pipeline}
-The adaptation pipeline follows a structured lifecycle from input capture to UI update, and can be viewed as four main stages:
+The adaptation pipeline follows a structured lifecycle from input capture to UI update, and can be viewed as four main stages (Figure~\ref{fig:adaptation-pipeline-flow}):
 \begin{enumerate}
     \item \textbf{Event reception and context gathering:} Inputs from any modality are captured, standardised, and sent to the backend. The backend retrieves the associated user profile and recent history to build a complete context for reasoning.
     \item \textbf{Intent interpretation:} The backend analyses the combined event and context, using both deterministic rules and LLM-based reasoning to infer the most likely user intent.
@@ -886,7 +886,7 @@ The adaptation pipeline follows a structured lifecycle from input capture to UI 
 \end{figure}
 
 \subsection{Supported Adaptation Actions}
-The framework supports a defined set of adaptation types that cover common accessibility needs. These include scaling or spacing adjustments for improved touch accuracy, font and contrast changes for better readability, and modality switches for hands-free interaction. The action set is deliberately kept broad enough to handle varied contexts, yet constrained enough to ensure reliable rendering across platforms (more details in Section 5.7).
+The framework supports a defined set of adaptation types that cover common accessibility needs. These include scaling or spacing adjustments for improved touch accuracy, font and contrast changes for better readability, and modality switches for hands-free interaction. The action set is deliberately kept broad enough to handle varied contexts, yet constrained enough to ensure reliable rendering across platforms (more details in Chapter~\ref{ch:chapter5}).
 
 \subsection{Continuous Learning and Feedback Loop}
 A central design principle is that adaptations are not static changes. The system maintains a history of recent interactions for each user, enabling it to identify recurring patterns such as frequent miss-taps or repeated modality switches. When such patterns are detected, the backend can suggest persistent adjustments; for example, permanently enlarging a frequently used UI element, reducing the need for smaller repeated actions.
@@ -908,6 +908,7 @@ Together, these elements provide a framework capable of addressing real-world ac
 
 %Chapter 4
 \chapter{Smart Intent Fusion (SIF)}
+\label{ch:chapter4}
 \section{Introduction to Smart Intent Fusion}
 Smart Intent Fusion (SIF) is the central intelligence layer of the proposed multimodal AI-driven UI adaptation framework, responsible for transforming raw, heterogeneous user input signals into concrete, context-aware interface adaptations. 
 Where the Frontend Layer renders the UI and the Input Adapter Layer standardises events, SIF performs the reasoning step. Architecturally, SIF occupies the central position in the adaptation loop, receiving standardised events from the Input Adapter Layer, combining them with user profile and context data, and returning validated adaptations back to the frontend for immediate application. This placement ensures that every adaptation decision is both context-aware and modality-agnostic, allowing the framework to maintain consistent behaviour regardless of how the interaction was initiated.
@@ -984,7 +985,7 @@ In HCI, “multimodal fusion” just means combining different types of input to
     \item \textbf{Hybrid fusion}: a mix of both, sharing some data early but also combining results later. \\
     → Used when one modality’s data can make another modality’s interpretation more accurate.
 \end{itemize}
-SIF uses the hybrid approach. The Input Adapter Layer already standardises each input into a clean JSON format, but the fusion step happens in the backend where the current event, past history, and profile are all processed and fused together. This makes it possible to combine patterns like “miss-tap + voice command” into one clear adaptation. In the overall architecture described in Chapter 3, this fusion step is the bridge between raw input handling and adaptation generation. By sitting in the backend, SIF can remain entirely modality-agnostic while still benefiting from the structured event format defined by the Input Adapter Layer. This ensures that even when new input methods are introduced in the future, the fusion logic can remain unchanged, relying on the same JSON schema and profile-context pipeline.
+SIF uses the hybrid approach. The Input Adapter Layer already standardises each input into a clean JSON format, but the fusion step happens in the backend where the current event, past history, and profile are all processed and fused together. This makes it possible to combine patterns like “miss-tap + voice command” into one clear adaptation. In the overall architecture described in Chapter~\ref{ch:chapter3}, this fusion step is the bridge between raw input handling and adaptation generation. By sitting in the backend, SIF can remain entirely modality-agnostic while still benefiting from the structured event format defined by the Input Adapter Layer. This ensures that even when new input methods are introduced in the future, the fusion logic can remain unchanged, relying on the same JSON schema and profile-context pipeline.
 
 \subsection{Intent Inference}
 The main goal of SIF is not just to log inputs, but to figure out \textit{why} the user did them. This is called intent inference. In other words, we want the system to answer the question: “What was the user trying to do?”
@@ -1056,11 +1057,11 @@ In the backend, each profile is a JSON document in the \texttt{profiles} collect
   "input_preferences": { "preferred_modality": "voice" },
   "ui_preferences": { "font_size": 16 },
   "interaction_history": [
-    { "event_type": "miss_tap", "target_element": "lamp" }
+     { "action":"increase_button_size", "target": "all", "value": 1.2 },
+     { "action":"increase_font_size", "target": "all",  "value": 1.1 } 
   ]
 }
 \end{lstlisting}
-The full schema with all supported fields and metadata is given in Chapter 5.
 
 This design keeps it simple but flexible. Architecturally, each profile contains:
 \begin{itemize}
@@ -1449,7 +1450,7 @@ Similarly, experimental agents for new modalities such as gaze tracking or hapti
   }
 }
 \end{lstlisting}
-Each agent configuration above specifies its model, temperature, and thinking budget, which control the LLM's behavior and output style. The \texttt{focus} field describes the agent's adaptation domain, while \texttt{allowed\_actions} restricts the set of suggestions to ensure predictable outputs. The \texttt{prompt} guides the agent's reasoning, and is dynamically extended at runtime with the current event (see Chapter 5), user profile, and interaction history. This enables agents to generate personalized adaptation suggestions based on live user context, rather than relying solely on static instructions.
+Each agent configuration above specifies its model, temperature, and thinking budget, which control the LLM's behavior and output style. The \texttt{focus} field describes the agent's adaptation domain, while \texttt{allowed\_actions} restricts the set of suggestions to ensure predictable outputs. The \texttt{prompt} guides the agent's reasoning, and is dynamically extended at runtime with the current event (see Chapter~\ref{ch:chapter5}), user profile, and interaction history. This enables agents to generate personalized adaptation suggestions based on live user context, rather than relying solely on static instructions.
 
 \subsection{Temperature and Thinking Budget}
 
@@ -1479,13 +1480,13 @@ The multi-agent architecture provides several practical advantages. Reliability 
 
 Specialisation further enhances the quality of the output, as each agent’s prompt scope is narrow enough to minimise irrelevant reasoning. The dynamic configuration system makes it possible to scale the number of agents up or down, or to swap in different models, without any changes to the backend logic. This adaptability is especially important in research and prototyping contexts, where requirements may change quickly.
 
-The practical implementation of MA-SIF including the \texttt{sif\_config.json} schema, example prompts, and backend implementation is detailed in Chapter 5.
+The practical implementation of MA-SIF including the \texttt{sif\_config.json} schema, example prompts, and backend implementation is detailed in Chapter~\ref{ch:chapter5}.
 
 \section{Prompt Engineering for LLMs in SIF}
 One of the most important parts of Smart Intent Fusion is \textbf{how we talk to the LLM}.
 Unlike a traditional rule-based system, where logic is written explicitly in code, here the behaviour of the LLM depends on the instructions it receives, namely the prompt.
 If the prompt, by which the LLM is queried, is unclear, missing context, or too open-ended, the output will either be wrong, inconsistent, or impossible to parse in code.
-The LLM could also be more prone to hallucinations, which means it generates answers that sound plausible but are actually incorrect or nonsensical. This means the design of the prompt, the model parameters, and the output format all directly affect how useful and reliable the adaptations are. Even though the prompts used in this framework are relatively simple compared to large fine-tuned systems, they still follow a consistent structure and design philosophy that make them work for this use case. In the architecture described in Chapter 3, each event passed to the SIF Backend Layer arrives already standardised, enriched with metadata, and paired with relevant user profile and history context. The following prompt engineering process simply embeds this structured data into the LLM request, ensuring that reasoning always starts from the same reliable, modality-agnostic representation.
+The LLM could also be more prone to hallucinations, which means it generates answers that sound plausible but are actually incorrect or nonsensical. This means the design of the prompt, the model parameters, and the output format all directly affect how useful and reliable the adaptations are. Even though the prompts used in this framework are relatively simple compared to large fine-tuned systems, they still follow a consistent structure and design philosophy that make them work for this use case. In the architecture described in Chapter~\ref{ch:chapter3}, each event passed to the SIF Backend Layer arrives already standardised, enriched with metadata, and paired with relevant user profile and history context. The following prompt engineering process simply embeds this structured data into the LLM request, ensuring that reasoning always starts from the same reliable, modality-agnostic representation.
 
 \subsection{LLM Prompt Design Principles}
 Prompt engineering in this context is not just about getting a correct answer, it directly impacts accessibility outcomes. A poorly constrained prompt could suggest adaptations that introduce visual clutter, require unnecessary actions, or even reduce usability for the intended audience. By embedding accessibility goals, WCAG criteria, and known user needs into the prompt, the LLM is guided toward changes that genuinely improve the interface rather than merely altering it.
@@ -1518,7 +1519,7 @@ The important elements here are:
     \item \textbf{Output constraints}: telling the model exactly what keys and value types are allowed.
     \item \textbf{Value rules}: restricting numeric ranges so the model doesn’t output absurd sizes.
 \end{itemize}
-The complete prompt set, agent-specific instructions, and their runtime configuration are detailed in Chapter 5.
+The complete prompt set, agent-specific instructions, and their runtime configuration are detailed in the codebase of this thesis.
 
 \subsection{Disjunction Ambiguity in LLM Interpretation}
 During testing, it was observed that LLMs can misinterpret logical connectors such as \textbf{or} and \textbf{and}. For example, the instruction:
@@ -1638,7 +1639,7 @@ Each response was classified as:
 The strict JSON output schema used in the backend was enforced to compute “schema-valid \%”. To avoid artificial timeouts during heavier MA-SIF runs, client keep-alive pings were disabled. Run sizes were intentionally small (6-10 events) due to API free-tier limits; the goal is to surface architectural trends, not saturate the service.
 
 \subsection*{Configurations}
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Exact agent settings for the three measured configurations.}
 \label{tab:agent-settings}
@@ -1684,10 +1685,11 @@ MA-SIF (heavy)        & 26875.99 & 27613.81 & 32009.47 & 27229.24 & 30443.48 & 3
 \bottomrule
 \end{tabular}%
 }
+\label{tab:latency_correctness}
 \caption*{\textit{Legend.} WS p50/p90/max: WebSocket round-trip latency percentiles and maximum (ms). Suite p50/p90/max: end-to-end latency percentiles and maximum for the deterministic event suite (ms). Schema-valid: share of responses that passed JSON schema validation (\%). \textit{n}: number of events.}
 \end{table}
 
-Across all runs \emph{0\% combined\_agent\_suggestions} and \emph{0\% mock\_rule\_fallback} was observed: the validator returned a final list for every event. In the heavy configuration, some individual agent calls failed (API-side), yet the validator still produced a valid final list, so external behaviour stayed stable.  
+Across all runs \emph{0\% combined\_agent\_suggestions} and \emph{0\% mock\_rule\_fallback} was observed: the validator returned a final list for every event. In the heavy configuration, some individual agent calls failed (API-side), yet the validator still produced a valid final list, so external behaviour stayed stable. (Table~\ref{tab:latency_correctness})
 Note: in earlier exploratory tests, fallbacks mainly appeared when the free-tier quota was hit or the validator timed out, which did not occur here. Furthermore, during this evaluation it was observed that the validator agent in the MA-SIF heavy config accepted more suggestions from the agents than in the other more balanced config.
 
 \subsection*{Interpretation}
@@ -1812,15 +1814,11 @@ Limitations of LLM integration including latency, occasional hallucinations, and
 Overall, Smart Intent Fusion was presented not just as an algorithm, but as a modular, extensible smart reasoning layer designed to work across platforms, adapt to different users, and remain robust in the face of LLM unpredictability. It is the component that turns multimodal input into meaningful, personalised adaptations for reshaping the interface to fit the user.
 
 %Chapter 5
-% diagrams!
-% Move to Chapter 5 (implementation)
-    % Full, unabridged prompts for each agent from sif_config.json.
-    % Exact numeric parameter configs for all agents + defaults -> tabel
-    % Any concrete backend code for prompt injection.
 \chapter{An Adaptive Multimodal GUI Framework using LLMs}
+\label{ch:chapter5}
 
 \section{Introduction to an Adaptive Smart Home Controller}
-The Adaptive Smart Home Controller is the practical proof-of-concept used to implement and validate the multimodal AI-driven GUI framework presented in this thesis. It serves as a concrete example of how the framework’s concepts, introduced in Chapter 3, can be applied in a real, interactive application. The Smart Home Controller simulates the control of typical household devices such as lights, thermostats, and door locks. While the devices themselves are virtual, the process of capturing inputs, interpreting them through the backend with user profiles and history, and applying adaptive changes to the interface is authentic and functionally representative of a real deployment.
+The Adaptive Smart Home Controller is the practical proof-of-concept used to implement and validate the multimodal AI-driven GUI framework presented in this thesis. It serves as a concrete example of how the framework’s concepts, introduced in Chapter~\ref{ch:chapter3}, can be applied in a real, interactive application. The Smart Home Controller simulates the control of typical household devices such as lights, thermostats, and door locks. While the devices themselves are virtual, the process of capturing inputs, interpreting them through the backend with user profiles and history, and applying adaptive changes to the interface is authentic and functionally representative of a real deployment.
 
 The choice for a smart home context was deliberate. It offers a relatable and real-life use case structured set of interaction scenarios that cover a range of UI components, buttons, sliders, text elements which are central to accessibility-focused adaptations. Furthermore, it reflects real-world situations where users may have diverse abilities and input preferences. For example, a motor-impaired user might need larger buttons to avoid frequent miss-taps, while a visually impaired user may benefit from higher-contrast modes and enlarged text. By embedding these scenarios into a single, unified application, the Smart Home Controller provides a manageable but representative testbed for the framework’s adaptive capabilities.
 
@@ -1856,7 +1854,7 @@ While this configuration is sufficient for the current implementation, it is als
 The frontend of the Adaptive Smart Home Controller is implemented in Flutter and serves as the primary user-facing component of the framework. Its role is to render the interface, capture user interactions across multiple modalities, and apply adaptation actions received from the backend in real time. Although the backend is responsible for reasoning about what adaptations to make, the frontend is where these adaptations become visible to the user and directly influence usability.
 
 \subsection{Responsibilities \& Data Flow}
-The Flutter frontend (\texttt{AdaptiveSmartHomeApp} $\rightarrow$ \texttt{SmartHomeScreen}) renders the device cards, captures user interactions (live touch; voice/gesture mocked), and applies backend-issued adaptations in real time via a WebSocket callback. The \texttt{AdaptiveUIAdapter} is constructed with a user ID and a callback; when the backend responds with a list of \texttt{UIAdaptation} items, the frontend updates reactive state maps and triggers lightweight animations.
+The Flutter frontend (\texttt{AdaptiveSmartHomeApp} $\rightarrow$ \texttt{SmartHomeScreen}) renders the device cards, captures user interactions (live touch; voice/gesture mocked), and applies backend-issued adaptations in real time via a WebSocket callback. The \texttt{AdaptiveUIAdapter} is constructed with a user ID and a callback; when the backend responds with a list of \texttt{UIAdaptation} items, the frontend updates reactive state maps and triggers lightweight animations. (Figure~\ref{fig:frontend_data_flow})
 
 \begin{figure}[h]
 \centering
@@ -1872,6 +1870,7 @@ The Flutter frontend (\texttt{AdaptiveSmartHomeApp} $\rightarrow$ \texttt{SmartH
 \draw[->] (adapt) -- node[left,xshift=-4mm]{\texttt{applyAdaptations()}} (ui);
 \end{tikzpicture}
 \caption{Frontend data flow: events to adapter; adaptations back to UI.}
+\label{fig:frontend_data_flow}
 \end{figure}
 
 \subsection{UI Composition \& State Model}
@@ -1887,6 +1886,7 @@ The UI is a scrollable list of device cards with minimalist controls each repres
 The UI is intentionally minimalist, focusing on clarity and accessibility. Each device card (Lamp, Thermostat, Lock) presents its controls in a clean, uncluttered layout: large buttons for toggling states, sliders for adjustments, and concise status labels. The design prioritizes high visual contrast and generous spacing, making it easier for users with motor or visual impairments to interact. Adaptations such as increased button size, font scaling, or contrast changes are immediately reflected in the UI, with smooth animations to reinforce feedback. A persistent mock event row below each card allows users (or testers) to simulate miss-taps, voice commands, or gestures, demonstrating how the interface responds and adapts in real time. This modular structure ensures that accessibility enhancements are both visible and intuitive, supporting a wide range of user needs without overwhelming the interface.
 
 \subsection{Event \& Adaptation Contract}
+\label{sec:event_adaptation_contract}
 \paragraph{Event (frontend$\rightarrow$backend).} Events carry modality and UI context:
 \begin{lstlisting}[language=json, basicstyle=\ttfamily\small, caption={Event structure}]
 {
@@ -1910,7 +1910,7 @@ This event will later be enriched with other required fields in the Input Adapte
 ]
 \end{lstlisting}
 
-Adaptations received from the backend after being processed by the Input Adapter Layer are applied immediately using Flutter’s reactive state management, This is handled in the \verb|applyAdaptations(...)| callback function. For example, a \texttt{increase\_button\_size} action triggers an \texttt{AnimatedScale} widget update, enlarging the targeted button over a short animation to make the change more noticeable without disrupting the user’s flow. Similarly, a \texttt{increase\_contrast} action adjusts the application’s color scheme by updating theme parameters, while text-related adaptations update font sizes dynamically. Furthermore, when these adaptations reach the frontend, a brief highlight at the top of the application, indicates the changes being applied. This direct mapping between adaptation actions and Flutter widget properties allows the frontend to respond flexibly to a wide range of changes without requiring hardcoded layouts.
+Adaptations received from the backend after being processed by the Input Adapter Layer are applied immediately using Flutter’s reactive state management, This is handled in the \verb|applyAdaptations(...)| callback function. For example, a \texttt{increase\_button\_size} action triggers an \texttt{AnimatedScale} widget update, enlarging the targeted button over a short animation to make the change more noticeable without disrupting the user’s flow. Similarly, a \texttt{increase\_contrast} action adjusts the application’s color scheme by updating theme parameters, while text-related adaptations update font sizes dynamically. Furthermore, when these adaptations reach the frontend, a brief highlight at the top of the application, indicates the changes being applied. This direct mapping between adaptation actions and Flutter widget properties allows the frontend to respond flexibly to a wide range of changes without requiring hardcoded layouts. See Table~\ref{tab:frontend-adapt-mapping} for details.
 
 \begin{table}[H]
 \centering
@@ -1987,7 +1987,7 @@ Overall, the Adaptive Smart Home Controller (\texttt{adaptive\_ui\_app.dart}) de
 
 % implementation details and extensibility eye tracking
 \section{Input Adapter (Dart): Transport, Serialization \& Adaptation Callback}
-The adapter bridges the Flutter frontend and the SIF backend by (i) serializing internal \texttt{Event} objects into the JSON event contract (defined in Chapter~3), (ii) handling low-latency transport via WebSocket for adaptations, and (iii) managing user profiles over HTTP. This section focuses on the concrete implementation in \texttt{adaptive\_ui\_adapter.dart}: the class surface, serialization choices, transport lifecycle, and the \texttt{onAdaptations} callback function into the frontend. We refer to Chapter~3 for the high-level event schema and field definitions.
+The adapter bridges the Flutter frontend and the SIF backend by (i) serializing internal \texttt{Event} objects into the JSON event contract, (ii) handling low-latency transport via WebSocket for adaptations, and (iii) managing user profiles over HTTP. This section focuses on the concrete implementation in \texttt{adaptive\_ui\_adapter.dart}: the class surface, serialization choices, transport lifecycle, and the \texttt{onAdaptations} callback function into the frontend. See Chapter~\ref{ch:chapter3} for the high-level event schema and field definitions.
 
 \subsection{Class Overview}
 \begin{figure}[H]
@@ -2025,9 +2025,10 @@ The adapter bridges the Flutter frontend and the SIF backend by (i) serializing 
 
 \end{tikzpicture}
 \caption{Simplified UML-like diagram for \texttt{AdaptiveUIAdapter}.}
+\label{fig:adaptive-ui-adapter}
 \end{figure}
 
-In the current implementation, the adapter intercepts mock events generated by the frontend, such as missed button presses, missed slider adjustments, or simulated voice commands. Each event is enriched with metadata, including the user’s identifier, a timestamp, the type of interaction, and any target element references. The adapter then converts this information into the JSON event contract, further defined in Chapter 3, which serves as the standard interface between the frontend and backend. This contract includes fields for event type, source modality, target element, coordinates if applicable, confidence level, time stamp, user\_id and additional metadata such as the spoken command in the case of voice input.
+In the current implementation (Figure~\ref{fig:adaptive-ui-adapter}), the adapter intercepts mock events generated by the frontend, such as missed button presses, missed slider adjustments, or simulated voice commands. Each event is enriched with metadata, including the user’s identifier, a timestamp, the type of interaction, and any target element references. The adapter then converts this information into the JSON event contract, further defined in Chapter~\ref{ch:chapter3}, which serves as the standard interface between the frontend and backend. This contract includes fields for event type, source modality, target element, coordinates if applicable, confidence level, time stamp, user\_id and additional metadata such as the spoken command in the case of voice input.
 
 \subsection{Internal Representations of Event, Adaptation and User Profiles}
 The adapter defines core Dart classes for representing interaction events, user profiles, and adaptation actions. The \texttt{Event} class encapsulates all relevant fields such as event type, source modality, target element, etc., ensuring every interaction is consistently structured and easily serializable to the backend’s JSON contract (see figure \ref{fig:adapter-classes} for schema details). Similarly, \texttt{UIAdaptation} models adaptation instructions received from the backend, while \texttt{UserProfile} maintains accessibility needs, preferences, and recent history. These unified data structures guarantee reliable, type-safe communication between frontend and backend, simplify integration, and support extensibility for future modalities or adaptation types.
@@ -2165,7 +2166,7 @@ void sendEvent(Event eventData) {
 
 \textbf{Receiving Adaptations:}
 
-When the adapter receives adaptations from the backend in the WebSocket channel, the adapter processes the JSON and converts them in a \texttt{UIAdaptation} list. This list is then passed to the \texttt{onAdaptations} frontend callback function. This function is responsible for updating the UI based on the received adaptation data, see section 5.3.3 for more details on this process.
+When the adapter receives adaptations from the backend in the WebSocket channel, the adapter processes the JSON and converts them in a \texttt{UIAdaptation} list. This list is then passed to the \texttt{onAdaptations} frontend callback function. This function is responsible for updating the UI based on the received adaptation data, see Section~\ref{sec:event_adaptation_contract} for more details on this process.
 
 \textbf{Profile Management:}
 
@@ -2196,7 +2197,7 @@ The backend implements the decision‑making core of the framework. It receives 
 The application exposes a WebSocket endpoint, \texttt{/ws/adapt}, that accepts JSON events matching the contract introduced earlier. Each message is parsed into a Pydantic \texttt{Event} model, the user profile is loaded from MongoDB, and the event, profile, and short history window are passed to the Smart Intent Fusion routine. The resulting adaptation list is returned on the same socket, allowing the frontend to update the UI immediately. For non‑interactive operations the backend offers \texttt{POST /profile} for profile creation, \texttt{GET /profile/{user\_id}} for retrieval, and a small set of diagnostic endpoints such as \texttt{GET /full\_history} and \texttt{GET /modalities}. Profile writes use FastAPI \texttt{BackgroundTasks}, which keeps the interaction path responsive while updates are persisted asynchronously.
 
 \subsubsection*{Startup \& Runtime}
-For local runs, the service is started via a small shell script that prepares a venv, checks MongoDB, and runs Uvicorn with explicit WebSocket keepalive settings:
+For local runs, the service is started via a small shell script (\texttt{start\_backend\_processes.sh}) that prepares a venv, checks MongoDB, and runs Uvicorn with explicit WebSocket keepalive settings:
 \begin{lstlisting}[basicstyle=\ttfamily\small,caption={Backend startup (excerpt)}]
 uvicorn backend:app --reload --host 0.0.0.0 --port 8000 \
   --ws websockets --ws-ping-interval 60 --ws-ping-timeout 180
@@ -2207,7 +2208,7 @@ This configuration enables reliable long-lived WS sessions during interactive te
 MongoDB stores user profiles in a \texttt{profiles} collection and event–adaptation pairs in a \texttt{logs} collection. Profiles are indexed by \texttt{user\_id} to allow direct lookups during interaction. Each time an event is processed the backend appends a compact JSON representation to the profile’s \texttt{interaction\_history}, capped to a small sliding window. This keeps the prompt context focused on recent behaviour while avoiding unnecessary growth in the database. For redundancy, a JSONL file mirrors the log entries during development, which simplifies offline inspection or debugging purposes when the database is reset.
 
 \subsection{Smart Intent Fusion and MA‑SIF}
-The fusion step supports two paths. A multi‑agent configuration, MA‑SIF, is the default. It loops over a set of specialised LLM agents, UI, Geometry, and Input, each prompted with the current event, the user profile, and a short history via runtime injection (for more details see Chapter 4), defined in the \texttt{sif\_config.json}. These agents propose structured adaptations in their domain, for example increasing button size, adjusting spacing, switching input mode, or triggering a button when intent is clear. Their outputs are then passed to a dedicated Validator agent that consolidates, filters, and normalises the suggestions into a final list. The validator removes duplicates, corrects out‑of‑range values, and ensures that every adaptation conforms to the allowed action set and includes a target and either a value or a mode and more.
+The fusion step supports two paths. A multi‑agent configuration, MA‑SIF, is the default. It loops over a set of specialised LLM agents, UI, Geometry, and Input, each prompted with the current event, the user profile, and a short history via runtime injection (for more details see Chapter~\ref{ch:chapter4}), defined in the \texttt{sif\_config.json}. These agents propose structured adaptations in their domain, for example increasing button size, adjusting spacing, switching input mode, or triggering a button when intent is clear. Their outputs are then passed to a dedicated Validator agent that consolidates, filters, and normalises the suggestions into a final list. The validator removes duplicates, corrects out‑of‑range values, and ensures that every adaptation conforms to the allowed action set and includes a target and either a value or a mode and more. See Table~\ref{fig:current-agent-configuration} for the current agent configuration.
 
 A single‑agent SIF path is also available. It produces a complete adaptation list in one call and is useful when quick iteration is preferable over agent specialisation. Both paths share the same I/O schema, which keeps the frontend indifferent to which reasoning strategy is currently set to active.
 
@@ -2225,6 +2226,7 @@ Validator & consolidate + validate all suggestions & \emph{all actions above} & 
 \bottomrule
 \end{tabular}
 \caption{MA\textendash SIF agents, focus, allowed actions, and model settings (runtime configurable).}
+\label{fig:current-agent-configuration}
 \end{table}
 
 \paragraph{Runtime defaults:}
@@ -2263,7 +2265,7 @@ For each event, the backend invokes Gemini per specialist agent (UI, Geometry, I
 If a specialist agent times out or returns invalid JSON, its suggestions are omitted; the Validator runs on whatever is available. If validation still fails schema checks or time outs, the backend emits the available adaptation or conservative rule-based adaptations as a fallback.
 
 \subsection{Structured outputs and guardrails}
-To reduce hallucinations and schema drift, the backend requests JSON‑typed responses from the LLM with an explicit schema and allowed actions, as described earlier in chapter 4. The prompt defines required fields, expected types, and a one‑of constraint that demands either a numeric \texttt{value} or a categorical \texttt{mode}. Agent prompts are intentionally narrow, which improves determinism. The validator prompt is broader, since it must adjust conflicting suggestions and justify final choices. Despite these controls, invalid outputs still occur occasionally. However, the schema can be enforced at two distinct levels: by the agents and by the validator. This dual-level approach makes it easier for the validator to ensure that the agents' adaptations are compliant. Furthermore, it has a defensive layer that falls back to simple rules if all LLM validation fails.
+To reduce hallucinations and schema drift, the backend requests JSON‑typed responses from the LLM with an explicit schema and allowed actions, as described earlier in Chapter~\ref{ch:chapter4}. The prompt defines required fields, expected types, and a one‑of constraint that demands either a numeric \texttt{value} or a categorical \texttt{mode}. Agent prompts are intentionally narrow, which improves determinism. The validator prompt is broader, since it must adjust conflicting suggestions and justify final choices. Despite these controls, invalid outputs still occur occasionally. However, the schema can be enforced at two distinct levels: by the agents and by the validator. This dual-level approach makes it easier for the validator to ensure that the agents' adaptations are compliant. Furthermore, it has a defensive layer that falls back to simple rules if all LLM validation fails.
 The output schema will produce an adaptation of the following format:
 \begin{lstlisting}[language=json,basicstyle=\ttfamily\small,caption={Example adaptation Format}]
 {"adaptations":[{"action":"...","target":"...","value":1.2,"mode":"...","reason":"...","intent":"..."}]}
@@ -2305,7 +2307,7 @@ The user profile and context subsystem was implemented as a dedicated data servi
 
 When a new event is received via the WebSocket (\texttt{/ws/adapt}), the backend queries the profile store using the supplied \texttt{user\_id}. If no profile exists, the profile will be created and added to the MongoDB using \texttt{insert\_one} before continuing, otherwise the profile will be retrieved using \texttt{find\_one} or updated using \texttt{update\_one}, ensuring that all adaptation decisions are made in a contextualized environment. This retrieval step is synchronous, guaranteeing that the most recent committed profile is available to the reasoning pipeline before any LLM or rule-based evaluation occurs. Interaction history is maintained using MongoDB’s \texttt{\$push} with \texttt{\$slice} operators to append the incoming event while capping the array length at 10 entries for efficiency. This rolling history provides the SIF agents with temporal context, enabling progressive personalization; for example, recognising a pattern of repeated miss-taps and proactively switching to voice mode. Updates to the history are performed asynchronously to avoid blocking real-time adaptation.
 
-Profile documents are structured as JSON as described in chapter 3, containing four key sections: \texttt{accessibility\_needs} (boolean capability flags), \texttt{input\_preferences} (preferred modality and fallback order), \texttt{ui\_preferences} (default font size, button scale and more), and \texttt{interaction\_history} (recent event log). This schema strikes a balance between simplicity and extensibility, allowing new fields to be added without migration overhead.
+Profile documents are structured as JSON as described in Chapter~\ref{ch:chapter4}, containing four key sections: \texttt{accessibility\_needs} (boolean capability flags), \texttt{input\_preferences} (preferred modality and fallback order), \texttt{ui\_preferences} (default font size, button scale and more), and \texttt{interaction\_history} (recent event log). This schema strikes a balance between simplicity and extensibility, allowing new fields to be added without migration overhead.
 
 To optimise performance and safety, all profile mutations are atomic, relying on MongoDB transactions to prevent race conditions when simultaneous events and updates occur. Adaptation logs are stored separately in the \texttt{logs} collection and mirrored to a local \texttt{adaptation\_log.jsonl} file, supporting offline analysis and reproducibility of evaluation results. Furthermore, if a profile update is in-flight during an event, the backend uses the latest committed profile, mitigated by client-side checks (waiting for \texttt{POST /profile} success) and server-side transactions.
 
@@ -2490,7 +2492,7 @@ The design of the Adaptive Multimodal GUI Framework using LLMs reflects a series
 \textbf{Reasoning:}
 \begin{itemize}
     \item \textbf{Low Latency:} WebSocket enables fast and bidirectional sending of data like adaptations (e.g., scaling a button after a miss-tap).
-    \item \textbf{Reliability:} HTTP supports robust profile updates (\texttt{POST}/\texttt{PUT} \texttt{/profile}), ideal for non-real-time scenarios or debugging.
+    \item \textbf{Reliability:} HTTP supports robust profile updates (\texttt{POST} \texttt{/profile}), ideal for non-real-time scenarios or debugging.
     \item \textbf{Accessibility:} Real-time feedback enhances usability for motor-impaired or hands-free users, where delays could disrupt interaction. 
 \end{itemize}
 
@@ -2550,7 +2552,7 @@ In its current state, the implementation demonstrates that the framework can del
 
 %Chapter 6
 \chapter{Evaluation}
-% Feasibility Study and System Demonstration
+\label{ch:evaluation}
 
 \section{Evaluation Overview}
 The goal of evaluating the implementation is by feasibility study, to check whether the multimodal AI-driven adaptation pipeline works end-to-end under realistic interaction traces, and whether it does so in a way that is useful for accessibility. Concretely:
@@ -2571,7 +2573,7 @@ Six user profiles (P0--P5) were used to cover a range of interaction needs, incl
     \item \textbf{P4 (Combined):} Needs adaptations for both motor and hands-free interactions (voice preferred).
     \item \textbf{P5 (Combined):} Needs adaptations for motor and visual impairments (voice preferred).
 \end{itemize}
-For each of the six profiles, two runs were executed to allow a small interaction history to build up over time. Each run consisted of the same 7-event sequence (14 events per profile, 84 events total). 
+For each of the six profiles, two runs were executed to allow a small interaction history to build up over time. Each run consisted of the same 7-event sequence (14 events per profile, 84 events total). See Table~\ref{tab:user-profile-mapping} for the user profile mapping.
 
 \begin{table}[h]
 \centering
@@ -2588,6 +2590,7 @@ P4 & Motor-impaired + hands-free, voice modality \\
 P5 & Visual-impaired + motor-impaired, voice modality \\
 \bottomrule
 \end{tabular}
+\label{tab:user-profile-mapping}
 \end{table}
 
 \paragraph{Event Suite:}
@@ -2601,7 +2604,7 @@ The event suite mixes errors and successful attempts across modalities and targe
 This combination intentionally triggers common accessibility challenges (tap precision, slider control, and mode switching between touch/voice/gesture).
 
 \paragraph{Backend Configuration and Metrics:} 
-All traces were evaluated using the MA-SIF (balanced) configuration, with each event’s adaptation response checked for schema validity. For every event, the classification path (validator vs. fallback) and latency metrics (p50/p90/max) were recorded. Analysis was performed using the project’s extraction and evaluation scripts, which flatten the JSONL logs to CSV, compute summary statistics, and export figures and tables for reporting.
+All traces were evaluated using the MA-SIF (balanced) configuration (Table~\ref{tab:ma-sif-config}), with each event’s adaptation response checked for schema validity. For every event, the classification path (validator vs. fallback) and latency metrics (p50/p90/max) were recorded. Analysis was performed using the project’s extraction and evaluation scripts, which flatten the JSONL logs to CSV, compute summary statistics, and export figures and tables for reporting.
 \begin{table}[htb]
 \centering
 \caption{MA-SIF (balanced) agent configuration}
@@ -2616,9 +2619,10 @@ Input      & gemini-flash-lite & 0   & 0.2 & 15 \\
 Validator  & gemini-flash      & -1  & 0.3 & 30 \\
 \bottomrule
 \end{tabular}
+\label{tab:ma-sif-config-eval}
 \end{table}
 
-\paragraph{Operational definitions (micro-clarifications).}
+\paragraph{Operational definitions (micro-clarifications):}
 \textbf{Schema-valid} means the response object conforms to the adaptation JSON schema (valid action names, allowed parameter ranges, resolvable UI targets, and consistency checks enforced by the Validator). 
 \textbf{Latency} is measured client-side per event as $\Delta t = t_{\text{recv}} - t_{\text{send}}$, covering multi-agent coordination and Validator checks.
 
@@ -2642,7 +2646,7 @@ Hardware configuration:
 \newpage
 \section{Results and Observations}
 \subsection{Overall Summary}
-Across 84 events and 6 user profiles, the system produced adaptations with:
+Across 84 events and 6 user profiles, the system produced adaptations with: (Table~\ref{tab:overall-feasibility})
 \begin{itemize}
     \item \textbf{Schema-valid outputs:} 84.52\% of events.
     \item \textbf{Classification path:} 100\% processed via the Validator (no fallback used).
@@ -2666,6 +2670,7 @@ Across 84 events and 6 user profiles, the system produced adaptations with:
     Latency max (s) & 21.10 \\
     \bottomrule
   \end{tabular}
+  \label{tab:overall-feasibility}
 \end{table}
 
 The most frequent actions were:
@@ -2680,7 +2685,7 @@ Because multiple suggestions can be attached to one event, action counts exceed 
 \paragraph{Interpretation:} The system strongly prioritizes motor-related support (larger targets, borders, spacing) and modal switching to voice when it detects tap/slider errors, exactly the pattern that is needed for motor-impaired and hands-free users. Vision-related support (font size and contrast) also appears consistently, but is less prominent than motor support in this trace.
 
 \subsection{Per-Profile Outcomes}
-Per-profile schema validity and latency (median p50, higher-tail p90, and worst-case max):
+Per-profile schema validity and latency (median p50, higher-tail p90, and worst-case max): (Table~\ref{tab:per-profile})
 \begin{itemize}
     \item \textbf{P0 (baseline)}: 78.57\% valid; $p50 \approx 16.02\,\mathrm{s}$; $p90 \approx 20.23\,\mathrm{s}$; max $21.10\,\mathrm{s}$.
     \item \textbf{P1 (motor)}: 85.71\% valid; $p50 \approx 13.19\,\mathrm{s}$; $p90 \approx 16.78\,\mathrm{s}$; max $17.43\,\mathrm{s}$.
@@ -2706,8 +2711,9 @@ Per-profile schema validity and latency (median p50, higher-tail p90, and worst-
     P5 & Visual + Motor & 100.00 & 12.70 & 16.25 & 16.60 \\
     \bottomrule
   \end{tabular}
+    \label{tab:per-profile}
 \end{table}
-
+\newpage
 \paragraph{Observations:}
 \begin{itemize}
     \item Highest validity appears for combined needs (P5), likely because the event suite provides strong, consistent signals (miss-taps + slider overshoot) that align with the rules and model prior for motor/visual support.
@@ -2782,7 +2788,7 @@ In summary, the framework demonstrated robust adaptation performance, consistent
 
 %Chapter 7
 \chapter{Discussion and Future Work}
-
+\label{ch:chapter7}
 \section{Overview}
 This chapter interprets the results of this thesis in the broader context of accessibility and human-computer interaction (HCI), linking the implemented framework to existing research and real deployment. It first discusses implications for adaptive interface design, then summarises key findings and contrasts them with related work. Limitations and threats to validity are addressed explicitly. The chapter closes with a focused future-work,spanning near-term engineering improvements and longer-term research directions, including on-device, autonomous adaptation.
 
