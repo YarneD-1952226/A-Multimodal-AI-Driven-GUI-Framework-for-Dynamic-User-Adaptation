@@ -1458,7 +1458,7 @@ Two key parameters control the behaviour of each LLM agent in MA-SIF: \textbf{te
 
 \textbf{Temperature} determines the randomness and creativity of the model’s output. Lower values (e.g., 0.2) make the agent more deterministic, producing consistent and predictable suggestions—ideal for accessibility-focused UI changes where reliability is critical. Higher values (e.g., 0.7 or 1.0) increase creativity and output diversity, but can introduce unpredictability or hallucinations, which may be undesirable for critical adaptations.
 
-\textbf{Thinking budget} limits the number of reasoning steps or computational effort before the agent responds. A budget of 0 results in minimal reasoning and fast, direct answers. Higher budgets allow the agent to consider more factors, leading to more nuanced or complex suggestions. Negative values (e.g., -1) remove the limit, enabling extensive reasoning—useful for roles like the Validator Agent, which must resolve conflicts and ensure schema compliance.
+\textbf{Thinking budget} limits the number of reasoning steps or computational effort before the agent responds. A budget of 0 results in minimal reasoning and fast, direct answers. Higher budgets allow the agent to consider more factors, leading to more nuanced or complex suggestions. Negative values (e.g., -1) remove the limit, enabling extensive reasoning, useful for roles like the Validator Agent, which must resolve conflicts and ensure schema compliance.
 
 \textbf{Effect on Reasoning:}
 \begin{itemize}
