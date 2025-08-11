@@ -2,8 +2,8 @@
 
 ## Objective
 
-This thesis presents a modular and scalable framework for **real-time, AI-driven user interface adaptation**, enabling personalised accessibility enhancements across diverse platforms such as **Flutter (desktop/mobile/web)**, **SwiftUI (Apple platforms)**, and future **VR/AR environments** (Unity).  
-The framework fuses multimodal inputs — **touch, keyboard, voice, gestures** — with AI reasoning to dynamically modify UIs according to user needs, context, and interaction history.
+This master's thesis presents a modular and scalable framework for **real-time, multimodal AI-driven user interface adaptation**, enabling personalised accessibility enhancements across diverse platforms such as **Flutter (desktop/mobile/web)**, **SwiftUI (Apple platforms)**, and future **VR/AR environments** (Unity).  
+The framework fuses multimodal inputs — **touch, voice, gestures** — with AI reasoning to dynamically modify UIs according to user needs, context, and interaction history.
 
 At its core is **Smart Intent Fusion (SIF)**, a hybrid reasoning system combining **deterministic rules** with **multi-agent large language model (LLM)** reasoning. SIF interprets multimodal signals, user profiles, and recent interaction history to infer intent and propose targeted UI adaptations such as button enlargement, contrast adjustments, and input mode switching.
 
