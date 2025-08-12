@@ -195,9 +195,22 @@
 
 \chapter*{Abstract}
 This thesis presents a multimodal AI-driven GUI framework for dynamic user interface adaptation, enabling real-time, personalised accessibility enhancements across platforms such as Flutter, SwiftUI, and beyond. Designed with a focus on the health domain, the framework supports motor-impaired, visually impaired, and hands-free users by integrating diverse input modalities including touch, keyboard, voice, and gestures.
-At its core is Smart Intent Fusion (SIF), a multi-agent architecture powered by large language models (LLMs) via the Google Gemini API. SIF fuses user inputs, events, profiles, and interaction history to infer intent and propose targeted UI adaptations such as button enlargement, contrast enhancement, and navigation mode switching. The reasoning engine combines rule-based logic for predictable, low-latency responses with LLM-driven reasoning for complex or ambiguous cases.
+At its core is Smart Intent Fusion (SIF), a multi-agent architecture powered by large language models (LLMs) via the Google Gemini API. SIF fuses user inputs, events, profiles, and interaction history to infer intent and propose targeted UI adaptations such as button enlargement, contrast enhancement, and navigation mode switching. The SIF reasoning engine combines rule-based logic for predictable, low-latency responses with LLM-driven reasoning for complex or ambiguous cases.
 The framework provides developer-friendly integration through standardised JSON contracts and a FastAPI backend, making it portable across domains and platforms. Its feasibility was evaluated using six diverse user profiles, each representing different accessibility needs. For each profile, two sequential runs of seven multimodal interaction events were executed, allowing the system to adapt both to immediate interaction errors (e.g., miss-taps, slider overshoots) and to evolving user histories. Configurations were assessed for schema validity, action alignment with profile needs, and latency distribution, supported by per-profile breakdowns and global action analysis. This study demonstrated that the system consistently produced accessibility-targeted adaptations, with measurable strengths and areas for refinement in personalisation and latency handling.
 By addressing the gap in intelligent, multimodal UI adaptation, this work helps advance human-computer interaction and lays the foundation for future AI models capable of autonomously rewriting UI code, offering a scalable and extensible solution for personalised user experiences.
+
+\chapter*{Acknowledgments}
+I would like to express my deepest appreciation to all those who have supported and guided me throughout the course of my master’s thesis.
+
+First and foremost, I am sincerely grateful to Prof. Dr. Kris Luyten, my thesis supervisor, for his invaluable guidance, constructive feedback, practical tips, and continuous support.
+
+My heartfelt gratitude extends to my family, especially my sister Phaedra, my brother-in-law Dennis, and my parents for their unwavering support, patience, and help with proofreading.
+
+I would also like to thank my fellow students for their encouragement, collaboration, and support during this journey. Special thanks go to my two dogs, Tobias and Casper, whose company during countless late-night coding sessions, and gentle reminders to take breaks helped keep me grounded.
+
+Finally, I am thankful to my friends for their motivation, belief in my abilities, and for making this challenging journey a rewarding one.
+
+This work would not have been possible without the contribution and support of all these people, to whom I am deeply grateful.
 
 \chapter*{Nederlandse Samenvatting}
 \section*{Inleiding}
@@ -269,7 +282,7 @@ Multi-Agent SIF (MA-SIF) verfijnt dit door taken te splitsen in gespecialiseerde
 
 Prompt engineering is cruciaal voor LLM-prestaties. Principes includeren expliciete instructies ("Wees conservatief, hallucineer geen targets"), gestructureerde formats (bijv. "Output als JSON: {actions: [{type, target, value}]}"), en ambiguïteit vermijden (geen disjuncties zoals "A of B" die LLM's verkeerd interpreteren). Strikte schemas dwingen validiteit af: ongeldige outputs worden verworpen en fallbacken naar regels. Metrics evalueren SIF: latency (mediaan 13s voor MA-SIF), schema-validiteit (84.5\% in tests), correctheid (actie-alignment met profiel, 97.5\% toegankelijkheidsgericht), en personalisatie (bijv. \% aanpassingen uniek per profiel).
 
-Beperkingen van LLM-integratie zijn significant: latency door API-calls (seconden vs. ms voor regels), hallucinaties (bijv. niet-bestaande targets), en tokenlimits (contextgrootte beperkt geschiedenis). Oplossingen: hybride fallbacks (regels eerst, LLM asynchroon), validatoren voor filtering, en caching van bijvoorbeeld veelvoorkomende prompts. LLM-selectie (Gemini vs. GPT) balanceert kosten, snelheid en multimodaliteit. Toekomstige richtingen: autonome on-device agents met fine-tuned modellen (bijv. getraind op UI-logs en WCAG-richtlijnen), integratie met RL voor leren van feedback, en visuele UI-analyse (vision models voor screenshot-parsing) om context te verrijken zonder metadata.
+Beperkingen van LLM-integratie zijn significant: latency door API-calls (seconden vs. ms voor regels), hallucinaties (bijv. niet-bestaande targets), en tokenlimits (contextgrootte beperkt geschiedenis). Mogelijke oplossingen: hybride fallbacks (regels eerst, LLM asynchroon), validatoren voor filtering, en caching van bijvoorbeeld veelvoorkomende prompts. LLM-selectie (Gemini vs. GPT) balanceert kosten, snelheid en multimodaliteit. Toekomstige richtingen: autonome on-device agents met fine-tuned modellen (bijv. getraind op UI-logs en WCAG-richtlijnen), integratie met RL voor leren van feedback, en visuele UI-analyse (vision models voor screenshot-parsing) om context te verrijken zonder metadata.
 SIF transformeert statische UI's naar dynamische, intentiebewuste systemen, met een balans tussen snelheid, intelligentie en betrouwbaarheid, cruciaal voor toegankelijkheidsgerichte toepassingen.
 
 \textbf{Implementatie van het Framework}
@@ -307,22 +320,9 @@ Toekomstig werk omvat een gebruikersstudie met 12-18 deelnemers (4-6 per profiel
 \section*{Conclusie}
 Dit werk ontwikkelt een innovatief framework voor real-time multimodale UI-adaptatie, met een sterke focus op toegankelijkheid in het gezondheidsdomein, waar gebruikers met motorische, visuele of handsfree beperkingen baat hebben bij gepersonaliseerde interfaces. Smart Intent Fusion (SIF) combineert deterministische regels met LLM-gedreven redenering voor betrouwbare, contextbewuste aanpassingen, zoals het dynamisch vergroten van elementen of schakelen naar stemmodi, allemaal binnen een modulaire architectuur die schaalbaar is over platforms.
 
-Bijdragen omvatten een cross-platform design dat events standaardiseert via JSON, developer-vriendelijkheid met minimale setup en herbruikbare patronen, en een hybride engine die latency minimaliseert terwijl intelligentie maximaliseert. Beperkingen zijn de afhankelijkheid van externe LLM-API's (met quota's en privacy-risico's), de synthetische evaluatie (geen veldstudies, potentieel missen van edge-cases), en latency in multi-agent flows (mediaan 13s, merkbaar in snelle interacties). Lessen geleerd: hybride beter dan puur AI voor responsiviteit, strikte schemas cruciaal voor output-kwaliteit, en simulatie nuttig voor tuning voordat user involvement.
+Bijdragen omvatten een cross-platform design dat events standaardiseert via JSON "contracten", developer vriendelijkheid met minimale setup en herbruikbare patronen, en een hybride engine die latency minimaliseert terwijl intelligentie maximaliseert. Beperkingen zijn de afhankelijkheid van externe LLM-API's (met quota's en privacy-risico's), de synthetische evaluatie (geen veldstudies, potentieel missen van edge-cases), en latency in multi-agent flows (mediaan 13s, merkbaar in snelle interacties). Lessen geleerd: hybride beter dan puur AI voor responsiviteit, strikte schemas cruciaal voor output-kwaliteit, en simulatie nuttig voor tuning voordat user involvement.
 
 De evaluatie bevestigt haalbaarheid: consistente, toegankelijkheidsgerichte outputs met hoge validiteit, wat de basis legt voor bredere adoptie. Zelfreflectie: de doelen – modulaire fusie, intelligente adaptatie, toegankelijkheidsimpact – zijn bereikt, met een iteratief proces dat prioriteerde op end-to-end pipelines voor snelle feedback; gaps zoals latency en context-awareness vormen een duidelijke roadmap. Finale opmerkingen: dit werk stuwt interfaces van statische schermen naar adaptieve systemen die gepersonaliseerd, inclusief en veerkrachtig zijn, technologie positionerend als behulpzame partner in diverse contexten, met potentieel voor ecosysteemgroei via SDK's en open benchmarks.
-
-\chapter*{Acknowledgments}
-I would like to express my deepest appreciation to all those who have supported and guided me throughout the course of my master’s thesis.
-
-First and foremost, I am sincerely grateful to Prof. Dr. Kris Luyten, my thesis supervisor, for his invaluable guidance, constructive feedback, practical tips, and continuous support.
-
-My heartfelt gratitude extends to my family, especially my sister Phaedra, my brother-in-law Dennis, and my parents for their unwavering support, patience, and help with proofreading.
-
-I would also like to thank my fellow students for their encouragement, collaboration, and support during this journey. Special thanks go to my two dogs, Tobias and Casper, whose company during countless late-night coding sessions, and gentle reminders to take breaks helped keep me grounded.
-
-Finally, I am thankful to my friends for their motivation, belief in my abilities, and for making this challenging journey a rewarding one.
-
-This work would not have been possible without the contribution and support of all these people, to whom I am deeply grateful.
 
 \tableofcontents
 \listoffigures
@@ -2215,14 +2215,14 @@ A single‑agent SIF path is also available. It produces a complete adaptation l
 \subsubsection*{Current Agent Configuration (MA-SIF balanced) (from \texttt{sif\_config.json})}
 \begin{table}[H]
 \centering
-\begin{tabular}{p{2.1cm}p{4cm}p{4cm}p{4.1cm}}
+\begin{tabular}{p{2.1cm}p{4cm}p{4cm}p{4cm}}
 \toprule
 \textbf{Agent} & \textbf{Focus (examples)} & \textbf{Allowed actions} & \textbf{Model / params} \\
 \midrule
-UI suggestion & increase font sizes; enable contrast mode; stronger button borders; tooltips & \texttt{increase\_font\_size}, \texttt{increase\_contrast}, \texttt{increase\_button\_border}, \texttt{show\_tooltip} & \texttt{gemini-2.5-flash-lite}, $temp{=}0.2$, timeout 15\,s, thinking\_budget=0 \\
-Geometry & spacing; button size; slider size; simplify layout & \texttt{increase\_button\_size}, \texttt{increase\_slider\_size}, \texttt{adjust\_spacing}, \texttt{simplify\_layout} & \texttt{gemini-2.5-flash-lite}, $temp{=}0.2$, timeout 15\,s, thinking\_budget=0 \\
-Input & mode switching; trigger buttons & \texttt{switch\_mode}, \texttt{trigger\_button} & \texttt{gemini-2.5-flash-lite}, $temp{=}0.2$, timeout 15\,s, thinking\_budget=0 \\
-Validator & consolidate + validate all suggestions & \emph{all actions above} & \texttt{gemini-2.5-flash}, $temp{=}0.3$, timeout 30\,s, thinking\_budget=-1 \\
+UI suggestion & increase font sizes; enable contrast mode; stronger button borders; tooltips & \texttt{increase\_font\_size}, \texttt{increase\_contrast}, \texttt{increase\_button\_border}, \texttt{show\_tooltip} & \texttt{gemini-2.5-flash-lite}, temp{=}0.2, timeout{=}15\,s, thinking\_budget=0 \\
+Geometry & spacing; button size; slider size; simplify layout & \texttt{increase\_button\_size}, \texttt{increase\_slider\_size}, \texttt{adjust\_spacing}, \texttt{simplify\_layout} & \texttt{gemini-2.5-flash-lite}, temp{=}0.2, timeout{=}15\,s, thinking\_budget=0 \\
+Input & mode switching; trigger buttons & \texttt{switch\_mode}, \texttt{trigger\_button} & \texttt{gemini-2.5-flash-lite}, temp{=}0.2, timeout{=}15\,s, thinking\_budget=0 \\
+Validator & consolidate + validate all suggestions & \emph{all actions above} & \texttt{gemini-2.5-flash}, temp{=}0.3, timeout{=}30\,s, thinking\_budget=-1 \\
 \bottomrule
 \end{tabular}
 \caption{MA\textendash SIF agents, focus, allowed actions, and model settings (runtime configurable).}
@@ -2233,8 +2233,8 @@ Validator & consolidate + validate all suggestions & \emph{all actions above} & 
 \begin{itemize}
   \item \textbf{Default model settings:} 
     \begin{itemize}
-        \item UI/Geometry/Input use \texttt{gemini-2.5-flash-lite} at $temp{=}0.2$ with a 15\,s timeout and thinking budget of 0 (no thinking).
-        \item Validator uses \texttt{gemini-2.5-flash} at $temp{=}0.3$ with a 30\,s timeout and thinking budget of -1 (dynamic).
+        \item UI/Geometry/Input use \texttt{gemini-2.5-flash-lite} with a temperature of 0.2, a 15\,s timeout and thinking budget of 0 (no thinking).
+        \item Validator uses \texttt{gemini-2.5-flash} with a temperature of 0.3, a 30\,s timeout and thinking budget of -1 (dynamic).
     \end{itemize}
   \item \textbf{Whitelisting:} Each agent is restricted to an \emph{allowed action set}; Validator allows the union set only.
   \item \textbf{Schema enforcement:} Responses must match the JSON schema (\texttt{response\_json\_schema}); non-conforming replies trigger fallback.
@@ -2656,7 +2656,6 @@ Across 84 events and 6 user profiles, the system produced adaptations with: (Tab
 \begin{table}[htb]
   \centering
   \caption{Overall feasibility results with MA-SIF (balanced).}
-  \label{tab:overall-feasibility}
   \begin{tabular}{lr}
     \toprule
     \textbf{Metric} & \textbf{Value} \\
@@ -2698,7 +2697,6 @@ Per-profile schema validity and latency (median p50, higher-tail p90, and worst-
 \begin{table}[htb]
   \centering
   \caption{Per-profile schema validity and latency under MA-SIF (balanced).}
-  \label{tab:per-profile}
   \begin{tabular}{l l r r r r}
     \toprule
     \textbf{Profile} & \textbf{Declared needs} & \textbf{Valid (\%)} & \textbf{$p_{50}$ (s)} & \textbf{$p_{90}$ (s)} & \textbf{max (s)} \\

@@ -1,4 +1,4 @@
-# MA-SIF Config 1 Benchmark Data
+# MA-SIF Config 1 (Balanced) Benchmark Data
 
 Welcome to the benchmark data folder for **MA-SIF Config 1**. This dataset supports the evaluation and testing of the Multi-Agent Smart Intent Fusion (MA-SIF) framework for adaptive UI in the Accessible Smart Home Controller.
 
