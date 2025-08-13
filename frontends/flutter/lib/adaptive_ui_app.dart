@@ -237,7 +237,7 @@ class _SmartHomeScreenState extends State<SmartHomeScreen> {
     'lock': 'Locked',
   };
   double thermostatValue = 20.0;
-  String userId = 'Yarne';
+  String userId = 'P5';
   bool isLoading = false;
   String? _loadingDevice;
   UserProfile? _profile;

@@ -6,10 +6,9 @@
       "allowed_actions": ["increase_font_size", "increase_contrast", "increase_button_border", "show_tooltip"],
       "prompt": "You're the UI suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' and 'mode' field. Value must be a reasonable number (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements.",
       "model_settings": {
-        "model": "gemini-2.5-flash",
+        "model": "gemini-2.5-flash-lite",
         "temperature": 0.2,
-        "thinking_budget": 2048,
-        "timeout":30
+        "thinking_budget": 0
       }
     },
     "geometry": {
@@ -18,10 +17,8 @@
       "allowed_actions": ["increase_button_size", "increase_slider_size", "adjust_spacing", "simplify_layout"],
       "prompt": "You're the Geometry suggestion Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' and 'mode' field. Value must be reasonable(e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements.",
       "model_settings": {
-        "model": "gemini-2.5-flash",
-        "temperature": 0.2,
-        "thinking_budget": 2048,
-        "timeout":30
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2
       }
     },
     "input": {
@@ -30,10 +27,7 @@
       "allowed_actions": ["switch_mode", "trigger_button"],
       "prompt": "You're the Input suggestions Agent. Analyze user event: {event_json}\nUser profile: {profile_json}\nRecent history (last 10 events): {history_json}\nSuggest UI adaptations as JSON in the strict format. Each suggestion must include 'intent', 'reason', and at least a 'value' and 'mode' field. Value must be reasonable (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements.",
       "model_settings": {
-        "model": "gemini-2.5-flash",
-        "temperature": 0.2,
-        "thinking_budget": 2048,
-        "timeout":30
+        "model": "gemini-2.5-flash-lite"
       }
     },
     "validator": {

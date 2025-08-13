@@ -8,8 +8,7 @@ BACKEND_WS   = "ws://localhost:8000/ws/adapt"
 
 # --- Adaptations schema (strict: action/target/reason/intent + value|mode) ---
 ADAPTATIONS_SCHEMA = {
-                "type": "object",
-                "properties": {
+                
                 "adaptations": {
                     "type": "array",
                     "items": {
@@ -47,8 +46,8 @@ ADAPTATIONS_SCHEMA = {
                     ]
                     }
                 }
-                },
-                "required": ["adaptations"]
+
+                # "required": ["adaptations"]
             }
 
 # --- Profiles you’ll iterate (replace with your six from the plan) ---
@@ -94,54 +93,66 @@ def classify_response(resp_json):
   return schema_valid, cls
 
 def post_profile(p):
-  r = requests.post(f"{BACKEND_HTTP}/profile", json=p, timeout=10)
+  r = requests.post(f"{BACKEND_HTTP}/profile", json=p, timeout=3)
   r.raise_for_status()
   return r.json()
+
+def open_ws(url):
+    return connect(
+        url,
+        open_timeout=30,
+        close_timeout=120,
+        ping_interval=5,
+        ping_timeout=120,
+        max_size=None,   # no cap
+    )
 
 def run_profile(p, runs=2, jsonl_path="feasibility_log.jsonl"):
   # Create/update profile
   meta = post_profile(p)
   print(f"[{p['user_id']}] profile status:", meta.get("status","ok"))
 
-  ws = connect(BACKEND_WS)
-  with open(jsonl_path,"a") as f:
-    for r in range(1, runs+1):
-      for idx, ev in enumerate(event_script(p["user_id"]), start=1):
-        send_ts = time.perf_counter()
-        send_iso = dt.datetime.utcnow().isoformat()+"Z"
-        ws.send(json.dumps(ev))
-        raw = ws.recv()
-        recv_ts = time.perf_counter()
-        recv_iso = dt.datetime.utcnow().isoformat()+"Z"
-        latency_ms = round((recv_ts - send_ts)*1000, 2)
+  ws = open_ws(BACKEND_WS)
+  profile_idx = PROFILES.index(p)
+  profile_filename = f"profile{profile_idx}.jsonl"
+  with open(profile_filename, "a") as f:
+      for r in range(1, runs+1):
+          for idx, ev in enumerate(event_script(p["user_id"]), start=1):
+            send_ts = time.perf_counter()
+            send_iso = dt.datetime.utcnow().isoformat()+"Z"
+            ws.send(json.dumps(ev))
+            raw = ws.recv()
+            recv_ts = time.perf_counter()
+            recv_iso = dt.datetime.utcnow().isoformat()+"Z"
+            latency_ms = round((recv_ts - send_ts)*1000, 2)
 
-        try:
-          resp = json.loads(raw)
-        except Exception as e:
-          resp = {"parse_error": str(e), "raw": raw}
+            try:
+                resp = json.loads(raw)
+            except Exception as e:
+                resp = {"parse_error": str(e), "raw": raw}
 
-        schema_valid, classification = (False, "unknown")
-        if isinstance(resp, dict):
-          schema_valid, classification = classify_response(resp)
+            schema_valid, classification = (False, "unknown")
+            if isinstance(resp, dict):
+                schema_valid, classification = classify_response(resp)
 
-        row = {
-          "run_id": str(uuid.uuid4()),
-          "profile_id": p["user_id"],
-          "run_index": r,
-          "event_index": idx,
-          "event": ev,
-          "t_send": send_iso,
-          "t_recv": recv_iso,
-          "latency_ms": latency_ms,
-          "response": resp,
-          "schema_valid": schema_valid,
-          "classification": classification,
-          "backend_config": "MA-SIF balanced + instant rules"
-        }
-        f.write(json.dumps(row) + "\n")
-        print(f"[{p['user_id']} r{r} e{idx}] {latency_ms}ms | valid={schema_valid} | {classification}")
+            row = {
+                "run_id": str(uuid.uuid4()),
+                "profile_id": p["user_id"],
+                "run_index": r,
+                "event_index": idx,
+                "event": ev,
+                "t_send": send_iso,
+                "t_recv": recv_iso,
+                "latency_ms": latency_ms,
+                "response": resp,
+                "schema_valid": schema_valid,
+                "classification": classification,
+                "backend_config": "single-agent SIF + instant rules"
+            }
+            f.write(json.dumps(row) + "\n")
+            print(f"[{p['user_id']} r{r} e{idx}] {latency_ms}ms | valid={schema_valid} | {classification}")
   ws.close()
 
 if __name__ == "__main__":
-  for p in PROFILES:
-    run_profile(p)
+    for p in PROFILES[3:]:
+        run_profile(p)

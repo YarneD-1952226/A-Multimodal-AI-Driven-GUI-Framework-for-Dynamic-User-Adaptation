@@ -18,9 +18,9 @@ It aggregates per user (from event.user_id or profile_id) and writes:
 
 Run:
 python extract_profiles_events.py \
-  --glob "/mnt/data/profile*.jsonl" \
-  --output-json "/mnt/data/chapter6_payload.json" \
-  --output-csv "/mnt/data/profile_summary.csv"
+  --glob "./profile*.jsonl" \
+  --output-json "./chapter6_payload.json" \
+  --output-csv "./profile_summary.csv"
 """
 
 import argparse

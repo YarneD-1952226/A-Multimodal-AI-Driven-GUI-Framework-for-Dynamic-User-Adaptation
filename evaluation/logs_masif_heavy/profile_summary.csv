@@ -1,0 +1,7 @@
+user_id,events_total,miss_tap,tap,voice,gesture,key_press,other,schema_valid_pct,latency_p50_ms,latency_p90_ms,latency_max_ms,top_targets,top_miss_targets,backend_top,validated_pct,combined_pct,mock_pct
+P0,14,4,0,6,2,0,2,100.00,34420.31,39006.56,39704.20,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",single-agent SIF + instant rules,100.00,0.00,0.00
+P1,14,4,0,6,2,0,2,100.00,34920.75,41280.49,43170.82,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",single-agent SIF + instant rules,100.00,0.00,0.00
+P2,14,4,0,6,2,0,2,100.00,36548.49,43345.99,54437.24,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",single-agent SIF + instant rules,100.00,0.00,0.00
+P3,14,4,0,6,2,0,2,100.00,34670.46,36924.69,39939.43,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",single-agent SIF + instant rules,100.00,0.00,0.00
+P4,14,4,0,6,2,0,2,100.00,40753.33,44980.25,61211.14,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",single-agent SIF + instant rules,100.00,0.00,0.00
+P5,14,4,0,6,2,0,2,100.00,38540.60,41882.36,45759.64,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",single-agent SIF + instant rules,100.00,0.00,0.00
