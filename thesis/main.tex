@@ -133,6 +133,65 @@
     showstringspaces=false,
 }
 
+% Define colors for syntax highlighting
+\definecolor{codeblue}{RGB}{42, 161, 152}
+\definecolor{codecomment}{RGB}{112, 128, 144}
+\definecolor{codestring}{RGB}{163, 21, 21}
+\definecolor{codekeyword}{RGB}{0, 112, 192}
+\definecolor{codebackground}{RGB}{248, 249, 250}
+\definecolor{codenumber}{RGB}{108, 117, 125}
+\definecolor{coderule}{RGB}{233, 236, 239}
+
+% Modern code style
+\lstdefinestyle{mystandard}{
+    basicstyle=\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{codenumber},
+    backgroundcolor=\color{codebackground},
+    frame=single,
+    frameround=tttt,
+    rulecolor=\color{coderule},
+    framerule=0.8pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    captionpos=b,
+    showstringspaces=false,
+    tabsize=2,
+    xleftmargin=15pt,
+    xrightmargin=5pt,
+    aboveskip=12pt,
+    belowskip=8pt,
+    lineskip=1pt,
+    columns=flexible,
+    keepspaces=true,
+    % Enhanced syntax highlighting
+    keywordstyle=\color{codekeyword}\bfseries,
+    commentstyle=\color{codecomment}\itshape,
+    stringstyle=\color{codestring},
+    identifierstyle=\color{black},
+    emphstyle=\color{codeblue}\bfseries,
+    % Add subtle shadow effect
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+% Inline code style
+\newcommand{\inlinecode}[1]{%
+    \colorbox{codebackground}{\texttt{\color{codekeyword}#1}}%
+}
+
+% Beautiful caption style for listings
+\DeclareCaptionFormat{listing}{%
+    \colorbox{codebackground}{%
+        \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+            \centering\color{codekeyword}\bfseries#1#2#3%
+        }%
+    }%
+}
+\captionsetup[lstlisting]{format=listing, singlelinecheck=false, margin=0pt, font={sf,footnotesize}}
+
+% Apply globally
+\lstset{style=mystandard}
+
 
 \begin{document}
 
@@ -302,7 +361,7 @@ Ontwerpbeslissingen benadrukken modulariteit (losse koppeling voor swaps), WebSo
 
 Deze implementatie bewijst de haalbaarheid: een schaalbaar, developer-vriendelijk framework dat statische UI's omzet in adaptieve, toegankelijke systemen, met focus op gezondheidstoepassingen.
 
-\section*{Evaluatie}
+\section*{Haalbaarheidsstudie}
 De evaluatie van het framework richt zich op het demonstreren van haalbaarheid en effectiviteit door middel van een gecontroleerde, synthetische setup, zonder echte gebruikers, om de kernmechanismen te testen. Er werden zes diverse gebruikersprofielen gebruikt, elk representerend specifieke toegankelijkheidsbehoeften: drie motorisch beperkte (bijv. tremors, fijne motoriekproblemen), twee visueel beperkte (bijv. laag contrastgevoeligheid, kleurenblindheid) en één handsfree profiel (bijv. stem- en gebaarafhankelijk). Voor elk profiel werden twee sequentiële runs uitgevoerd, elk bestaande uit zeven multimodale interactiegebeurtenissen, zoals miss-taps, slider-overshoots, stemcommando's met ambiguïteit en gebaren met lage confidence. Dit simuleerde real-world interactie door het systeem te laten aanpassen aan onmiddellijke fouten en een groeiende geschiedenis, waarbij de tweede run bouwde op de eerste voor contextuele leren.
 
 De MA-SIF configuratie (multi-agent met gebalanceerde temperaturen en prompts) werd getest op sleutelmetrics: schema-validiteit (84.5\% van outputs voldeden aan het strikte JSON-schema, met validator die inconsistenties filterde), actie-alignment (97.5\% van suggesties waren toegankelijkheidsgericht, zoals vergroting voor motorisch, contrast voor visueel, en modaliteitsswitches voor handsfree), en latency (mediaan 13 seconden, met regels voor instant feedback en LLM's asynchroon). Resultaten toonden consistente aanpassingen over 84 events, met per-profiel breakdowns: motorische profielen scoorden hoog in geometrie-acties (bijv. 90\% knopvergroting), visuele in UI-veranderingen (bijv. 85\% contrastboost), maar handsfree lager in validiteit (75\%) door ambiguïteit in stem/gebaar-fusie. Globale actie-analyse bevestigde 100\% doorloop via validator, met heatmaps die patronen onthulden zoals clusterde taps rond knoppen.
@@ -390,10 +449,10 @@ The thesis is structured as follows:
     This chapter delves into the specifics of the Smart Intent Fusion (SIF) component, outlining its architecture, the reasoning processes it employs, and how it integrates with the other layers of the framework. It discusses the challenges of fusing diverse input modalities and the strategies employed to ensure accurate and context-aware adaptations as well as dealing with hallucinations from LLMs.
     \item \textbf{Chapter 5: An Adaptive Multimodal GUI Framework using LLMs} \\
     This chapter presents the implementation of a proof-of-concept for the framework, covering the Flutter-based “Adaptive Smart Home Controller” UI with touch, and simulated voice/gesture inputs, the input adapter layer’s JSON contract, and the SIF backend. A backend Flutter-based interface is also introduced for developer insights and debugging.
-    \item \textbf{Chapter 6: Evaluation} \\
+    \item \textbf{Chapter 6: Feasibility Study} \\
     This chapter discusses the evaluation setup, scenarios, results, and reflects on the implications and limitations of the findings.
     \item \textbf{Chapter 7: Discussion and Future Work} \\
-    This chapter discusses the broader implications for accessibility and HCI, key findings, and comparison with related work. Addresses limitations and proposes future work, including on-device reasoning, integrated visual UI understanding, reinforcement learning from user feedback, and expanding modality support.
+    This chapter discusses the broader implications for accessibility and HCI, key findings, and comparison with related work. Addresses limitations and proposes future work, including on-device reasoning, integrated visual UI understanding, federated learning, and expanding modality support.
     \item \textbf{Chapter 8: Conclusion} \\
     This chapter summarises the thesis contributions and lessons learned from the development process. Reflects on the evaluation results, revisits the research objectives, and outlines how this work can inform future adaptive UI systems.
 \end{itemize}
@@ -912,7 +971,7 @@ Together, these elements provide a framework capable of addressing real-world ac
 \section{Introduction to Smart Intent Fusion}
 Smart Intent Fusion (SIF) is the central intelligence layer of the proposed multimodal AI-driven UI adaptation framework, responsible for transforming raw, heterogeneous user input signals into concrete, context-aware interface adaptations. 
 Where the Frontend Layer renders the UI and the Input Adapter Layer standardises events, SIF performs the reasoning step. Architecturally, SIF occupies the central position in the adaptation loop, receiving standardised events from the Input Adapter Layer, combining them with user profile and context data, and returning validated adaptations back to the frontend for immediate application. This placement ensures that every adaptation decision is both context-aware and modality-agnostic, allowing the framework to maintain consistent behaviour regardless of how the interaction was initiated.
-it fuses current interaction data with user profiles, accessibility requirements, and recent interaction history to infer the user’s underlying intent and translate this into actionable UI changes.
+It fuses current interaction data with user profiles, accessibility requirements, and recent interaction history to infer the user’s underlying intent and translate this into actionable UI changes.
 
 The motivation for SIF stems from a simple but critical challenge in accessibility-focused HCI:
 users rarely interact with a system through a single, perfectly clean input channel. Instead, interactions are often multimodal, noisy, and incomplete. A motor-impaired user may miss-tap a button but also issue a supporting voice command. A visually impaired user may attempt to activate a control by gesture but with low confidence, relying on high-contrast cues to complete the action. Traditional rule-based adaptive systems tend to process these signals independently, missing the opportunity to combine them into a unified, more reliable understanding of the user’s goal.
@@ -1344,10 +1403,10 @@ If the validator itself fails, either due to malformed output or a processing er
 \begin{figure}[ht]
 \centering
 \begin{tikzpicture}[
-    scale=0.93,
+    scale=0.91,
     font=\small,
     >=Latex,
-    node distance=6mm and 10mm,
+    node distance=6mm and 9mm,
     block/.style={draw, rounded corners=4pt, thick, align=center, minimum height=6mm, minimum width=27mm, inner sep=1mm},
     input/.style={block, fill=blue!15},
     agent/.style={block, fill=green!15, minimum width=30mm},
@@ -1359,22 +1418,30 @@ If the validator itself fails, either due to malformed output or a processing er
     dline/.style={->, thick, dashed}
 ]
 
+
 % Inputs (left column)
-\node[input] (events) {User Events};
-\node[input, below=3mm of events] (profile) {User Profile\\+ History};
+\node[input, name=events] (events) {User Events};
+\node[input, below=3mm of events, name=profile] (profile) {User Profile\\+ History};
 
 % Agents (middle column)
-\node[agent, right=10mm of events] (ui) {UI Agent\\(Visual)};
+\node[agent, right=8mm of events] (ui) {UI Agent\\(Visual)};
 \node[agent, below=1.5mm of ui] (geo) {Geometry Agent\\(Spatial)};
 \node[agent, below=1.5mm of geo] (inp) {Input Agent\\(Modality)};
 
 % Validator + fallback (right column)
-\node[validator, right=10mm of geo] (val) {Validator Agent\\(Validate, Resolve)};
-\node[fallback, below=5mm of val] (fb) {Rule-Based Fallback};
+\node[validator, right=8mm of geo] (val) {Validator Agent\\(Validate, Resolve)};
+\node[fallback, below=5mm of val, name=fb] (fb) {Rule-Based Fallback};
 
 % Results (far right)
 \node[suggest, right=8mm of val, yshift=4mm] (comb) {Combined Suggestions\\(Validator Fail)};
-\node[final, right=8mm of val, yshift=-8mm] (final) {Final Adaptations};
+\node[final, right=8mm of val, yshift=-8mm, name=final] (final) {Final Adaptations};
+
+% Border around the entire SIF diagram
+\node[draw, rounded corners=8pt, thick, inner sep=5mm, fit={(events) (profile) (final) (fb)}] (sif-border) {};
+
+% SIF label in top right corner
+\node[anchor=south east] at ([xshift=-2mm,yshift=0mm]sif-border.north east) {\textbf{SIF}};
+
 
 % Inputs to agents (direct arrows)
 \draw[line] (events.east) -- (ui.west);
@@ -1693,7 +1760,7 @@ Across all runs \emph{0\% combined\_agent\_suggestions} and \emph{0\% mock\_rule
 Note: in earlier exploratory tests, fallbacks mainly appeared when the free-tier quota was hit or the validator timed out, which did not occur here. Furthermore, during this evaluation it was observed that the validator agent in the MA-SIF heavy config accepted more suggestions from the agents than in the other more balanced config.
 
 \subsection*{Interpretation}
-The pattern is clear:
+The following patterns can be observed:
 \begin{itemize}
     \item Moving from \textbf{SIF (single agent)} to \textbf{MA\mbox{-}SIF (balanced)} increases median latency from $\sim$8.3\,s to $\sim$11.0\,s, but schema validity jumps from \textbf{40\%} to \textbf{70\%}. Even with zero thinking budget on the specialist agents, the \emph{validator} is pulling its weight.
     \item \textbf{MA\mbox{-}SIF (heavy)} pushes median latency to $\sim$27.2\,s, but schema validity reaches \textbf{100\%}, and the \texttt{reason}/\texttt{intent} fields become noticeably richer and more proactive.
@@ -1709,42 +1776,6 @@ This preserves responsiveness while still getting the benefits of multi-agent re
 
 \subsection*{Limitations}
 The runs were kept small (6-10 events) due to free-tier limits, so statistical power is modest—though the differences are large and consistent. The backend is sequential, so times reflect worst-case per-event latency with LLM on the critical path. The event suite is deterministic; other UI states can nudge absolute times, but the overall trade-off (latency $\leftrightarrow$ schema quality) is expected to hold.
-
-\subsection*{Compact View (Full Results)}
-\begin{lstlisting}[language=json,caption={Condensed view of settings and outcomes per configuration.}]
-{
-  "SIF_single_agent": {
-    "settings": {"model":"gemini-2.5-flash","temp":0.2,"thinking_budget":"dynamic","timeout":"api-default"},
-    "results": {
-      "ws_latency_ms": {"p50":8240.99,"p90":9913.63,"max":10649.21},
-      "suite_latency_ms": {"p50":8261.86,"p90":12034.12,"max":12914.24},
-      "schema_valid_pct": 40.0,
-      "classification": {"validated_by_validator":100.0,"combined_agent_suggestions":0.0,"mock_rule_fallback":0.0},
-      "profile_note": "user_seq started with default profile; history grew across events"
-    }
-  },
-  "MA-SIF_balanced": {
-    "settings": {"agents":"3x flash-lite (no thinking); validator flash (dynamic thinking, 30s)"},
-    "results": {
-      "ws_latency_ms": {"p50":9969.99,"p90":11151.80,"max":11164.61},
-      "suite_latency_ms": {"p50":10988.27,"p90":14659.71,"max":15234.09},
-      "schema_valid_pct": 70.0,
-      "classification": {"validated_by_validator":100.0,"combined_agent_suggestions":0.0,"mock_rule_fallback":0.0},
-      "profile_note": "same user_seq; short interaction history window provides context"
-    }
-  },
-  "MA-SIF_heavy": {
-    "settings": {"agents":"all flash, thinking_budget=2048, timeouts=30s, temps=0.2/0.3"},
-    "results": {
-      "ws_latency_ms": {"p50":26875.99,"p90":27613.81,"max":32009.47},
-      "suite_latency_ms": {"p50":27229.24,"p90":30443.48,"max":31347.16},
-      "schema_valid_pct": 100.0,
-      "classification": {"validated_by_validator":100.0,"combined_agent_suggestions":0.0,"mock_rule_fallback":0.0},
-      "stability_note": "some agent calls failed; validator still produced final valid list"
-    }
-  }
-}
-\end{lstlisting}
 
 \subsection*{Implications for the Framework}
 Overall, the numbers back the architecture: MA-SIF + a capable validator improves output predictability and schema adherence; latency is tunable via thinking budgets, model choices and timeouts.
@@ -1818,7 +1849,7 @@ Overall, Smart Intent Fusion was presented not just as an algorithm, but as a mo
 \label{ch:chapter5}
 
 \section{Introduction to an Adaptive Smart Home Controller}
-The Adaptive Smart Home Controller is the practical proof-of-concept used to implement and validate the multimodal AI-driven GUI framework presented in this thesis. It serves as a concrete example of how the framework’s concepts, introduced in Chapter~\ref{ch:chapter3}, can be applied in a real, interactive application. The Smart Home Controller simulates the control of typical household devices such as lights, thermostats, and door locks. While the devices themselves are virtual, the process of capturing inputs, interpreting them through the backend with user profiles and history, and applying adaptive changes to the interface is authentic and functionally representative of a real deployment.
+The Adaptive Smart Home Controller \footnote{The codebase containing implementation and evaluation data of this thesis can be found at: \url{https://github.com/YarneD-1952226/A-Multimodal-AI-Driven-GUI-Framework-for-Dynamic-User-Adaptation}} is the practical proof-of-concept used to implement and validate the multimodal AI-driven GUI framework presented in this thesis. It serves as a concrete example of how the framework’s concepts, introduced in Chapter~\ref{ch:chapter3}, can be applied in a real, interactive application. The Smart Home Controller simulates the control of typical household devices such as lights, thermostats, and door locks. While the devices themselves are virtual, the process of capturing inputs, interpreting them through the backend with user profiles and history, and applying adaptive changes to the interface is authentic and functionally representative of a real deployment.
 
 The choice for a smart home context was deliberate. It offers a relatable and real-life use case structured set of interaction scenarios that cover a range of UI components, buttons, sliders, text elements which are central to accessibility-focused adaptations. Furthermore, it reflects real-world situations where users may have diverse abilities and input preferences. For example, a motor-impaired user might need larger buttons to avoid frequent miss-taps, while a visually impaired user may benefit from higher-contrast modes and enlarged text. By embedding these scenarios into a single, unified application, the Smart Home Controller provides a manageable but representative testbed for the framework’s adaptive capabilities.
 
@@ -2126,7 +2157,7 @@ Update profile       & POST  & \verb|/profile| \\
 \end{tabular}
 \label{tab:adapter_endpoints}
 \end{table}
-\newpage
+
 \textbf{WebSocket Lifecycle \& Error Handling:}
 \begin{figure}[H]
 \centering
@@ -2241,7 +2272,6 @@ Validator & consolidate + validate all suggestions & \emph{all actions above} & 
   \item \textbf{Low temperature + narrow prompts:} Specialist prompts reduce creative drift and injection surface.
   \item \textbf{Timeouts:} Per-agent time budgets ensure the loop returns within interaction thresholds.
 \end{itemize}
-\newpage
 
 \subsection{LLM invocation (Gemini)}
 For each event, the backend invokes Gemini per specialist agent (UI, Geometry, Input) and then once for the Validator, in sequence. Each call is single-shot (no streaming) with a strict JSON response contract. Requests are composed as follows:
@@ -2266,10 +2296,8 @@ If a specialist agent times out or returns invalid JSON, its suggestions are omi
 
 \subsection{Structured outputs and guardrails}
 To reduce hallucinations and schema drift, the backend requests JSON‑typed responses from the LLM with an explicit schema and allowed actions, as described earlier in Chapter~\ref{ch:chapter4}. The prompt defines required fields, expected types, and a one‑of constraint that demands either a numeric \texttt{value} or a categorical \texttt{mode}. Agent prompts are intentionally narrow, which improves determinism. The validator prompt is broader, since it must adjust conflicting suggestions and justify final choices. Despite these controls, invalid outputs still occur occasionally. However, the schema can be enforced at two distinct levels: by the agents and by the validator. This dual-level approach makes it easier for the validator to ensure that the agents' adaptations are compliant. Furthermore, it has a defensive layer that falls back to simple rules if all LLM validation fails.
-The output schema will produce an adaptation of the following format:
-\begin{lstlisting}[language=json,basicstyle=\ttfamily\small,caption={Example adaptation Format}]
-{"adaptations":[{"action":"...","target":"...","value":1.2,"mode":"...","reason":"...","intent":"..."}]}
-\end{lstlisting}
+The output schema will produce an adaptation of the following format:\\
+\lstinline[language=json,basicstyle=\ttfamily\small,caption={Example adaptation Format}]|{"adaptations":[{"action":"...","target":"...","value\mode":...,"reason":"...","intent":"..."}]}|
 
 \subsection{Rule‑based fallback and resilience}
 A lightweight rule engine acts as a safety net when LLM calls time out or the provider is unavailable. This rule engine comes into action when all the suggestion agents fail (no output). It covers essential accessibility behaviours, for example increasing button size after a miss‑tap, switching to voice for users flagged as motor‑impaired, or enabling high‑contrast mode for visually impaired profiles. These rules are intentionally conservative, they guarantee progress without surprising the user, and they keep the implementation usable in environments with unstable connectivity.
@@ -2551,10 +2579,10 @@ The prototype also faced practical challenges, including LLM output validation, 
 In its current state, the implementation demonstrates that the framework can deliver personalised, accessibility-focused adaptations in a responsive and modular manner, even under the constraints of a prototype environment. The next chapter evaluates this implementation through a feasibility study, assessing its responsiveness, adaptability, and practical potential in simulated real-world scenarios.
 
 % Chapter 6
-\chapter{Evaluation}
+\chapter{Feasibility Study}
 \label{ch:evaluation}
 
-\section{Evaluation Overview}
+\section{Study Overview}
 The evaluation follows a feasibility study design to check whether the multimodal AI-driven adaptation pipeline works end to end under realistic interaction traces, and whether it does so in a way that is useful for accessibility. Concretely:
 \begin{enumerate}
   \item \textbf{Adaptation validity:} Does the backend return schema-valid adaptation objects across different profiles and modalities?
@@ -2936,7 +2964,7 @@ The highest invalid share appears for the hands free profile (P3), which aligns 
 % The choice not to expose rejection reasons is intentional: the validator simplifies the integration surface by returning a clean, accepted set only. This reduces developer-facing complexity and keeps the on-device adapter logic straightforward during a feasibility study. The trade-off is reduced auditability of invalid cases in the logs. %-> to SIF design notes
 
 \subsection{Rule-only sufficiency (proxy)}
-For each event, the returned actions were checked against the acceptable corrective sets defined for that event type (Section~\ref{ch:evaluation}). In \textbf{85.71\%} of cases, a rule-only fast path would have produced at least one acceptable action (aggregate from Table~\ref{tab:era-by-event}: $24{+}12{+}35{+}1=72$ hits over $84$ events). This suggests that a staged design with a fast path followed by the Validator can lower median latency while preserving most coverage. A practical policy is to route obvious patterns (for example \texttt{miss\_tap} $\rightarrow$ target enlargement and spacing; \texttt{slider\_miss} $\rightarrow$ larger slider) through the fast path, while leaving ambiguous or gesture-driven cases to the Validator. This division keeps deterministic corrections quick and consistent, and reserves multi-agent reasoning for the smaller set of events where context and history matter most.
+For each event, the returned actions were checked against the acceptable corrective sets defined for that event type (Section~\ref{ch:evaluation}). In \textbf{85.71\%} of cases, a rule-only "fast path"\footnote{This fast path is a predefined rule based action that can be used instead of the AI logic.} would have produced at least one acceptable action (aggregate from Table~\ref{tab:era-by-event}: $24{+}12{+}35{+}1=72$ hits over $84$ events). This suggests that a staged design with a fast path followed by the Validator can lower median latency while preserving most coverage. A practical policy is to route obvious patterns (for example \texttt{miss\_tap} $\rightarrow$ target enlargement and spacing; \texttt{slider\_miss} $\rightarrow$ larger slider) through the fast path, while leaving ambiguous or gesture-driven cases to the Validator. This division keeps deterministic corrections quick and consistent, and reserves multi-agent reasoning for the smaller set of events where context and history matter most.
 
 \subsection{Rule baseline vs.\ LLM (minimal vs.\ maximal)}
 This analysis compares a deterministic rule baseline against the final LLM adaptations at the action–name set level. Two variants are used: (i) \emph{minimal} rules that apply one canonical fix per event type, and (ii) \emph{maximal} rules that include all acceptable fixes for that event type. Similarity is measured with Jaccard set overlap; the table also reports the baseline’s own PAA. A top–5 action mask per profile matches the PAA style used elsewhere.
@@ -2968,8 +2996,8 @@ ALL & 0.25 & 0.35 & 0.01 & -- & -- \\
 \paragraph{Interpretation.}
 Moving from minimal to maximal rules increases overlap with the LLM (mean Jaccard from 0.25 to 0.35 overall), while exact set matches remain rare (1\% overall). This is expected because the LLM often proposes multi–action bundles and tuned parameters that go beyond the canonical rule set. The rule baseline’s PAA is highest for the combined needs profile (P4), which aligns with frequent motor and hands free fixes in the event suite; P2 remains at 0\% due to the limited visual–focused rules in this baseline. For P3, PAA decreases under the maximal variant because the rule set adds motor fixes that do not align with hands free needs, increasing the denominator without increasing hands free hits. Event counts are identical across profiles (Table~\ref{tab:user-profile-mapping}), so differences stem from action selection rather than sample size.
 
-\paragraph{conclusion.}
-Rules provide useful coverage for obvious corrections and can raise overlap when broadened, but they do not replicate the LLM’s multi–action composition, parameter choices, or personalisation. This supports a staged design: route simple patterns through rules for speed, and rely on the LLM and Validator for complex, ambiguous, or profile–sensitive cases. Differences in \emph{rule\_PAA\_total} across profiles reflect variant choice (minimal vs.\ maximal) and the top–5 mask rather than unequal event counts.
+\paragraph{Conclusion.}
+Rules provide useful coverage for obvious corrections and can raise overlap when broadened, but they do not replicate the LLM’s multi–action composition, parameter choices, or personalisation. This supports a staged design: route simple patterns through rules for speed, and rely on the LLM and Validator for complex, ambiguous, or profile–sensitive cases. Differences in \emph{rule\_PAA\_total} across profiles reflect variant choice (minimal vs.\ maximal) and the top–5 mask rather than unequal event counts. 
 
 \subsection{Micro-cases on P1 and P5 profiles}
 \begin{figure}[H]
@@ -3123,11 +3151,11 @@ MA-SIF (heavy) improves Schema-valid output (100.00\% vs 84.52\%) and raises PAA
 The system focuses almost entirely on accessibility: \textbf{97.51\%} of all actions are accessibility targeted (Table~\ref{tab:overall-accessible-share}). Internal coherence is high across profiles (\textbf{DCI} $\approx$ \textbf{0.995}; Table~\ref{tab:obj-metrics}). Appropriateness is strong for motor and voice inputs: \texttt{miss\_tap} and \texttt{slider\_miss} reach \textbf{100\%} ERA and \texttt{voice} \textbf{97.22\%}, while \texttt{gesture} remains low at \textbf{8.33\%} (Table~\ref{tab:era-by-event}). In the configuration comparison, MA-SIF (heavy) reaches \textbf{100.00\%} schema-valid outputs and slightly higher ERA and DCI than the balanced setting (Table~\ref{tab:cfg-compare-overall}), confirming that stricter aggregation and checking can push quality to the top end.
 
 \paragraph{Personalisation.}
-Profile–Action Alignment (PAA) is moderate overall (\(\sim\)\textbf{55\%} on top–5 actions) and higher for combined-need profiles (P4, P5), which matches the event suite that emphasises motor errors and mode switching (Table~\ref{tab:obj-metrics}). MA-SIF (heavy) increases PAA from \textbf{55.22\%} to \textbf{61.45\%} overall (Table~\ref{tab:cfg-compare-overall}) and produces the largest gains where motor and hands free needs dominate (P1, P4; Table~\ref{tab:cfg-compare-profiles}). To raise alignment for single-need profiles without changing the study design:
+Profile–Action Alignment (PAA) is moderate overall (\(\sim\)\textbf{55\%} on top–5 actions) and higher for combined-need profiles (P4, P5), which matches the event suite that emphasises motor errors and mode switching (Table~\ref{tab:obj-metrics}). MA-SIF (heavy) increases PAA from \textbf{55.22\%} to \textbf{61.45\%} overall (Table~\ref{tab:cfg-compare-overall}) and produces the largest gains where motor and hands free needs dominate (P1, P4; Table~\ref{tab:cfg-compare-profiles}). Some potential improvements include:
 \begin{enumerate}
-  \item \textbf{Need-weighted validator scoring.} Rank candidates higher when their category matches the active need, and apply gentle penalties for off-need actions.
-  \item \textbf{Lightweight feedback signals.} Log accept, undo, and reversion in the client and feed these rates back as simple weights to prefer actions users keep.
-  \item \textbf{Richer hands free affordances.} Add confirmation prompts, focus hints, and voice-first navigation so that acceptable sets are available more often, lifting both ERA and PAA for hands free profiles.
+  \item \textbf{Weighted validator scoring:} Rank candidates higher when their category matches the active need, and apply gentle penalties for off-need actions.
+  \item \textbf{Lightweight feedback signals:} Log accept, undo, and reversion in the client and feed these rates back as simple weights to prefer actions users keep.
+  \item \textbf{Richer hands free affordances:} Add confirmation prompts, focus hints, and voice-first navigation so that acceptable sets are available more often, lifting both ERA and PAA for hands free profiles.
 \end{enumerate}
 
 \paragraph{Latency.}
@@ -3208,148 +3236,127 @@ RL-based UI Adaptation & Depends on sensors & Reinforcement learning & Layout, c
 \end{table}
 
 \section{Future Work} 
-While the framework in its current form demonstrates the feasibility of real-time, multimodal, adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
+While the framework in its current form demonstrates the feasibility of real-time, multimodal adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
 
-\subsection{User Study Plan}
-A minimal but informative evaluation would help with understanding user interactions and preferences in real-world scenarios:
-\begin{itemize}
-    \item \textbf{Participants:} 12-18 (4-6 per profile cluster).
-    \item \textbf{Design:} Within-subjects; rules-only vs. rules+MA-SIF.
-    \item \textbf{Measures:} SUS, NASA-TLX, error rate, task time, adaptation acceptance, perceived control.
-    \item \textbf{Tasks:} Smart home scenarios (toggle, adjust, unlock) with induced constraints (motor, visual, hands-free).
-\end{itemize}
+\subsection{Short-Term Improvements}
 
-\subsection{Extending to Existing UIs}
-Currently, the framework is designed for applications built with its SDK (adapter) or adhering to its JSON contracts. A significant future step is retrofitting existing applications with minimal code changes. This could involve:
-\begin{itemize}
-    \item Creating a UI overlay adapter capable of intercepting and adapting components without direct code modification.
-    \item Developing browser extensions or OS-level accessibility hooks to capture events and inject adaptations dynamically.
-\end{itemize}
+\subsubsection{Improved Gesture Support}
+The evaluation revealed that gesture events achieved only \textbf{8.33\%} ERA (Table~\ref{tab:era-by-event}), significantly lower than touch-based interactions (100\%) and voice commands (97.22\%). This limitation stems from insufficient disambiguation mechanisms and limited gesture-specific adaptations in the current action set.
 
-\subsection{Developer SDK and Ecosystem}
-A natural evolution of this framework is packaging it as a reusable SDK for popular development platforms. This would abstract away the complexity of event standardisation, profile management, and adaptation application, allowing developers to integrate adaptive capabilities with minimal code. The SDK could include:
-\begin{itemize}
-    \item Pre-built adapters for Flutter, SwiftUI, Unity, and web frontends.
-    \item Visual debugging tools for inspecting adaptation decisions in real time.
-    \item Templates for common accessibility adaptations aligned with WCAG guidelines.
-\end{itemize}
-By lowering the integration barrier, this would encourage adoption in both commercial and open-source projects, expanding the framework’s impact.
+To address this, future iterations should implement a gesture disambiguation pipeline that includes brief confirmation prompts (e.g., "Point to confirm?") and fallback routing to voice modality when gesture recognition confidence is low. Additionally, extending the acceptable action sets with gesture-specific affordances such as focus outlines, dwell-to-activate mechanisms, and spatial targeting hints would improve appropriateness.
 
-\subsection{UI Component Analyzer}
-An automated UI Component Analyzer could parse live UI trees (or screenshots) to create a semantic model of the interface, mapping components to accessible adaptation targets. This could leverage:
-\begin{itemize}
-    \item \textbf{Image/vision models} for recognising UI elements from screenshots.
-    \item \textbf{DOM or widget tree parsing} for native apps.
-    \item Integration with the SIF backend so that adaptations are generated based on \textbf{actual UI context}, not just predefined IDs or defined metadata.
-\end{itemize}
+\subsubsection{Enhanced Personalisation for Single-Need Profiles}
+While combined-need profiles (P4, P5) achieved strong Profile-Action Alignment scores, single-need profiles showed moderate performance, with P2 and P3 achieving 34.69\% and 28.00\% PAA respectively (Table~\ref{tab:obj-metrics}). This indicates room for improvement in tailoring adaptations to specific accessibility needs.
 
-\subsection{Enhancing Multimodal Inputs}
-Future versions should expand input modality coverage beyond touch, voice, and gestures:
-\begin{itemize}
-    \item \textbf{Full gaze tracking} to enable more intuitive and hands-free navigation in VR/AR and desktop environments.
-    \item Supporting \textbf{hand tracking} for precise and more natural gesture recognition as well as UI navigation.
-    \item \textbf{Brain-Computer Interface (BCI)} integration for high-accessibility scenarios. This expansion will require updates to the Input Adapter Layer to capture and standardise new modalities without breaking existing ones.
-\end{itemize}
+The solution involves implementing need-weighted scoring within the Validator Agent, where adaptations matching the active profile's declared needs receive higher priority. The rule fallback engine could be implemented in a similar way for a higher overall effectiveness. Additionally, integrating lightweight user feedback mechanisms (accept, undo, revert actions) would provide continuous learning signals to refine personalisation over time. These improvements should target a \textbf{+10 point} increase in PAA for underperforming profiles while maintaining high Design Coherence Index (DCI $\geq$ 0.99).
 
-\subsection{LLM Agents for Autonomous Adaptation}
-While MA-SIF improves modularity, agents currently operate on fixed prompts and allowed actions. The next step is autonomous adaptation, where agents:
-\begin{itemize}
-    \item Dynamically update their own prompts based on user feedback and historical success rates.
-    \item Use proposed adaptation actions not initially in the allowed list (hallucinations), subject to developer approval.
-    \item Collaborate with other agents through inter-agent dialogue before validation, enabling more complex adaptation strategies.
-\end{itemize}
+\subsubsection{Latency Reduction for Interactive Use}
+Current median latency of \textbf{13.19s} for MA-SIF (balanced) configuration, while acceptable for asynchronous adaptation, could benefit from optimisation for more responsive interaction. The heavy configuration's 36.06s median latency further emphasises the need for speed improvements.
 
-\subsection{Specialized AI Model for UI Adaptation}
-Relying on general-purpose LLMs limits the precision and latency of adaptation reasoning. A dedicated, domain-specific model could be trained on:
-\begin{itemize}
-    \item UI adaptation logs generated by SIF.
-    \item Accessibility guidelines (e.g., WCAG 2.1).
-    \item Synthetic data from simulated user impairments.
-\end{itemize}
-This model could be run locally on-device for low-latency, privacy-friendly adaptation, making the framework viable in offline or sensitive deployments.
+A staged approach would route obvious patterns (miss-tap → larger target, slider overshoot → larger slider) through a fast rule-based path, followed by MA-SIF consolidation for complex cases. Caching frequently suggested adaptations and implementing selective on-device classification for path selection could further reduce response times. The target is achieving p50 $\leq$ 8s while maintaining current schema validity and ERA performance.
 
-\subsection{Towards Autonomous, On-Device UI Adaptation Agents}
-A long-term vision for this work is to move beyond general-purpose LLMs and cloud-based reasoning, towards a domain-specialised, reinforcement-learned agent capable of autonomously adapting UIs both at runtime and compile time.
-Such an agent would integrate several capabilities:
-\begin{enumerate}
-    \item \textbf{On-Device AI Reasoning}
-        \begin{itemize}
-            \item Replace the dependency on external LLM APIs with a lightweight, locally hosted model optimised for UI adaptation tasks.
-            \item Reduce latency and remove the need for internet connectivity, improving privacy and enabling use in sensitive domains such as healthcare and defence.
-            \item Models could be quantised and optimised to run efficiently on consumer-grade CPUs, GPUs, or NPUs.
-        \end{itemize}
-    \item \textbf{Integrated Visual UI Understanding}
-        \begin{itemize}
-            \item Couple the reasoning agent with an image-based UI analyser (e.g., a fine-tuned vision transformer or CLIP-like model) to interpret the live UI.
-            \item At runtime, this would allow the system to `see'' the interface, understanding spatial layouts, colour schemes, element hierarchies, and visibility issues without requiring developer-provided metadata.
-            \item At compile time, the analyser could scan UI code or rendered snapshots to detect accessibility violations, recommend improvements, or auto-inject adaptation hooks.
-        \end{itemize}
-    \item \textbf{Reinforcement Learning from User Feedback}
-        \begin{itemize}
-            \item Continuously learn from user interactions by rewarding effective adaptations and penalising ineffective ones.
-            \item Gradually develop personalised adaptation policies optimised for each user's needs.
-        \end{itemize}
-    \item \textbf{Dual-Mode Adaptation: Compile-Time + Runtime}
-        \begin{itemize}
-            \item Analyse static UIs at compile time to pre-configure accessibility defaults and flag issues.
-            \item Dynamically adapt during runtime based on live user context and environment.
-        \end{itemize}
-    \item \textbf{Continuous Multi-Modal Feedback Loop}
-        \begin{itemize}
-            \item Combine visual UI analysis with interaction history to refine adaptation strategies.
-            \item Maintain an ongoing loop where the system reasons over both the appearance of the UI and the way the user interacts with it.
-        \end{itemize}
-\end{enumerate}
+\subsubsection{SDK Development and Cross-Platform Support}
+To facilitate adoption, the framework requires packaging as developer-friendly SDKs for Flutter, SwiftUI, Unity/VR, and web platforms. These SDKs should include pre-built adapter components, standardised integration patterns, debugging tools, and comprehensive documentation with accessibility-focused examples.
 
-\medskip
-In summary, the results indicate that hybrid, multi-agent adaptation is feasible and immediately useful for accessibility, while the outlined extensions such as UI analysis, richer modalities, latency reduction, specialised models, and user studies form a credible path to robust, deployable adaptive interfaces.
+The SDK should also support offline modes using lightweight, on-device models for basic adaptations when cloud connectivity is unavailable. This addresses both privacy concerns and deployment constraints in sensitive environments.
+
+\subsection{Research Directions}
+
+\subsubsection{Visual UI Understanding and Semantic Analysis}
+Current reasoning relies on developer-provided metadata about UI elements and their relationships. Integrating computer vision capabilities would enable the system to analyse live interface screenshots, understanding spatial layouts, colour schemes, element hierarchies, and accessibility violations without requiring manual annotation.
+
+This visual understanding could be implemented using fine-tuned vision transformers or CLIP-like models trained on UI datasets. The analyser would complement existing metadata with real-time visual context, enabling more nuanced adaptations such as repositioning elements based on visual density or adjusting contrast based on actual colour relationships.
+
+\subsubsection{Specialised AI Models for UI Adaptation}
+Moving beyond general-purpose LLMs towards domain-specific models trained on UI interaction logs, accessibility guidelines (WCAG), and adaptation effectiveness data would improve both accuracy and efficiency. These models could be fine-tuned for specific contexts (healthcare, gaming, productivity) and optimised for on-device deployment.
+
+Such specialisation would reduce dependence on external APIs, improve privacy, and enable faster response times. The models could incorporate reinforcement learning from user feedback to continuously improve adaptation strategies.
+
+\subsubsection{Comprehensive User Studies}
+While the feasibility study demonstrates technical capability, validating real-world effectiveness requires comprehensive user studies with participants who have actual accessibility needs. A properly powered study should recruit N=12-18 participants across three groups: motor-impaired (4-6 participants), visually impaired (4-6 participants), and hands-free users (4-6 participants).
+
+The study design should employ a within-subjects comparison, testing participants on both rule-based adaptations and the full MA-SIF pipeline using realistic smart home control scenarios. Objective measures would include task completion time, error rates, and adaptation acceptance rates, while subjective measures would capture perceived usefulness through validated instruments such as the System Usability Scale (SUS) and NASA Task Load Index (TLX).
+
+Critically, participants should include individuals with lived experience of the target accessibility constraints rather than simulated impairments. This ensures that findings reflect genuine usability improvements and adaptation preferences. Such studies would provide essential evidence for the framework's practical impact beyond technical feasibility, while identifying refinements needed for real-world deployment based on authentic user experiences.
+
+\subsubsection{Extended Modality Support}
+Future work should expand input modality support to include eye tracking for hands-free navigation, advanced gesture recognition using depth sensors or computer vision, and brain-computer interfaces for users with severe motor impairments. Each new modality requires careful integration with the existing event standardisation pipeline and adaptation logic.
+
+Particular attention should be paid to multimodal fusion strategies that can intelligently combine signals from multiple simultaneous inputs, handling confidence weighting and temporal alignment to produce coherent user intent inference.
+
+\subsubsection{Privacy-Preserving and Federated Learning}
+As the framework collects rich interaction data including multimodal inputs and adaptation effectiveness, implementing privacy-preserving techniques becomes crucial. Federated learning approaches could enable model improvement across users without centralising sensitive data, while differential privacy techniques could protect individual interaction patterns.
+On-device processing capabilities should be expanded to minimise data transmission requirements, with selective cloud processing only for complex reasoning tasks that exceed local computational capacity.
+
 
 % Chapter 8
 \chapter{Conclusion}
 
 \section{Summary of the Work}
-This thesis designed and evaluated a multimodal AI-driven GUI framework that adapts user interfaces in real time. The goal was to support personalised and accessible experiences, especially in health contexts where users may have motor, visual, or hands-free constraints. The framework captures touch, keyboard, voice, and gesture inputs and turns them into concrete adaptation actions via \emph{Smart Intent Fusion} (SIF).
+This thesis designed and evaluated a multimodal AI-driven GUI framework that adapts user interfaces in real time. The goal was to support personalised and accessible experiences, especially in health contexts where users may have motor, visual, or hands free constraints. The framework captures touch, keyboard, voice, and gesture inputs and turns them into concrete adaptation actions via \emph{Smart Intent Fusion} (SIF).
 
 The architecture has three modular layers: an \textbf{Input Adapter} that standardises events and handles basic management, a \textbf{SIF Backend} that combines rules with LLM-driven reasoning, and a \textbf{Frontend} that renders the UI and applies adaptations. A key addition is \textbf{Multi-Agent SIF} (MA-SIF): separate specialists for UI, geometry, and input, with a Validator Agent to reconcile and validate outputs. This setup reduced hallucinations, improved reliability, and stayed easy to configure through an external JSON file.
 
-\paragraph{Research Questions Answered:}
-This work demonstrates that a modular framework can (i) adapt UIs in real time, (ii) deliver accessibility-oriented behaviour, and (iii) remain developer-friendly across platforms. The prototype provides instant rule-based feedback with asynchronous MA-SIF results, achieves high coverage of accessibility actions, and maintains a stable JSON contract and SDK that integrates cleanly with the Flutter stack.
+\paragraph{Research Objectives and Outcomes}
+To reach the overall goal, six concrete objectives were set. Each is briefly restated with its outcome.
+
+\begin{enumerate}
+  \item \textbf{Develop a modular, cross-platform architecture.}  
+  A three-layer framework (Frontend, Input Adapter, Backend) was implemented with a shared JSON-based event and adaptation format. It integrates with Flutter today and keeps a clear path for SwiftUI and Unity through the same contracts.
+
+  \item \textbf{Implement multimodal input fusion.}  
+  Touch, keyboard, voice, and gesture inputs are supported and logged in a unified event schema. The pipeline fuses these with profile data and history, enabling context-aware adaptations across modalities.
+
+  \item \textbf{Integrate Smart Intent Fusion (SIF).}  
+  A hybrid engine was built that blends deterministic rules with multi-agent LLM reasoning (MA-SIF). The Validator Agent enforces schema, removes duplicates, and prevents conflicts, which yields high internal coherence (DCI $\approx$ \textbf{0.995}; Table~\ref{tab:obj-metrics}).
+
+  \item \textbf{Deliver accessibility-focused adaptations.}  
+  The system consistently proposes accessibility actions: \textbf{97.51\%} of all suggestions target motor, visual, or hands free needs (Table~\ref{tab:overall-accessible-share}). Typical changes include enlarging targets, increasing contrast and font size, and switching interaction modes.
+
+  \item \textbf{Provide a developer-friendly integration path.}  
+  The framework exposes simple contracts and reusable patterns; adapters apply changes on the client with minimal glue code. Configuration lives in JSON and can be swapped without redeploying the app.
+
+  \item \textbf{Evaluate system performance and impact.}  
+  A feasibility study over \textbf{84 events} across \textbf{six profiles} assessed adaptation quality and latency. In the balanced configuration, median latency is \textbf{13.19\,s}, schema-valid outputs \textbf{84.52\%}, and profile–action alignment (top five actions) \textbf{55.22\%}. A heavier configuration raises schema-valid to \textbf{100.00\%} and PAA to \textbf{61.45\%}, at \textbf{36.06\,s} median latency (Tables~\ref{tab:cfg-compare-overall}–\ref{tab:cfg-compare-profiles}).
+\end{enumerate}
 
 \section{Summary of Contributions}
 \begin{enumerate}
-    \item \textbf{Modular, cross-platform architecture:} Designed to work across Flutter and SwiftUI, with a clear path to future platforms like Unity/VR.
-    \item \textbf{Smart Intent Fusion (SIF):} A hybrid engine that mixes deterministic rules with LLM reasoning for ambiguous cases.
-    \item \textbf{MA-SIF extension:} Specialised agents (UI/geometry/input) plus a Validator Agent for conflict resolution and schema adherence.
-    \item \textbf{Developer-friendly integration:} Consistent JSON contracts for events, adaptations, and profiles; minimal glue code.
-    \item \textbf{Accessibility focus:} Concrete adaptations for motor, visual, and hands-free use, demonstrated via profile configurations.
+    \item \textbf{Modular, cross-platform architecture:} Designed to work across Flutter and SwiftUI, with a clear path to future platforms such as Unity/VR through shared JSON contracts.
+    \item \textbf{Smart Intent Fusion (SIF):} A hybrid engine that mixes deterministic rules with multi-agent LLM reasoning for ambiguous cases.
+    \item \textbf{MA-SIF extension:} Specialist agents (UI/geometry/input) plus a Validator Agent for conflict resolution and schema adherence, yielding high coherence (DCI $\approx$ 0.995).
+    \item \textbf{Developer-friendly integration:} Consistent contracts for events, adaptations, and profiles; minimal glue code; configuration in JSON.
+    \item \textbf{Accessibility focus (empirical):} \textbf{97.51\%} of actions are accessibility targeted; strong performance on common motor/voice issues and moderate personalisation that improves under the heavy configuration.
 \end{enumerate}
-\newpage
+
 \section{Limitations}
 Current limitations include:
 \begin{itemize}
-    \item \textbf{LLM API dependency:} Requires internet connectivity and an API key with quota limits.
-    \item \textbf{Synthetic evaluation:} Results are based on controlled profiles and tasks rather than large-scale field studies.
-    \item \textbf{UI context awareness:} Reasoning uses predefined metadata; there is no live semantic understanding of layouts yet.
-    \item \textbf{Latency:} Multi-agent LLM reasoning adds seconds of delay, which may not suit time-critical scenarios.
-    \item \textbf{Privacy and cost:} Multimodal logging can be sensitive and cloud inference can be costly; production systems need privacy controls and efficiency measures.
+    \item \textbf{LLM API dependency:} Cloud models require connectivity and are subject to quota and availability.
+    \item \textbf{Synthetic evaluation:} Results come from structured profiles and tasks; a user study is still needed to capture acceptance and perceived control.
+    \item \textbf{UI context awareness:} Reasoning relies on predefined metadata; there is no live semantic understanding of layouts yet.
+    \item \textbf{Latency:} Multi-agent LLM reasoning adds seconds of delay, which may not suit highly time-critical flows.
+    \item \textbf{Privacy and cost:} Multimodal logging can be sensitive and cloud inference can be costly; production systems need strict telemetry controls and efficiency measures.
 \end{itemize}
-Taken together, these constraints mean the current prototype is best suited for exploratory deployments rather than safety-critical settings. Dependence on a cloud LLM introduces availability and quota risks; when the model stalls or rate-limits, behavior regresses to the rule layer. The evaluation, while systematic, still relies on synthetic tasks and may not capture edge-case behaviors seen in uncontrolled environments. Because the backend reasons over predefined IDs and metadata instead of a live UI model, it can miss layout nuances or state that only a semantic analyzer would reveal. Multi-agent prompting also adds seconds of latency, which is noticeable for highly interactive flows. Finally, logging rich, multimodal context raises privacy and cost concerns: storing less, redacting more, and moving inference closer to the edge will be required for production. Near-term mitigations include progressive enhancement (rules first, LLM second), batching/caching of requests, rate-aware fallbacks, configurable telemetry with on-device redaction, and a UI analyzer to bridge the context gap.
+These constraints make the current prototype best suited for exploratory deployments rather than safety-critical settings. Dependence on a cloud LLM introduces availability risks; if the model stalls or rate-limits, behaviour regresses to rules. The evaluation, while systematic, is based on scripted scenarios and may miss edge cases. Without a live UI model, layout nuances can be overlooked. Latency is noticeable for highly interactive flows. Finally, rich logging raises privacy and cost concerns. Near-term mitigations include progressive enhancement (rules first, MA-SIF second), batching and caching, rate-aware fallbacks, on-device redaction, and a UI analyser to bridge the context gap.
 
 \section{Lessons Learned}
-Following the implementation and evaluation of this framework, several key lessons emerged:
 \begin{itemize}
-    \item \textbf{Hybrid $>$ pure AI:} Rules keep the UI responsive; MA-SIF adds smarter, profile-aware changes a moment later.
-    \item \textbf{Schemas are leverage:} Stable JSON contracts made the system portable and easy to debug as components evolved.
-    \item \textbf{Prompts and validation matter:} Constraint-heavy prompts plus a Validator Agent noticeably improved output quality.
-    \item \textbf{Simulation is useful:} Synthetic profiles/events were enough to tune reasoning and latency trade-offs before user studies.
-    \item \textbf{Modularity is beneficial:} Loose coupling made it straightforward to swap models/modalities and iterate quickly.
+    \item \textbf{Hybrid $>$ pure AI.} Rules keep the interface responsive; MA-SIF adds smarter, profile-aware changes moments later.
+    \item \textbf{Schemas are leverage.} Stable JSON contracts made the system portable and easy to debug as components evolved.
+    \item \textbf{Prompts and validation matter.} Constraint-focused prompts plus a Validator Agent improved output quality and reduced contradictions.
+    \item \textbf{Simulation helps.} Synthetic profiles and events were enough to tune latency limits, prompts, and fallback behaviour before involving real users.
+    \item \textbf{Modularity reduces risk.} Loose coupling made it straightforward to swap models and modalities and points to a clear path toward UI-aware vision and on-device reasoning.
 \end{itemize}
-The hybrid design proved its worth: deterministic rules kept the interface responsive, and MA SIF added smarter changes based on user profiles without blocking interaction. Rigid schemas turned out to be a real advantage. The shared JSON contracts worked like a common language across components and platforms, which made debugging simpler. Careful prompt design and a Validator Agent significantly improved action quality, cut down on made up targets, and enforced value and mode constraints. Simulation paid off early: synthetic profiles and scripted events were enough to tune latency limits, prompts, and fallback behavior before involving real users. Most importantly, the modular split (frontend $\leftrightarrow$ adapter $\leftrightarrow$ SIF) reduced risk. Models, modalities, and transports could be swapped with minimal side effects, which points to a clear path to scale and to future upgrades such as vision based context and on device reasoning.
 
 \section{Evaluation Results: Conclusion}
-The Adaptive Smart Home Controller shows the framework can deliver valid, accessibility-focused adaptations in real time. Across 84 events and six profiles, the system reached \textbf{84.5\%} schema-valid outputs (i.e., responses that pass the strict JSON schema), with \textbf{100\%} of responses flowing through the Validator Agent for consistency. \textbf{97.5\%} of suggested actions targeted motor, visual, or hands-free needs.
+The Adaptive Smart Home Controller shows that the framework can deliver valid, accessibility-focused adaptations in real time. Across \textbf{84 events} and six profiles, the balanced configuration reached \textbf{84.52\%} schema-valid responses (i.e., final payloads that pass the strict JSON schema), with \textbf{100\%} of responses flowing through the Validator Agent. \textbf{97.51\%} of suggested actions were accessibility targeted (Table~\ref{tab:overall-accessible-share}), and internal coherence was high (DCI $\approx$ \textbf{0.995}; Table~\ref{tab:obj-metrics}).
 
-Under the balanced multi-agent configuration, median latency was about \textbf{13\,s}. This worked well with the two-tier approach: rules for instant feedback; MA-SIF for richer, profile-aware changes. Hands-free profiles trailed slightly on schema validity, pointing to future work on mode-switch prompts and input disambiguation. Overall, the combination of rules + MA-SIF + validation gave predictable outputs without sacrificing adaptability.
+Effectiveness is strong on common motor and voice cases: \emph{missed tap} and \emph{slider overshoot} reached \textbf{100\%} ERA, and \emph{voice command} \textbf{97.22\%}; gestures remain the main opportunity for improvement (\textbf{8.33\%}; Table~\ref{tab:era-by-event}). Personalisation is moderate overall (PAA \textbf{55.22\%} on the top five actions) and highest for combined needs (P4, P5), which aligns with the action mix. Latency under MA-SIF (balanced) is \textbf{13.19\,s} median (p90 \textbf{17.13\,s}, max \textbf{21.10\,s}), which suits asynchronous adaptation. The heavier configuration increases schema validity to \textbf{100.00\%} and raises alignment to \textbf{61.45\%} at \textbf{36.06\,s} median latency (Tables~\ref{tab:cfg-compare-overall}–\ref{tab:cfg-compare-profiles}), making the trade-off explicit.
+
+A rules-only engine did \emph{not} outperform this setup. Overlap with the final LLM+Validator sets was limited (Jaccard $\sim$0.25–0.35 overall; exact matches $\sim$1\%), and rules missed multi-action bundles and need-aware choices (Table~\ref{tab:rule-vs-llm-compact}). That said, a rule \emph{fast path} is still useful: in about \textbf{86\%} of events there is at least one canonical corrective action available (aggregated from Table~\ref{tab:era-by-event}), so emitting that immediately and letting the Validator consolidate afterwards can lower median latency without sacrificing quality.
+
+Overall, the combination of rules + MA-SIF + validation produced predictable outputs without sacrificing adaptability. The next step is a small, focused user study to measure acceptance and perceived control, and to validate that the balanced configuration offers the right quality–latency point in practice. Beyond that, UI-aware action variants and light feedback signals are expected to lift personalisation for single-need profiles while keeping coherence and latency within bounds.
 
 \section{Self-Reflection and Reflection on the Work}
 
@@ -3357,20 +3364,23 @@ This project taught me how to turn an ambitious idea about multimodal adaptive i
 
 I solved core challenges such as standardising events across input types, using WebSocket for fast feedback and HTTP for profile management, and reducing hallucinations with a multi agent setup and a strong Validator Agent. Some things were out of scope for now, such as live semantic understanding of the UI, very low latency on device models, and large user studies. Because of these limits the system is ready for exploration and demos rather than strict time critical or safety critical use.
 
-This work suggests clear next steps. A UI analyser that uses visual input or a widget tree would let the backend reason over the real screen. Light domain specific models that run on device could lower latency a lot. Studies with people who have motor or visual impairments would show real effects and acceptance. Privacy by design logging and redaction at the edge would make the system safer for sensitive data.
+This work also provided me with insights into future directions. A UI analyser that uses visual input or a widget tree would let the backend reason over the real screen. Light domain specific models that run on device could lower latency a lot. Studies with people who have motor or visual impairments would show real effects and acceptance. Privacy by design logging and redaction at the edge would make the system safer for sensitive data.
 
 My process improved as I narrowed the scope. By iterating on a small end to end pipeline from adapter to backend to frontend I got faster feedback and clearer priorities. Simulated profiles and scripted events were enough to tune latency budgets, prompts, and fallbacks before involving real users. I also made progress measurable with schema checks, logging, and small comparisons instead of guesswork.
 
-I learned that I work well between research and engineering. I enjoy turning ideas like MA-SIF and its agents into robust code. I also learned to avoid trying to do everything at once. A focused first version and clear contracts helped me move fast without losing quality. I became more precise in writing prompts, planning for failure with timeouts and fallbacks, and stating privacy and cost assumptions. I also learned to accept uncertainty since LLM systems do not always behave in predictable ways.
+I learned that I work well between research and engineering. I enjoyed turning ideas like MA-SIF and its agents into robust code. I also learned to avoid trying to do everything at once. A focused first version and clear contracts helped me move fast without losing quality. I became more precise in writing prompts, planning for failure with timeouts and fallbacks, and stating privacy and cost assumptions. I also learned to accept uncertainty since LLM systems do not always behave in predictable ways. By evaluating the system more and more, I came to conclusion that this has real potential for improving user experience.
 
-Looking back, the main aims were met. The system delivers real time adaptations, fuses multimodal intent, and stays friendly for developers. Rules give quick feedback and MA-SIF adds richer changes. The main gaps are latency and deep context awareness. These are not failures but a roadmap. On device inference, semantic UI analysis, and real world studies are the natural next steps.
+Looking back, the main aims were met. The system delivers real time adaptations, fuses multimodal intent, and stays friendly for developers. Rules give quick feedback and MA-SIF adds richer changes. The main gaps are latency and deep context awareness. These are not failures but a roadmap. On device inference, semantic UI analysis, and real world studies are the next steps.
 
 \section{Final Remarks}
-This thesis showed that \textbf{Smart Intent Fusion}, especially in a multi‑agent configuration with a validator, can improve accessibility without giving up responsiveness. The architecture is intentionally future‑proof: on‑device inference to reduce latency and cost, richer UI understanding from widget trees and vision to ground decisions in real context, and reinforcement from user outcomes to learn what truly helps over time. In short: treat UIs as programmable surfaces, fuse multimodal intent, and validate before acting. This moves interfaces from static screens to adaptive systems that are personalised, inclusive, and resilient to the diversity of human interaction.
+This thesis shows that \textbf{Smart Intent Fusion}, in a multi-agent setup with a Validator, delivers \emph{reliable, accessibility-focused} adaptation at interactive pace. In the six-profile, 84-event study, almost all suggestions targeted accessibility goals (97.51\%), internal coherence was high (DCI $\approx$ 0.995), and the balanced configuration kept median latency near 13\,s. Effectiveness was near-perfect on common motor/voice cases (missed tap, slider overshoot, voice command), with gestures marked as the main opportunity for refinement.
 
-Beyond the prototype, a practical path is clear: package the adapter and contracts as SDKs for Flutter, SwiftUI, Unity/VR, and more; offer offline and privacy‑preserving modes; and integrate policy guardrails aligned with WCAG and safety constraints. A user study with motor‑, visual‑, and hands‑free participants, coupled with open evaluation logs and simple benchmarks, would turn feasibility into evidence. Incremental rollout is realistic: fast local rules for immediate feedback, MA‑SIF for deeper, profile‑aware changes, and a validator as a constant safety layer.
+A key outcome is that a \emph{rules-only} policy did not outperform this architecture. Overlap with the final LLM+Validator sets stayed modest (Jaccard $\sim$0.25–0.35; exact matches $\sim$1\%), and rules missed multi-action bundles and need-aware choices that lift personalisation. At the same time, the data support a practical compromise: in $\sim$86\% of events there is at least one canonical rule fix available, so a \emph{fast path} can emit that immediately while MA-SIF and the Validator consolidate the full, profile-aware adaptation a moment later. In short, rules help with speed; the hybrid pipeline wins on coverage, composition, and alignment.
 
-The bigger goal is to build an ecosystem where adaptive behavior is built-in, not just added later. In this vision, models can understand the live UI, learn from small signals, and stay reliable by using clear prompts, strict schemas, and human oversight. By combining solid engineering with easy-to-use defaults, interfaces can adjust quietly, explain their changes, and support users in real time. This way, technology becomes less of a barrier and more of a helpful partner.
+Looking ahead, there is some work to do: package the adapter and contracts as SDKs (Flutter, SwiftUI, Unity/VR), add offline and privacy-preserving modes, and ground decisions in real UI context via widget trees and vision. A small user study with motor-, visual-, and hands-free participants will turn feasibility into user-level evidence (acceptance, perceived control). Beyond that, UI-aware action variants and light feedback signals can raise personalisation for single-need profiles without sacrificing coherence or latency.
+
+Treat UIs as programmable surfaces, fuse multimodal intent, and validate before acting. With that recipe, interfaces move from static screens to adaptive systems that are personalised, inclusive, and resilient to the diversity of human interaction.
+
 
 \printbibliography[title=References]
 
