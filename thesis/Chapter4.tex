@@ -1,0 +1,879 @@
+%Chapter 4
+\chapter{Smart Intent Fusion (SIF)}
+\label{ch:chapter4}
+\section{Introduction to Smart Intent Fusion}
+Smart Intent Fusion (SIF) is the central intelligence layer of the proposed multimodal AI-driven UI adaptation framework, responsible for transforming raw, heterogeneous user input signals into concrete, context-aware interface adaptations. 
+Where the Frontend Layer renders the UI and the Input Adapter Layer standardises events, SIF performs the reasoning step. Architecturally, SIF occupies the central position in the adaptation loop, receiving standardised events from the Input Adapter Layer, combining them with user profile and context data, and returning validated adaptations back to the frontend for immediate application. This placement ensures that every adaptation decision is both context-aware and modality-agnostic, allowing the framework to maintain consistent behaviour regardless of how the interaction was initiated.
+It fuses current interaction data with user profiles, accessibility requirements, and recent interaction history to infer the user’s underlying intent and translate this into actionable UI changes.
+
+The motivation for SIF stems from a simple but critical challenge in accessibility-focused HCI:
+users rarely interact with a system through a single, perfectly clean input channel. Instead, interactions are often multimodal, noisy, and incomplete. A motor-impaired user may miss-tap a button but also issue a supporting voice command. A visually impaired user may attempt to activate a control by gesture but with low confidence, relying on high-contrast cues to complete the action. Traditional rule-based adaptive systems tend to process these signals independently, missing the opportunity to combine them into a unified, more reliable understanding of the user’s goal.
+
+SIF addresses this gap through a hybrid reasoning approach:
+\begin{itemize}
+    \item Rule-based logic handles deterministic adaptations for example, “if miss\_tap on target → increase size by 1.5×” ensuring baseline accessibility support and fast response times even without AI availability.
+    \item LLM-driven reasoning can process richer multimodal context and can propose creative or proactive adaptations that go beyond fixed rules such as switching to voice mode after repeated input struggles, or combining voice + gesture input to trigger a button instantly.
+    \item Multi-Agent SIF (MA-SIF) extends this further by distributing reasoning across specialised LLM agents (UI, Geometry, Input or more) and validating results through a dedicated Validator Agent to reduce hallucinations and conflicting actions as well ensuring the necessary validation.
+\end{itemize}
+
+The SIF layer sits behind well-defined APIs:
+\begin{itemize}
+    \item WebSocket endpoint \texttt{/ws/adapt} for low-latency, real-time adaptation suggestions.
+    \item HTTP endpoints like \texttt{/profile} for profile management, or \texttt{/full\_history} for developer tooling and debugging.
+\end{itemize}
+These endpoints use a strict JSON contract, making it easy for any frontend platform to connect and work with the backend. This ensures that the system remains flexible and can handle different input modalities.
+
+A defining feature of SIF is its integration with persistent user profiles stored in MongoDB. These profiles encapsulate three layers of information: static attributes such as preferred font size or contrast mode, learned preferences derived from recurring interaction patterns, and contextual data including recent history and environmental details. By merging these dimensions with each incoming event, SIF can make decisions that are not only responsive to the user’s current action but also aligned with their long-term accessibility needs.
+By fusing this profile data with incoming events, SIF maintains a continuous personalisation loop progressively adapting the UI to match the user’s abilities and context over time.
+
+For example:
+\begin{itemize}
+    \item A profile with \texttt{motor\_impaired: true} will bias adaptations towards larger controls and simplified layouts.
+    \item Repeated history of slider misses may lead to permanent slider thumb enlargement.
+    \item A hands-free preference can automatically promote voice/gesture-driven navigation in relevant contexts.
+\end{itemize}
+
+In the context of this thesis, SIF is not only an internal backend feature, it is the core research contribution.
+The remainder of this chapter expands on the theoretical underpinnings of SIF, its integration with user profiles and multimodal fusion, the prompt engineering strategies for guiding LLM behaviour, the architecture of its multi-agent extension, and the performance metrics used to evaluate its effectiveness.
+% Event Flow Diagram: Abstract SIF Reasoning Pipeline (Vertical Layout)
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=1.8cm,
+    font=\small,
+    >=latex,
+        every node/.style={font=\footnotesize},
+    sbox/.style={draw, rounded corners, fill=gray!10, minimum width=5.5cm, minimum height=1.1cm, align=center}
+]
+    % Nodes (vertical stack)
+        \node [sbox] (adapter) {Input Adapter Layer \\ \footnotesize (JSON event)};
+        \node [sbox, below=of adapter] (profile) {Profile \& History \\ \footnotesize (MongoDB)};
+        \node [sbox, below=of profile] (reason) {SIF Reasoning \\ \footnotesize (Rules + LLM + MA-SIF)};
+        \node [sbox, below=of reason] (output) {Adaptation Output \\ \footnotesize (JSON to adapter to Frontend)};
+
+        % Arrows
+        \draw[->, thick] (adapter) -- (profile) node[midway,right]{event};
+        \draw[->, thick] (profile) -- (reason) node[midway,right]{enrich context};
+        \draw[->, thick] (reason) -- (output) node[midway,right]{adaptation(s)};
+\end{tikzpicture}
+\caption{Abstract event flow in Smart Intent Fusion: events from the Input Adapter are enriched with profile/context, processed by rule-based and LLM/MA-SIF reasoning, and returned as adaptation outputs to the frontend.}
+\label{fig:sif-event-flow}
+\end{figure}
+
+\section{Theoretical Foundations of Smart Intent Fusion}
+The idea behind Smart Intent Fusion is simple:
+\\ users don’t interact with a UI in one clean and perfect way. In real life, inputs are messy, mixed, and often incomplete. A person might tap the wrong spot on a button, then say a voice command to make sure it worked. Someone using gestures might point at something but not be perfectly accurate, so they rely on extra visual cues to finish the task. A lot of current adaptive systems still process these signals separately, and that means they miss the chance to combine them into a clearer picture of what the user actually wanted.
+
+Smart Intent Fusion tries to fix that by taking all the inputs together: touch, keyboard, voice, gestures and mixing them with what the system already knows about the user (their profile, their history of interactions, and their accessibility needs). This way, it can guess the real intent and adapt the UI in the most helpful way.
+
+\subsection{Multimodal Fusion}
+In HCI, “multimodal fusion” just means combining different types of input to get a more reliable or richer understanding of the user’s action. 
+\\This can be done in a few ways:
+\begin{itemize}
+    \item \textbf{Early fusion}: merge the raw signals before interpreting them (e.g., combining the coordinates of a tap with the audio of a voice command immediately). \\
+    → Useful when two inputs happen at the exact same moment.
+    \item \textbf{Late fusion}: process each input type separately first, then merge the interpreted results (e.g., “voice command = unlock” + “miss-tap near unlock button” → final decision = trigger Unlock button).\\
+    → This is where most SIF reasoning happens.
+    \item \textbf{Hybrid fusion}: a mix of both, sharing some data early but also combining results later. \\
+    → Used when one modality’s data can make another modality’s interpretation more accurate.
+\end{itemize}
+SIF uses the hybrid approach. The Input Adapter Layer already standardises each input into a clean JSON format, but the fusion step happens in the backend where the current event, past history, and profile are all processed and fused together. This makes it possible to combine patterns like “miss-tap + voice command” into one clear adaptation. In the overall architecture described in Chapter~\ref{ch:chapter3}, this fusion step is the bridge between raw input handling and adaptation generation. By sitting in the backend, SIF can remain entirely modality-agnostic while still benefiting from the structured event format defined by the Input Adapter Layer. This ensures that even when new input methods are introduced in the future, the fusion logic can remain unchanged, relying on the same JSON schema and profile-context pipeline.
+
+\subsection{Intent Inference}
+The main goal of SIF is not just to log inputs, but to figure out \textit{why} the user did them. This is called intent inference. In other words, we want the system to answer the question: “What was the user trying to do?”
+If the system knows the intent, it can choose the best adaptation. The inference process is always profile-aware. Each decision is informed by a combination of static preferences (such as font size or contrast mode), learned patterns from past usage (such as repeated difficulty with sliders), and short-term contextual data (such as the most recent interactions). This means that two users producing the same input sequence could receive different adaptations if their profiles and histories differ, keeping the interaction completely personalised. 
+\\For example:
+\begin{itemize}
+    \item If the intent is to press “Unlock” but the user misses, the adaptation could be to enlarge the button and trigger it right away.
+    \item If the intent is to adjust a thermostat but the user struggles with the slider, the adaptation could be to switch to voice control and increase the slider size.
+\end{itemize}
+
+This is where LLMs can help. They are good at reasoning about context, combining clues, and filling in gaps when inputs are unclear. The downside is that they can be slow, be costly to run, and sometimes “hallucinate” an answer that doesn’t make sense even if its not defined in the prompt. That’s why SIF uses a \textbf{hybrid} approach:
+\begin{itemize}
+    \item \textbf{Rules} handle clear, simple cases with instant feedback.
+    \item \textbf{LLM reasoning} handles more complex or ambiguous cases.
+\end{itemize}
+
+\subsection{Why Hybrid Works Best}
+A purely rule-based system is predictable but rigid. It can only respond to situations that were thought of in advance. A purely LLM-based system is flexible but not always reliable, especially when it needs to work in (close to) real time for accessibility.
+By combining both:
+\begin{itemize}
+    \item The rules guarantee that basic accessibility changes (like increasing size after a miss-tap) always work. For example:
+    \begin{verbatim}
+        IF event_type == "miss_tap" AND profile.motor_impaired == true
+        THEN action = increase_button_size(target, 1.5)
+    \end{verbatim}
+    \item The LLM adds creativity and can adapt to situations the rules didn’t cover, like combining unusual input patterns, proposing a mode switch for hands-free use or even something entirely new.
+\end{itemize}
+
+\subsection{Connection to Accessibility}
+The whole point of this is to improve accessibility for different kinds of users:
+\begin{itemize}
+    \item \textbf{Motor-impaired:} combine multiple input signals to avoid repeated failed attempts.
+    \item \textbf{Visually impaired:} recognise when visual feedback is not enough and trigger higher-contrast or bigger fonts automatically.
+    \item \textbf{Hands-free:} allow combinations like voice + gesture to instantly activate actions.
+\end{itemize}
+
+In short, the theoretical base for SIF comes from multimodal fusion, intent inference, and hybrid reasoning. These ideas are not new in HCI, but this framework applies them with a strong focus on accessibility and personalisation, and makes them work in real time with cross-platform UI code. For example, a motor-impaired user who misses a lock button twice and then issues a voice command might trigger a combined adaptation: the UI immediately enlarges the button for future taps, but also switches the interface to voice-first mode for the current session. This ability to layer short-term fixes on top of long-term adjustments is what makes SIF more than just a reactive system, it is a continuously learning adaptation layer.
+
+\section{User Profile and Context Integration}
+For Smart Intent Fusion to be truly “smart,” it needs more than just the current event it is processing. If SIF reacted to every tap, voice command, or gesture without knowing who the user is or how they usually interact, it would behave like a generic accessibility script rather than a personalised adaptation system. That’s why the user profile and interaction context form the backbone of the reasoning process. They give SIF a sort of memory/personality, and the ability to adapt over time, not just in the moment.
+When a new event comes in like a tap, miss-tap, voice command, or gesture, SIF doesn’t look at it in isolation. It combines that event with:
+\begin{enumerate}
+    \item \textbf{The user profile} – a stored record in MongoDB with accessibility flags, preferred modalities, and UI settings.
+    \item \textbf{Interaction history} – the last 10 events that show patterns or repeated problems.
+    \item \textbf{Current UI context} – optional metadata about what’s on screen, where buttons are placed, and their sizes.
+\end{enumerate}
+This means SIF can make decisions that are personal and context-aware, not just reactive.
+
+\subsection{User Profiles}
+A user profile stores the information that makes one person’s interaction style different from another’s.
+This can include accessibility needs (motor-impaired, visually impaired, hands-free preferred), preferred input modalities, and baseline UI settings like font size, contrast mode, and button scale. It can be seen as the \textbf{memory} of the system.
+When combined with a short history of recent interactions, this profile turns SIF from a static decision engine into a continuous learning system. 
+
+Without profiles, SIF could still make adaptations, however they would always be reactive and temporary.
+For example:
+\begin{itemize}
+    \item If a user with tremors keeps missing a button, the button might get enlarged for that session, but as soon as they restart the app, it would shrink back.
+    \item If a user prefers voice input, SIF wouldn’t know to automatically switch to voice mode when they struggle with touch, instead it would have to come up on its own that this switch is needed for this user.
+\end{itemize}
+Profiles ensure these adaptations stick and get better over time.
+
+\subsection{User Profile Structure}
+In the backend, each profile is a JSON document in the \texttt{profiles} collection of a MongoDB database. It’s indexed by \texttt{user\_id} so the system can look it up instantly whenever a new event arrives. A typical structure looks like this:
+
+\begin{lstlisting}[language=json, caption=Simplified User Profile Example]
+{
+  "user_id": "user_123",
+  "accessibility_needs": { "motor_impaired": true },
+  "input_preferences": { "preferred_modality": "voice" },
+  "ui_preferences": { "font_size": 16 },
+  "interaction_history": [
+     { "action":"increase_button_size", "target": "all", "value": 1.2 },
+     { "action":"increase_font_size", "target": "all",  "value": 1.1 } 
+  ]
+}
+\end{lstlisting}
+
+This design keeps it simple but flexible. Architecturally, each profile contains:
+\begin{itemize}
+    \item \texttt{accessibility\_needs}: flags that tell SIF what kind of adaptations to prioritise.
+    \item \texttt{input\_preferences}: helps the system decide which modality to switch to when needed.
+    \item \texttt{ui\_preferences}: baseline visual parameters such as font size and contrast mode.
+    \item \texttt{interaction\_history}: capped log of recent events to support continuous learning.
+\end{itemize}
+MongoDB’s indexing means the profile can be retrieved in milliseconds, even with a large user base, and capped histories ensure lookups are fast.
+
+\subsection{How Profiles Affect Decisions}
+When an event comes in, the backend follows a clear process:
+\begin{enumerate}
+    \item Load the profile from MongoDB using the \texttt{user\_id}. If it doesn’t exist yet, create a new default profile.
+    \item Combine the event with the last few interactions from the history.
+    \item Pass the profile, history, and current event into the Smart Intent Fusion reasoning step.
+\end{enumerate}
+This context completely changes how SIF decides on adaptations.\\\\
+Some examples of influenced decisions:
+
+\textbf{Example 1: Motor-impaired user with repeated miss-taps}\\
+If the last three events in history are miss-taps on the same “Unlock/Lock” button, and \texttt{motor\_impaired} is true in their profile, SIF might do two things at once:
+\newpage
+\begin{lstlisting}[language=json, caption={Possible motor-impaired user adaptations}]
+[
+  {"action": "increase_button_size", "target": "button_unlock", "value": 1.5, "reason": "Multiple miss-taps detected, enlarging button for better accessibility"},
+  {"action": "highlight_border", "target": "button_unlock", "reason": "Increase button visibility for the user"}
+]
+\end{lstlisting}
+Without the profile, it might have just enlarged the button once and moved on.
+
+\textbf{Example 2: Hands-free preferred user}
+A user with \texttt{"hands\_free\_preferred": true} points at a device card (gesture) and says “turn on the lights.”
+SIF reasoning can fuse these into:
+\begin{lstlisting}[language=json, caption={Hands-free user intent fusion}]
+{
+  "action": "trigger_button",
+  "target": "button_light",
+  "reason": "Gesture pointing + voice 'Turn on the lights' detected for hands-free user",
+  "intent": "Activate Lights"
+}
+\end{lstlisting}
+Because of the profile, SIF is confident enough to trigger the button immediately without asking for physical confirmation.
+
+\subsection{Continuous Learning from History}
+Profiles are not static. Every interaction is logged in the \texttt{interaction\_history} and can influence future decisions. The interaction context can be seen as the system's \textbf{short-term awareness}.
+This makes SIF a learning system:
+\begin{itemize}
+    \item If a user keeps manually enabling high-contrast mode, the system can update \texttt{contrast\_mode} in their profile so it’s always on by default.
+    \item If increasing a button size significantly reduces miss-taps, that size can become the new permanent baseline in \texttt{ui\_preferences}.
+    \item If switching to voice mode solves repeated touch struggles, the profile can be updated to favour voice by default.
+\end{itemize}
+This feedback loop means the user doesn’t need to “train” the system manually, it adapts naturally as they use it. If SIF only looked at the current event, it would miss important patterns and make short-sighted decisions.
+With profile + history + event combined:
+\begin{itemize}
+    \item Adaptations can be proactive instead of reactive.
+    \item The UI can stay consistent between sessions.
+    \item The system can learn what really helps the user over time.
+\end{itemize}
+From an accessibility perspective, this is the difference between a generic interface that occasionally helps and a personalised tool that feels like it understands the user.
+
+\subsection{Role in Accessibility}
+User profiles are the backbone of accessibility-focused adaptations in this framework. They act as a persistent memory of the user’s abilities, preferences, and interaction challenges, enabling the system to make targeted, proactive adjustments rather than relying solely on short-term reactive changes. By storing explicit accessibility flags alongside learned behavioural patterns, profiles allow SIF to tailor the interface to an individual user in ways that are both short-term and long-term.
+
+From an accessibility perspective, profiles influence SIF’s reasoning in three key user categories:
+\begin{itemize}
+    \item \textbf{Motor-Impaired Users:} Profile flags such as \verb|motor_impaired: true| prioritise adaptations that reduce fine motor precision requirements. This can include:
+    \begin{itemize}
+        \item Enlarging touch targets (buttons, sliders) and increasing spacing to prevent accidental taps.
+        \item Offering alternative modalities such as voice commands or keyboard navigation to bypass touch interaction altogether.
+        \item Retaining enlarged target sizes across sessions once repeated miss-taps are detected.
+    \end{itemize}
+
+    \item \textbf{Visually Impaired Users:} When \verb|visual_impaired: true| is set, adaptations aim to maximise visual clarity. Examples include:
+    \begin{itemize}
+        \item Switching to high-contrast themes and bold colour schemes to align with WCAG 2.1 contrast requirements.
+        \item Increasing font sizes and icon scales to meet text accessibility guidelines.
+        \item Highlighting the active element with a strong focus border or magnified overlay to improve navigation feedback.
+    \end{itemize}
+
+    \item \textbf{Hands-Free Users:} Profiles with \verb|hands_free_preferred: true| bias SIF towards non-touch input modes, reducing physical interaction demands. Adaptations may involve:
+    \begin{itemize}
+        \item Automatically switching to voice or gesture navigation when interaction struggles are detected.
+        \item Providing clear, speech-friendly UI labels and tooltips to improve command recognition accuracy.
+        \item Simplifying layouts by reducing the number of visible controls at once, making it easier to select elements through voice or gesture.
+    \end{itemize}
+\end{itemize}
+
+By embedding these accessibility considerations directly into the profile structure, SIF can reason in a way that is both context-aware and user-specific. This allows the system to:
+\begin{enumerate}
+    \item Anticipate needs before errors occur (e.g., pre-emptively enlarging critical controls for a motor-impaired user on a small screen).
+    \item Ensure adaptations persist across sessions, avoiding the frustration of having to reconfigure accessibility settings each time.
+    \item Combine profile knowledge with real-time interaction patterns, enabling nuanced decisions such as \emph{“keep high contrast on by default, but also enable voice mode when the user is multitasking”}.
+\end{enumerate}
+
+\section{Modeling Multimodal Input Fusion}
+Smart Intent Fusion doesn’t just take one input, it collects \textbf{multiple inputs from different modalities} like touch, voice, gestures, and more. Then fuses them into a single, well-reasoned adaptation. This process is called \textit{multimodal input fusion}.
+Without fusion, the system would treat each event separately. A miss-tap would trigger one adaptation, and a voice command would trigger another, without realising both were aimed at the same action. With fusion, those two inputs can be combined into one confident and more helpful response which saves time and reduces frustrations. Furthermore, the user profile and interaction history also directly affect how this fusion works. A hands-free preferred user will have a lower threshold for fusing gesture + voice, but a visually impaired user’s profile might cause SIF to always add a “highlight” adaptation when triggering elements via voice, even if not strictly necessary. If history shows repeated failures for a certain modality, its weight in fusion decisions can be reduced. For users with impairments, every extra action is extra effort. Because of how the fusion is designed, it cuts down on unnecessary steps so the UI adapts faster and smarter to the user’s needs.
+
+\subsection{Event Standardisation}
+Before any fusion can happen, the raw input needs to be standardised.
+Every frontend in the framework Flutter, SwiftUI or a future VR client converts its local input data into the same JSON contract. This is handled by the Input Adapter Layer as described earlier.
+
+A standardised event looks like this:
+\begin{lstlisting}[language=json, caption={Standardised Event Example}]
+{
+  "event_type": "miss_tap",
+  "source": "touch",
+  "timestamp": "2025-08-04T14:41:00Z",
+  "user_id": "user_123",
+  "target_element": "button_unlock",
+  "coordinates": {"x": 210, "y": 640},
+  "confidence": 0.8,
+  "metadata": {"UI_element": "button"}
+}
+\end{lstlisting}
+This contract ensures:
+\begin{itemize}
+    \item \textbf{Cross-platform compatibility}: all clients speak the same “language” to the backend.
+    \item \textbf{Dynamic field names}: fields like \texttt{event\_type} and \texttt{target\_element} can be extended and modified without breaking existing logic.
+    \item \textbf{Extensibility}: new modalities can be added (like gaze tracking) without breaking existing clients.
+\end{itemize}
+By the time the event reaches SIF, it doesn’t matter whether it came from a phone, desktop, or VR headset, it always adheres to the same format for the backend.
+As said earlier SIF uses a hybrid approach for multimodal input fusion. The Input Adapter handles basic pre-processing (similar to early fusion), but the actual reasoning, deciding what adaptations to apply happens in the backend using late fusion.
+
+\textbf{Example: Touch + voice} \\
+Let’s say a motor-impaired user taps just to the right of the “Lock/Unlock” button and, within a second, says “Unlock.”
+Individually, the miss-tap could trigger an enlargement of the button and the voice command could trigger the unlocking action. However, with multimodal fusion, the system can understand that both inputs are related and prioritize the unlocking action while also enlarging the button for better accessibility.
+
+With SIF fusion, the system sees both in context:
+
+\begin{lstlisting}[{language=json}, caption=Example of Multimodal Fusion]
+[
+  {"action": "increase_button_size", "target": "button_unlock", "value": 1.5, "reason": "Miss-tap detected near Unlock button"},
+  {"action": "trigger_button", "target": "button_unlock", "reason": "Voice command 'unlock' detected in combination with miss-tap"}
+]
+\end{lstlisting}
+Now the button is both enlarged for future use and triggered immediately, reducing the number of actions the user needs to take, simplifying the interaction which is useful for motor-impaired users.
+
+\subsection{Timing and Confidence}
+SIF's LLM reasoning can also consider \textbf{when} and \textbf{how confidently} an input happened based on two fields from the standardised event:
+\begin{itemize}
+    \item \textbf{Timing}: events close together in time (e.g., within 1–2 seconds) are more likely to be related.
+    \item \textbf{Confidence}: each modality can provide a confidence score (e.g., gesture detection might be 0.7 certainty). Lower confidence might require a second modality before acting.
+\end{itemize}
+For example, a low-confidence gesture to point at a button might do nothing alone, but if followed by a high-confidence voice command naming that button, SIF can treat them as a combined intent.
+
+\subsection{LLM Reasoning in Fusion Decisions}
+While the fusion process benefits from deterministic rules for speed and reliability, one of the key innovations of SIF is its ability to leverage LLM reasoning to interpret and combine multimodal inputs in a context-aware way. 
+
+Once standardised events reach the backend, they are not processed in isolation. Each event is enriched with:
+\begin{itemize}
+    \item \textbf{User profile data:} accessibility flags, preferred modalities, and baseline UI settings.
+    \item \textbf{Interaction history:} the most recent events, revealing repeated struggles or patterns.
+    \item \textbf{Contextual metadata:} details about the UI state (e.g., which elements are visible), UI element type, environment and more.
+\end{itemize}
+
+This enriched dataset is then included in the LLM prompt, allowing the model to reason comprehensively about the user’s intent across modalities.  
+For example, instead of treating:
+\begin{itemize}
+    \item a low-confidence “point” gesture at a thermostat slider, and
+    \item a voice command “set temperature to 22”
+\end{itemize}
+as separate actions, the LLM can infer that they describe the same goal and produce a single adaptation: 
+\begin{lstlisting}[language=json]
+{
+  "action": "adjust_slider",
+  "target": "slider_thermostat",
+  "value": 22,
+  "reason": "Gesture and voice command combined to adjust temperature"
+}
+\end{lstlisting}
+
+By bringing together different types of input modalities, user’s preferences, and their recent actions, SIF can suggest changes that are not only accurate but also anticipate what will help the user most. This means the system can adapt quickly and make the interface easier to use based on what the user's most probable intent was.
+
+\section{Rule-Based Logic and LLM-Driven Adaptation}
+Smart Intent Fusion uses two very different ways to decide what adaptation to apply:
+\begin{itemize}
+    \item \textbf{Rule-based logic} handles clear, deterministic cases where the system can apply a known adaptation based on the event type and user profile. It is instant, and predictable.
+    \item \textbf{LLM-driven reasoning} uses the Gemini API to process complex, multimodal contexts and propose creative adaptations that go beyond simple rules.
+\end{itemize}
+Both have strengths and weaknesses, which is why the framework combines them instead of choosing one.
+
+\subsection{Rule-Based Logic}
+Rule-based logic works by matching incoming events to predefined conditions and applying a fixed response.\\
+For example:
+\begin{lstlisting}[language=python, breaklines]
+    if event.event_type == "miss_tap":
+        return {"action": "increase_button_size", "target": event.target_element, "value": 1.5}
+\end{lstlisting}
+Advantages:
+\begin{itemize}
+    \item \textbf{Simplicity}: Easy to implement and understand.
+    \item \textbf{Speed}: Instantaneous responses to known events.
+    \item \textbf{Predictability}: Consistent behavior for similar inputs and no risk of unintended consequences like hallucinations.
+    \item \textbf{Baseline guarantee}: Acts as a safety net so that critical accessibility features still work if the LLM is unavailable, slow to respond, or returns unusable output.
+\end{itemize}
+Limitations:
+\begin{itemize}
+    \item Can only handle cases explicitly programmed in advance.
+    \item No ability to combine signals in creative ways.
+    \item Doesn’t learn new patterns unless a developer updates the rules.
+\end{itemize}
+This means that while rule-based logic is fast and reliable, it can also be rigid and unable to adapt to new situations without human intervention. In SIF, they are deliberately kept lightweight, mostly as a mock or backup layer for LLM-driven reasoning.
+
+
+\subsection{LLM-Driven Reasoning}
+The LLM can reason about the event, user profile, and history together to try and infer the user's intent more deeply. It can make connections that rules would miss, such as:
+\begin{itemize}
+    \item Combining a miss-tap with a voice command into a single action.
+    \item Switching to a different modality when it detects repeated failure in the current one.
+    \item Proposing multiple coordinated adaptations for one intent.
+\end{itemize}
+Advantages:
+\begin{itemize}
+    \item \textbf{Flexibility}: Can adapt to new situations without explicit programming by the developer.
+    \item \textbf{Context-aware}: Takes profile and history into account naturally.
+    \item \textbf{Learning}: Can improve over time by learning from user interactions and feedback.
+\end{itemize}
+Limitations:
+\begin{itemize}
+    \item \textbf{Less predictable}: May generate unexpected or irrelevant responses.
+    \item \textbf{Slower}: Network call + reasoning time.
+    \item \textbf{Needs validation}: Output must be checked more thoroughly before applying.
+\end{itemize}
+
+\subsection{Hybrid Approach in SIF}
+In practice, SIF doesn’t fully choose between the two, it blends them:
+\begin{enumerate}
+    \item \textbf{Rules first}: If the event matches a clear, high-confidence rule, apply it immediately, this is mostly done in the frontend by the user profile.
+    \item \textbf{LLM second}: Use the model for complex or ambiguous cases, or to suggest extra adaptations beyond the rules.
+    \item \textbf{Timeout Fallback}: If the LLM times out or fails, return rule-based or other LLM output only.
+\end{enumerate}
+This ensures that basic accessibility features always work, while still allowing for creative, context-aware adaptations when needed. In other words, the rules form the “floor” of the system (the minimum guaranteed level of accessibility) while the LLM can raise the ceiling by adapting to more complex, ambiguous, or novel situations. Users are never left waiting for AI responses that might never come, and the system remains responsive even in worst-case scenarios.
+
+\subsection{Heatmap Analysis}
+
+To further refine adaptation decisions, the backend can analyze interaction heatmaps derived from user event logs. By aggregating tap coordinates and gesture paths, the system identifies problematic UI regions (e.g., frequently missed buttons) and adapts layouts or element sizes accordingly. This data-driven approach supports continuous improvement and personalization, especially for users with evolving accessibility needs. By using tap frequency, the backend can suggest adaptations like repositioning elements or enlarging hit areas, enhancing usability.
+
+\section{Multi-Agent Smart Intent Fusion (MA-SIF)}
+While a single LLM can process events and suggest adaptations, it often tries to “do everything” at once.
+That makes it harder to constrain, more prone to hallucinations, less predictable and in some cases slower (depending on workload).
+Multi-Agent Smart Intent Fusion (MA-SIF) solves this by splitting the reasoning into specialised agents, each focused on one domain of UI adaptation, and then combining their outputs through a Validator Agent.
+This design brings the benefits of modularity, parallelism, and role-specific constraints, all of which improve reliability and make the system easier to maintain.
+
+\subsection{Why Multiple Agents?}
+SIF began with a single-agent LLM that handled UI changes, geometry edits, and input switching in one pass. In practice, this made the prompt broad and brittle, and JSON outputs were less consistent. Measured against the same event suite, the single-agent baseline achieved lower schema validity (cf. Section~\ref{sec:perf-metrics-ai-logic}) and was harder to constrain. MA-SIF addresses this by dividing work across focused agents (UI, Geometry, Input) and routing all suggestions through a Validator Agent. The result is tighter control over allowed actions, fewer duplicates, and higher parse reliability, at the cost of a small latency increase.
+Furthermore, when one model is asked to handle UI changes, geometry adjustments, input mode switching, and validation all at once, several problems appear:
+\begin{itemize}
+    \item The prompt becomes long and vague.
+    \item Allowed actions become harder to enforce and turn into hallucinations.
+    \item Reasoning gets scattered between unrelated concerns.
+\end{itemize}
+By giving each agent a clear role, their prompts can be short, specific, and easy to maintain.
+For example, the UI agent only ever sees actions like \texttt{increase\_font\_size} or \texttt{increase\_contrast}, while the Geometry agent only deals with spatial changes like \texttt{increase\_button\_size} or \texttt{adjust\_spacing}.
+This separation means that each agent can focus on its specific task without being distracted by unrelated concerns. Parameters can be tuned independently for each agent, allowing for more precise control over their behavior (e.g., lower temperature for Geometry, slightly higher for Input). Finally, debugging becomes easier as each agent's logic is contained and easier to follow.
+
+\subsection{Agent Roles}
+At a high level, MA-SIF in this thesis's current configuration, consists of four specialised LLM agents: 
+\begin{enumerate}
+    \item a \textbf{UI Agent} for visual and interactive adaptations, 
+    \item a \textbf{Geometry Agent} for spatial changes and layout simplification, 
+    \item an \textbf{Input Agent} for modality switching and interaction simplification, 
+    \item a \textbf{Validator Agent} for conflict resolution and accessibility compliance. 
+\end{enumerate}
+Each has a narrow focus, defined prompts, and a limited set of allowed actions, making their reasoning predictable and easier to validate. They have clearly defined scopes of responsibility, and their roles are deliberately narrow to keep prompts concise, outputs predictable, and debugging straightforward. \textbf{The UI Suggestion Agent} is concerned purely with visual accessibility changes such as increasing font size, toggling high-contrast mode, or displaying contextual tooltips. For example, when a visually impaired user interacts with a dense text block, this agent might output an adaptation like increasing the global font scale by 1.2×.
+
+The \textbf{Geometry Suggestion Agent} deals with spatial layout changes and the physical dimensions of interactive elements. It might recommend increasing the size of a button, expanding the hit area of a slider, or adding extra spacing between cards in a list. For example, a motor-impaired user who repeatedly misses a button may trigger an output to enlarge that specific button by 1.5× while keeping the rest of the interface unchanged.
+
+The \textbf{Input Suggestion Agent} focuses on modality switching and simplifying interaction pathways. It is capable of suggesting transitions between touch, keyboard, voice, or gesture modes, as well as proposing layout simplifications to reduce cognitive load. For instance, if a user struggles with touch but succeeds with voice commands, this agent can suggest switching to voice-first navigation, potentially combined with a reduced interface complexity.
+
+Finally, the \textbf{Validator Agent} operates after all others have completed their reasoning. This is the most computationally demanding role, as it must examine every proposed adaptation in detail, identify and remove duplicates, verify that all actions are allowed, and ensure that no output falls outside safe parameter ranges. It also resolves potential conflicts, such as two agents targeting the same element with incompatible values. Because of the breadth of this responsibility, the validator uses a larger Gemini model, a higher timeout of 30 seconds, and a dynamic thinking budget.
+
+\subsection{Adaptation Flow}
+When an event arrives at the backend, the fusion process begins by loading the user’s profile and recent interaction history from MongoDB. This contextual data is then sent to each non-validator agent, alongside the event itself. The prompt for each agent is tailored to its domain, ensuring that the LLM only receives relevant instructions and the list of actions it is permitted to output.
+
+Once each agent has processed the event, their suggestions are collected. Importantly, the system is tolerant of partial failures, if one or more agents fail to return a result due to a timeout or API error, the remaining agents’ outputs are still retained. These partial results are then passed to the Validator Agent, which merges them into a coherent and conflict-free final adaptation set. Another possibility is fusing LLM adaptations with rule-based suggestions to create a hybrid output when one or more agents fail.
+
+If the validator itself fails, either due to malformed output or a processing error, the system does not discard all results. Instead, it falls back to returning the raw, unvalidated suggestions from the agents since the output may still be more useful than rule-based alternatives. Only if all agents fail to produce output does the framework revert to the rule-based \texttt{mock\_fusion} fallback. This layered approach ensures that useful adaptations are preserved whenever possible, rather than being lost due to a single point of failure.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    scale=0.91,
+    font=\small,
+    >=Latex,
+    node distance=6mm and 9mm,
+    block/.style={draw, rounded corners=4pt, thick, align=center, minimum height=6mm, minimum width=27mm, inner sep=1mm},
+    input/.style={block, fill=blue!15},
+    agent/.style={block, fill=green!15, minimum width=30mm},
+    validator/.style={block, fill=yellow!20, minimum width=34mm},
+    fallback/.style={block, fill=gray!15, minimum width=30mm},
+    suggest/.style={block, fill=gray!20, minimum width=34mm},
+    final/.style={block, fill=pink!20, minimum width=34mm},
+    line/.style={->, thick},
+    dline/.style={->, thick, dashed}
+]
+
+
+% Inputs (left column)
+\node[input, name=events] (events) {User Events};
+\node[input, below=3mm of events, name=profile] (profile) {User Profile\\+ History};
+
+% Agents (middle column)
+\node[agent, right=8mm of events] (ui) {UI Agent\\(Visual)};
+\node[agent, below=1.5mm of ui] (geo) {Geometry Agent\\(Spatial)};
+\node[agent, below=1.5mm of geo] (inp) {Input Agent\\(Modality)};
+
+% Validator + fallback (right column)
+\node[validator, right=8mm of geo] (val) {Validator Agent\\(Validate, Resolve)};
+\node[fallback, below=5mm of val, name=fb] (fb) {Rule-Based Fallback};
+
+% Results (far right)
+\node[suggest, right=8mm of val, yshift=4mm] (comb) {Combined Suggestions\\(Validator Fail)};
+\node[final, right=8mm of val, yshift=-8mm, name=final] (final) {Final Adaptations};
+
+% Border around the entire SIF diagram
+\node[draw, rounded corners=8pt, thick, inner sep=5mm, fit={(events) (profile) (final) (fb)}] (sif-border) {};
+
+% SIF label in top right corner
+\node[anchor=south east] at ([xshift=-2mm,yshift=0mm]sif-border.north east) {\textbf{SIF}};
+
+
+% Inputs to agents (direct arrows)
+\draw[line] (events.east) -- (ui.west);
+\draw[line] (events.east) -- (geo.west);
+\draw[line] (events.east) -- (inp.west);
+
+\draw[line] (profile.east) -- (ui.west);
+\draw[line] (profile.east) -- (geo.west);
+\draw[line] (profile.east) -- (inp.west);
+
+% Agents to validator
+\draw[line] (ui.east) -- (val.west);
+\draw[line] (geo.east) -- (val.west);
+\draw[line] (inp.east) -- (val.west);
+
+% All agents fail -> fallback
+\draw[dline] ([xshift=2mm]geo.east) to[out=-15,in=170] node[above,pos=0.7,xshift=4.5mm]{All fail} (fb.west);
+
+% Validator success/fail
+\draw[line] (val.east) -- node[above,pos=0.6, xshift=4.5mm]{Success} (final.west);
+\draw[dline] (val.north east) --  node[above,pos=0.3]{Fail} (comb.west);
+
+% Combined/fallback to final
+\draw[line] (comb.south) -- (final.north);
+\draw[line] (fb.east) -- (final.west);
+
+\end{tikzpicture}
+\caption{Multi-agent SIF adaptation flow: user events and profile/history are processed by specialised agents, validated, and merged into final adaptations. Fallbacks ensure robustness.}
+\label{fig:ma-sif-flow}
+\end{figure}
+
+\subsection{Dynamic Configuration}
+A key advantage of MA-SIF is that it is configured almost entirely through the \texttt{sif\_config.json}, making it very adaptable without requiring backend code changes. Each agent’s behaviour can be fine-tuned individually including its allowed actions, model type, temperature, thinking budget, and timeout, simply by editing the configuration file. This flexibility extends to the ability to add new agents or duplicate existing ones with different focuses.
+
+For instance, it is entirely possible to run two Geometry agents in parallel: one optimised for mobile devices with smaller screens and one tuned for desktop layouts. Both would analyse the same event and profile data but apply different heuristics in their prompts. The Validator Agent would then merge their suggestions, resolving overlaps and conflicts automatically. This makes it possible to create specialised agents for emerging modalities, such as gaze tracking in VR, without altering any core fusion logic.
+
+This externalised configuration is particularly valuable in accessibility research, where rapid iteration is needed. 
+For example, during a live user study, the prompt for the UI Agent can be adjusted to emphasise high-contrast themes over font scaling without redeploying the backend. 
+Similarly, experimental agents for new modalities such as gaze tracking or haptic feedback can be added in minutes, allowing researchers or developers to test new adaptation strategies with minimal downtime.
+
+\begin{lstlisting}[language=json,firstnumber=1, caption={Basic example of a 2-agent (+ validator) configuration}]
+{
+  "ui_agent": {
+    "model_settings": {
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2,
+        "thinking_budget": 0
+    },
+    "focus": ["visual adaptations"],
+    "allowed_actions": ["increase_size", "increase_contrast", "reposition_element"],
+    "prompt": "Given the event data, suggest UI adaptations for accessibility. Consider user profile and interaction history."
+  },
+  "geometry_agent": {
+    "model_settings": {
+        "model": "gemini-2.5-flash-lite",
+        "temperature": 0.2,
+        "thinking_budget": 0
+    },
+    "focus": ["spatial adaptations"],
+    "model": "gemini-2.5-flash-lite",
+    "allowed_actions": ["resize_element", "adjust_spacing", "simplify_layout"],
+    "prompt": "Analyze the UI layout and suggest spatial adaptations to improve usability for motor-impaired users."
+  },
+  "validator_agent": {
+    "model_settings": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.3,
+        "thinking_budget": -1,
+        "timeout": 30
+    },
+    "allowed_actions": ["switch_to_voice", "interpret_gesture", "recover_from_error", "increase_size", "increase_contrast", "reposition_element","resize_element", "adjust_spacing", "simplify_layout"],
+    "prompt": "Validate proposed adaptations for conflicts, duplicates and inconsistencies based on user context, events and interaction history."
+  }
+}
+\end{lstlisting}
+Each agent configuration above specifies its model, temperature, and thinking budget, which control the LLM's behavior and output style. The \texttt{focus} field describes the agent's adaptation domain, while \texttt{allowed\_actions} restricts the set of suggestions to ensure predictable outputs. The \texttt{prompt} guides the agent's reasoning, and is dynamically extended at runtime with the current event (see Chapter~\ref{ch:chapter5}), user profile, and interaction history. This enables agents to generate personalized adaptation suggestions based on live user context, rather than relying solely on static instructions.
+
+\subsection{Temperature and Thinking Budget}
+
+Two key parameters control the behaviour of each LLM agent in MA-SIF: \textbf{temperature} and \textbf{thinking budget}.
+
+\textbf{Temperature} determines the randomness and creativity of the model’s output. Lower values (e.g., 0.2) make the agent more deterministic, producing consistent and predictable suggestions—ideal for accessibility-focused UI changes where reliability is critical. Higher values (e.g., 0.7 or 1.0) increase creativity and output diversity, but can introduce unpredictability or hallucinations, which may be undesirable for critical adaptations.
+
+\textbf{Thinking budget} limits the number of reasoning steps or computational effort before the agent responds. A budget of 0 results in minimal reasoning and fast, direct answers. Higher budgets allow the agent to consider more factors, leading to more nuanced or complex suggestions. Negative values (e.g., -1) remove the limit, enabling extensive reasoning, useful for roles like the Validator Agent, which must resolve conflicts and ensure schema compliance.
+
+\textbf{Effect on Reasoning:}
+\begin{itemize}
+    \item Lower temperature and budget: Fast, predictable, and simple adaptations.
+    \item Higher temperature and budget: More creative, thorough, and potentially complex adaptations, but with increased unpredictability and latency.
+\end{itemize}
+
+In summary, temperature and thinking budget are critical for tuning agent behaviour. Lower values favour speed and reliability, making them suitable for accessibility-focused changes. Higher values enable deeper reasoning and creativity, but may introduce unpredictability, which can be risky for critical UI adaptations. The framework defaults to low temperature and minimal thinking budget for suggestion agents, while the Validator Agent uses a higher budget and slightly increased temperature to ensure robust validation.
+
+\subsection{Example in Action}
+Consider a user with both \texttt{visual\_impaired: true} and \texttt{hands\_free\_preferred: true} in their profile. They attempt to turn on the lights by tapping near the “Turn on” button but miss slightly, then say “Turn on the lights” almost immediately afterwards. The UI Suggestion Agent, informed by the user’s visual impairment, recommends switching to high-contrast mode and displaying a tooltip to make it easier to know the app's workings next time. The Geometry Suggestion Agent identifies the repeated miss and proposes increasing the button size. The Input Suggestion Agent recognises the voice command and suggests both switching to voice mode and triggering the button directly.
+
+These suggestions are passed to the Validator Agent, which removes any duplicate \texttt{increase\_button\_size} actions, ensures all parameters are sound, and merges the remaining actions into a single, ordered list. The final adaptation set includes the contrast adjustment, the button enlargement, the tooltip display, the voice mode switch, and the direct triggering of the button. All of these are applied in one update, making the interface immediately more accessible and easier to use in future interactions with the possibility of making them permanent for the user, by updating their profile.
+
+This scenario also highlights MA-SIF’s integration with persistent profiles and recent history: because the profile already records both visual impairment and a hands-free preference, the agents start from a position of context-awareness rather than guessing from scratch. The resulting adaptations are therefore both reactive to the immediate miss-tap and proactive in aligning with the user’s long-term accessibility needs.
+
+\subsection{Benefits of the Multi-Agent Approach}
+The multi-agent architecture provides several practical advantages. Reliability is improved because a failure in one agent does not prevent others from giving valuable suggestions. The modularity of the design makes it straightforward to maintain, as each agent can be modified or tuned independently without risking regressions in unrelated areas. Running agents in parallel also improves responsiveness, particularly when some suggestions can be applied even before all agents have finished processing.
+
+Specialisation further enhances the quality of the output, as each agent’s prompt scope is narrow enough to minimise irrelevant reasoning. The dynamic configuration system makes it possible to scale the number of agents up or down, or to swap in different models, without any changes to the backend logic. This adaptability is especially important in research and prototyping contexts, where requirements may change quickly.
+
+The practical implementation of MA-SIF including the \texttt{sif\_config.json} schema, example prompts, and backend implementation is detailed in Chapter~\ref{ch:chapter5}.
+
+\section{Prompt Engineering for LLMs in SIF}
+One of the most important parts of Smart Intent Fusion is \textbf{how we talk to the LLM}.
+Unlike a traditional rule-based system, where logic is written explicitly in code, here the behaviour of the LLM depends on the instructions it receives, namely the prompt.
+If the prompt, by which the LLM is queried, is unclear, missing context, or too open-ended, the output will either be wrong, inconsistent, or impossible to parse in code.
+The LLM could also be more prone to hallucinations, which means it generates answers that sound plausible but are actually incorrect or nonsensical. This means the design of the prompt, the model parameters, and the output format all directly affect how useful and reliable the adaptations are. Even though the prompts used in this framework are relatively simple compared to large fine-tuned systems, they still follow a consistent structure and design philosophy that make them work for this use case. In the architecture described in Chapter~\ref{ch:chapter3}, each event passed to the SIF Backend Layer arrives already standardised, enriched with metadata, and paired with relevant user profile and history context. The following prompt engineering process simply embeds this structured data into the LLM request, ensuring that reasoning always starts from the same reliable, modality-agnostic representation.
+
+\subsection{LLM Prompt Design Principles}
+Prompt engineering in this context is not just about getting a correct answer, it directly impacts accessibility outcomes. A poorly constrained prompt could suggest adaptations that introduce visual clutter, require unnecessary actions, or even reduce usability for the intended audience. By embedding accessibility goals, WCAG criteria, and known user needs into the prompt, the LLM is guided toward changes that genuinely improve the interface rather than merely altering it.
+The main objectives that flow from this understanding when writing the SIF prompts were:
+\begin{enumerate}
+    \item \textbf{Be unambiguous}: Avoid instructions that could be interpreted in multiple ways.
+    \item \textbf{Enforce a strict JSON schema}: The frontend and backend depend on predictable keys and types.
+    \item \textbf{Constrain actions}: Only allow adaptations that are valid for the given agent type.
+    \item \textbf{Tie reasoning to context}: The model should always consider the event, user profile, and recent history together.
+\end{enumerate}
+The idea was to make the prompts as predictable as possible. In accessibility systems, consistency often matters more than creativity or flexibility.
+
+\subsection{Prompt Structure from \texttt{sif\_config.json}}
+Each agent (UI, Geometry, Input) has its own prompt in \texttt{sif\_config.json}.\\
+Here’s a shortened example from the UI agent:
+\begin{lstlisting}[caption=Example UI Agent Prompt, language=json]
+{
+    "prompt": "You're the UI suggestion Agent.  
+    Analyze user event: {event_json}  
+    User profile: {profile_json}  
+    Recent history (last 10 events): {history_json}  
+    Suggest UI adaptations as JSON in the strict format.  
+    Each suggestion must include 'intent', 'reason', and at least a 'value' and 'mode' field. Value must be a reasonable number (e.g., 1.2) with at most one decimal place, and represents a scaling value unless stated otherwise in the metadata (e.g. font size). Target can be 'all' or specific elements."
+}
+\end{lstlisting}
+The important elements here are:
+\begin{itemize}
+    \item \textbf{Role definition}: explicitly stating the agent’s focus (“UI suggestion Agent”).
+    \item \textbf{Context injection}: inserting the current event, profile, and history as JSON strings.
+    \item \textbf{Output constraints}: telling the model exactly what keys and value types are allowed.
+    \item \textbf{Value rules}: restricting numeric ranges so the model doesn’t output absurd sizes.
+\end{itemize}
+The complete prompt set, agent-specific instructions, and their runtime configuration are detailed in the codebase of this thesis.
+
+\subsection{Disjunction Ambiguity in LLM Interpretation}
+During testing, it was observed that LLMs can misinterpret logical connectors such as \textbf{or} and \textbf{and}. For example, the instruction:
+\mdblockquote{“The adaptation must include a value or a mode field.”}
+was intended to mean \textit{at least one of these fields is required for this action type}. However, the model sometimes treated this as an exclusive choice (only one allowed) or as fully optional (neither required), even in cases where one was necessary. This can result in incomplete adaptations. This behaviour aligns with the well-known inclusive–exclusive disjunction ambiguity described in requirements engineering and computational linguistics, where natural language “or” lacks explicit semantic constraints and is prone to misinterpretation. \\
+For example:
+\begin{itemize}
+    \item \lstinline[language=json]|{"action": "increase_button_size", "target": "lamp", "value": 1.23}|: requires \texttt{value} but not \texttt{mode}.
+    \item \lstinline[language=json]|{"action": "switch_mode", "target": "all", "mode": "voice"}|: requires \texttt{mode} but not \texttt{value}.
+    \item \lstinline[language=json]|{"action": "highlight_button_border", "target": "button"}|: valid with neither, as neither field is relevant for this adaptation.
+\end{itemize}
+Having both fields is rather uncommon, but not impossible. This should handled further by the frontend and depends on the developer's implementation choices. Even with this type of prompt engineering, it sometimes still returns a \texttt{mode} field when a \texttt{value} field would be more appropriate, and vice versa.
+To reduce misinterpretation, prompts should explicitly state inclusive meaning when a field is required, such as:
+\mdblockquote{“The adaptation must at least include a value and a mode field, depending on the action type.”}
+This minimises the risk of missing required parameters due to inclusive-exclusive disjunction ambiguity.
+
+\subsection{Balancing Model Parameters}
+Even with a well-written prompt, model behaviour on the prompt is strongly affected by:
+\begin{itemize}
+    \item \textbf{Model}: The specific architecture and training of the model can influence its understanding and generation capabilities.
+    \item \textbf{Temperature}: how random the outputs are. Lower values (0.2-0.3) are better for consistent JSON.
+    \item \textbf{Thinking budget}: how many reasoning steps the model takes before output. Too low, and it may skip checks; too high, and it can slow down or get stuck.
+    \item \textbf{Timeout}: waiting time before falling back to mock or rule-based logic.
+\end{itemize}
+The Validator Agent especially needs more time and budget because it has a heavier job. This includes more complex reasoning and validation tasks like checking for inconsistencies in the adaptation or checking every adaptation against allowed actions, as well as removing irrelevant adaptations or merging duplicates.
+In my testing, the validator with a low thinking budget and temperature often got stuck or took a very long time to respond, which is not ideal for real-time adaptations. The goal was to stay under a timeout of max. 30 seconds for the Validator Agent and 15 seconds for the Suggestion Agents.
+
+\subsection{Avoiding Hallucinations and Bad Values}
+One common risk with LLM-driven adaptations is hallucination, where the model invents an action, target or value that doesn’t exist within the scope of the app.
+To reduce this:
+\begin{enumerate}
+    \item The allowed actions list is always clearly included in the prompt.
+    \item Targets are validated against the current UI state before applying them as well as by the Validator Agent.
+    \item A list of focus items is included to guide the model's attention and provide additional context to minimize irrelevant outputs.
+    \item Prompt clearly states the required fields and their expected values as well as adhering to the allowed actions and JSON contract.
+\end{enumerate}
+Even so, the validator sometimes has to fix agent mistakes.\\
+For example, if the geometry agent outputs: \\
+\lstinline[language=json]|{"action": "increase_button_size", "target": "button_unlock"}|\\
+The validator can correct it to:\\
+\lstinline[language=json]|{"action": "increase_button_size", "target": "button_unlock", "value": 1.5}|
+
+\subsection{Importance of a Strict JSON Schema}
+Another critical safeguard against hallucinations and malformed outputs is the use of a strict \texttt{response\_\\json\_schema} in the LLM API call (in this case Gemini). This schema explicitly defines:
+\begin{itemize}
+    \item The \textbf{structure} of the output object.
+    \item The \textbf{allowed fields}, their types, and descriptions.
+    \item The \textbf{required fields} and conditional requirements (e.g., either \texttt{value} or \texttt{mode} must be present depending on the action type).
+\end{itemize}
+
+By embedding this schema in every LLM request, the backend ensures that:
+\begin{enumerate}
+    \item Any response not matching the schema has a higher probability of being rejected before it reaches the frontend.
+    \item Missing critical parameters (such as \texttt{value} for size changes) are caught early.
+    \item Developers integrating the framework can rely on predictable keys, reducing integration errors.
+    \item The LLM is gently “steered” towards valid outputs, as many LLM APIs use the schema as a structural hint during generation.
+\end{enumerate}
+
+The schema used in this framework is shown below:
+
+\begin{lstlisting}[language=json,caption={SIF LLM Output JSON Schema}]
+{
+  "type": "object",
+  "properties": {
+    "adaptations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string",
+            "description": "The type of UI adaptation to perform" },
+          "target": { "type": "string",
+            "description": "UI element or component to apply the adaptation to, 'all' is allowed" },
+          "value": { "type": "number",
+            "description": "Numeric multiplier for size changes (e.g., 1.5 for 50% larger)" },
+          "mode": { "type": "string",
+            "description": "Interaction or visual mode to switch to (e.g., 'voice')" },
+          "reason": { "type": "string",
+            "description": "Why this adaptation was suggested" },
+          "intent": { "type": "string",
+            "description": "Inferred user intent based on the event" }
+        },
+        "required": ["action", "target", "reason", "intent"],
+        "oneOf": [
+          { "required": ["value"] },
+          { "required": ["mode"] }
+        ]
+      }
+    }
+  },
+  "required": ["adaptations"]
+}
+\end{lstlisting}
+
+This schema directly supports accessibility and safety goals: by preventing incomplete or semantically invalid adaptations from being applied, it reduces the risk of unpredictable UI behaviour. Combined with the Validator Agent, it forms a two-layer defence. Furthermore, schema validation stops malformed data at the source, while semantic validation ensures that even structurally valid adaptations are contextually appropriate.
+
+\section{Performance and Evaluation Metrics for AI Logic}
+\label{sec:perf-metrics-ai-logic}
+
+This section measures the end-to-end behaviour of the SIF and MA\mbox{-}SIF pipelines:
+\emph{Flutter client $\rightarrow$ WebSocket $\rightarrow$ FastAPI $\rightarrow$ LLM agents $\rightarrow$ validator $\rightarrow$ client}.
+The backend processes \emph{one event at a time} (sequential), so the reported latencies reflect a full round-trip with model inference on the critical path.  
+All runs used the same user identifier (\texttt{user\_seq}). On the very first event, no profile existed, so the server created a default profile; subsequent events appended to the profile’s \texttt{interaction\_history} (capped at 10). Qualitatively, later responses carried slightly richer rationales, consistent with the growing history window.
+
+\subsection*{Method}
+Two lightweight probes were run:
+\begin{enumerate}
+    \item \textbf{WebSocket round-trip}: a minimal ping-pong to capture end-to-end transport + processing overhead.
+    \item \textbf{Deterministic event suite}: rotation over \texttt{tap} $\rightarrow$ \texttt{miss\_tap} $\rightarrow$ \texttt{voice} $\rightarrow$ \texttt{gesture}, repeated over a short sequence.
+\end{enumerate}
+Each response was classified as:
+\begin{itemize}
+    \item \texttt{validated\_by\_validator} (final list produced by the validator),
+    \item \texttt{combined\_agent\_suggestions} (validator failed; raw agent outputs returned),
+    \item \texttt{mock\_rule\_fallback} (all agents failed; rule engine response).
+\end{itemize}
+The strict JSON output schema used in the backend was enforced to compute “schema-valid \%”. To avoid artificial timeouts during heavier MA-SIF runs, client keep-alive pings were disabled. Run sizes were intentionally small (6-10 events) due to API free-tier limits; the goal is to surface architectural trends, not saturate the service.
+
+\subsection*{Configurations}
+\begin{table}[H]
+\centering
+\caption{Exact agent settings for the three measured configurations.}
+\label{tab:agent-settings}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Config} & \textbf{Agent} & \textbf{Model} & \textbf{Temperature} & \textbf{Thinking Budget} & \textbf{Timeout (s)} \\
+\midrule
+\multirow{1}{*}{SIF (single agent)} 
+    & SIF agent & gemini-2.5-flash & 0.2 & dynamic (-1) & api-default \\
+\midrule
+\multirow{4}{*}{MA-SIF (balanced)} 
+    & UI agent       & gemini-2.5-flash-lite & 0.2 & 0 & 15 \\
+    & Geometry agent & gemini-2.5-flash-lite & 0.2 & 0 & 15 \\
+    & Input agent    & gemini-2.5-flash-lite & 0.2 & 0 & 15 \\
+    & Validator      & gemini-2.5-flash      & 0.3 & dynamic (-1) & 30 \\
+\midrule
+\multirow{4}{*}{MA-SIF (heavy)} 
+    & UI agent       & gemini-2.5-flash & 0.2 & 2048 & 30 \\
+    & Geometry agent & gemini-2.5-flash & 0.2 & 2048 & 30 \\
+    & Input agent    & gemini-2.5-flash & 0.2 & 2048 & 30 \\
+    & Validator      & gemini-2.5-flash & 0.3 & 2048 & 30 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection*{Results}
+\begin{table}[h]
+\centering
+\caption{Latency and correctness across configurations (sequential backend; \texttt{user\_seq} with default profile and growing history).}
+\setlength{\tabcolsep}{4pt}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\textbf{Config} & \textbf{WS p50} & \textbf{WS p90} & \textbf{WS max} & \textbf{Suite p50} & \textbf{Suite p90} & \textbf{Suite max} & \textbf{Schema-valid} & \textbf{n} \\
+ & (ms) & (ms) & (ms) & (ms) & (ms) & (ms) & (\%) &  \\
+\midrule
+SIF (single agent)    &  8240.99 &  9913.63 & 10649.21 &  8261.86 & 12034.12 & 12914.24 &  40.0 & 10 \\
+MA-SIF (balanced)     &  9969.99 & 11151.80 & 11164.61 & 10988.27 & 14659.71 & 15234.09 &  70.0 & 10 \\
+MA-SIF (heavy)        & 26875.99 & 27613.81 & 32009.47 & 27229.24 & 30443.48 & 31347.16 & 100.0 & 10 \\
+\bottomrule
+\end{tabular}%
+}
+\label{tab:latency_correctness}
+\caption*{\textit{Legend.} WS p50/p90/max: WebSocket round-trip latency percentiles and maximum (ms). Suite p50/p90/max: end-to-end latency percentiles and maximum for the deterministic event suite (ms). Schema-valid: share of responses that passed JSON schema validation (\%). \textit{n}: number of events.}
+\end{table}
+
+Across all runs \emph{0\% combined\_agent\_suggestions} and \emph{0\% mock\_rule\_fallback} was observed: the validator returned a final list for every event. In the heavy configuration, some individual agent calls failed (API-side), yet the validator still produced a valid final list, so external behaviour stayed stable. (Table~\ref{tab:latency_correctness})
+Note: in earlier exploratory tests, fallbacks mainly appeared when the free-tier quota was hit or the validator timed out, which did not occur here. Furthermore, during this evaluation it was observed that the validator agent in the MA-SIF heavy config accepted more suggestions from the agents than in the other more balanced config.
+
+\subsection*{Interpretation}
+The following patterns can be observed:
+\begin{itemize}
+    \item Moving from \textbf{SIF (single agent)} to \textbf{MA\mbox{-}SIF (balanced)} increases median latency from $\sim$8.3\,s to $\sim$11.0\,s, but schema validity jumps from \textbf{40\%} to \textbf{70\%}. Even with zero thinking budget on the specialist agents, the \emph{validator} is pulling its weight.
+    \item \textbf{MA\mbox{-}SIF (heavy)} pushes median latency to $\sim$27.2\,s, but schema validity reaches \textbf{100\%}, and the \texttt{reason}/\texttt{intent} fields become noticeably richer and more proactive.
+    \item The short history window helps later events rationales get slightly better as context accumulates, although the biggest quality gain clearly comes from the validator’s (higher) thinking budget.
+\end{itemize}
+
+\paragraph{Practical read:} For accessibility-centric flows, a sensible pattern is:
+\begin{enumerate}
+    \item \textbf{Immediate, local rules} for fast feedback (e.g., enlarge target, boost contrast).
+    \item \textbf{MA-SIF in the background} for the smarter, profile-aware follow-ups (e.g., switch to voice, simplify layout).
+\end{enumerate}
+This preserves responsiveness while still getting the benefits of multi-agent reasoning.
+
+\subsection*{Limitations}
+The runs were kept small (6-10 events) due to free-tier limits, so statistical power is modest—though the differences are large and consistent. The backend is sequential, so times reflect worst-case per-event latency with LLM on the critical path. The event suite is deterministic; other UI states can nudge absolute times, but the overall trade-off (latency $\leftrightarrow$ schema quality) is expected to hold.
+
+\subsection*{Implications for the Framework}
+Overall, the numbers back the architecture: MA-SIF + a capable validator improves output predictability and schema adherence; latency is tunable via thinking budgets, model choices and timeouts.
+
+\paragraph{Recommended deployment profiles:}
+\begin{itemize}
+    \item \textbf{Tiered response:} apply \emph{deterministic} local adaptations instantly; let MA-SIF deliver deeper, profile-aware changes a few seconds later.
+    \item \textbf{Balanced default:} \emph{gemini-flash-lite} for UI/geometry/input agents (\texttt{thinking\_budget=0}, \texttt{timeout=\\15s}); \emph{gemini-flash} validator with dynamic thinking and \texttt{timeout=30s}.
+    \item \textbf{Heavy mode (opt-in):} enable larger validator thinking budgets for flows that demand airtight structure and richer rationale (e.g., clinical or regulated settings). Expect $\sim$2–3$\times$ latency vs. balanced.
+\end{itemize}
+
+\paragraph{Guidelines for Model Optimization:}
+\begin{itemize}
+    \item \textbf{Enhanced Accuracy and Reduced Schema Errors:} Prioritize increasing the validator thinking budget for optimal cost-effectiveness.
+    \item \textbf{Reduced Latency:} Utilize \emph{gemini-flash-lite} agents with zero thinking time and set a validator timeout cap.
+    \item \textbf{Comprehensive Explanations:} Increment validator thinking budget first, followed by agent budget, while maintaining low temperatures (0.2-0.3).
+\end{itemize}
+
+\paragraph{Failure handling}
+Even with some agent API errors, the validator still made valid final lists. Returning other agent adaptations when the validator fails will provide a great fallback while the mock rule fallback is still the best backup for quota or timeout problems on all agents, although both are barely used in normal situations.
+
+\paragraph{Conclusion}
+Use MA-SIF for better quality and consistency, but only deal with the slower latency when it’s a necessity. Adding local rules will help keep the UI smooth for accessibility needs. As profiles and histories get bigger, there will be small but steady improvements in the reasoning quality over time, although the validator’s budget is still the main way to control accuracy. Using the gemini-pro model could potentially improve adaptations even further in important scenarios.
+
+\section{Limitations and Solutions of LLM Integration}
+Large Language Models make Smart Intent Fusion far more capable than any static rule set, but they also introduce new dependencies, performance constraints, and reliability issues. In this thesis, all reasoning was powered by the Gemini API, and while this enabled rapid development, it also shaped both the strengths and weaknesses of the final system.
+
+\subsection{LLM selection}
+Gemini was chosen as the sole LLM provider for this framework for a mix of practical and technical reasons. The generous free tier and large input/output token limits allowed for frequent iteration without cost becoming a limiting factor. The API provided access to both smaller, faster models (used for the UI, Geometry, and Input agents) and larger, reasoning-focused models such as \texttt{gemini-2.5-flash} or even \texttt{pro} (used for the Validator Agent). This made it possible to optimise speed where possible and allocate more resources to roles that needed deeper analysis.
+
+Gemini’s handling of structured JSON output was also an advantage, as Smart Intent Fusion depends on predictable schema-compliant responses. While this project did not directly benchmark other models like GPT-5 or Grok, partly to keep the system stable during development and partly because Gemini’s free tier already covered the thesis’s usage without cost. Stability was important for building and testing MA-SIF without constantly adjusting prompts and entire agents for different model behaviours. However, it also means that all testing and performance observations in this chapter are specific to Gemini’s runtime behaviour, and the results may differ if another LLM were used.
+
+\subsection{Reliability and Latency Constraints}
+A constant challenge was balancing response quality with the speed needed for near real-time accessibility. Smaller “lite” models returned in fractions of a second and were ideal for the three suggestion agents. The Validator Agent, however, required the larger gemini-2.5-flash model to perform more complex and reliable checks across multiple agent outputs. The trade-off was that validation could sometimes become the slowest part of the pipeline, especially with its increased timeout (30 seconds) and dynamic thinking budget.
+Network latency or temporary API slowdowns in the agents could lead to fewer suggestions being returned for a given event. In those cases, partial results were still applied rather than waiting or retrying for a full set.
+
+\subsection{Hallucinations and Invalid Output}
+Even with strict prompts and explicit allowed-action lists, hallucinations still appeared in the output. These took the form of actions outside the approved set, targeting elements that did not exist, or producing unreasonable scaling values (for example, value: 10). The Validator Agent was able to remove or correct most of these before they reached the frontend, but this came at the cost of extra processing time and complexity. Without validation, such outputs could have caused visual glitches or broken layouts, especially in geometry-related adaptations. The Input Adapter Layer or the Frontend itself, should as a fallback also have extra validation checks.
+
+\subsection{Token Limits and Context Size}
+Gemini’s token allowance was one of the main reasons for choosing it, but token limits were still a factor. Each agent’s prompt included the current event, the user profile, and the last few events from history, all in JSON format. In cases where the history was long or metadata verbose, this could approach the model’s input size limit. The solution was to truncate history in those cases, ensuring that the event and profile data always took priority, even if it meant losing some recent context. Furthermore the token limit per minute and per day also limited the number of requests that could be made, which is why the framework was designed to handle partial failures gracefully and still return useful adaptations even if some agents timed out or exceeded limits.
+
+\subsection{Validator Complexity}
+The Validator Agent is both the most important and the most resource-intensive part of MA-SIF. It merges outputs from multiple agents, removes duplicates, corrects invalid values, resolves conflicting suggestions, and ensures the final adaptations list passes schema validation. This workload made it prone to timeouts when handling a large number of adaptations at once. Increasing the thinking budget and timeout reduced these failures but also increased total response time, creating a constant balance between reliability and speed.
+
+\subsection{Dependency on External APIs}
+Finally, using an external LLM API means the framework is dependent on network availability and the stability of the provider. If the Gemini API is unavailable or returns errors, the system falls back to the rule-based logic. While this ensures baseline functionality, it also removes the more context-aware reasoning that makes Smart Intent Fusion valuable. In a production setting, this could be mitigated with on-device models or by integrating multiple LLM providers as backups.
+
+\section{Future Directions for AI-Driven Adaptation}
+While Smart Intent Fusion in its current form is functional and effective for the scenarios tested in this thesis, it is still a first iteration of what an AI-driven, multimodal UI adaptation system could be. The underlying architecture, especially the multi-agent design and the strict JSON-based API contract, was deliberately built with future extensions in mind. Several directions could significantly expand its capabilities and make it more adaptive and autonomous.
+
+One natural evolution is the introduction of visual context through image, vision-based or even at runtime UI analyzer models. Currently, SIF relies on structured metadata from the frontend to understand the UI state. In future versions, a lightweight computer vision model could take periodic screenshots of the interface and produce a semantic map of UI elements, their sizes, positions, and visual contrasts. This map could then be passed to the LLM alongside the existing event, profile, and history data. The advantage of this approach is that the AI would be reasoning over actual UI layouts, rather than relying on the frontend to describe them accurately which can cause misinterpretations. This opens the door to truly context-aware adaptations. For example, increasing the size of the smallest actionable element on a crowded screen, even if it hasn’t yet caused an interaction error or accurately reposition elements closer to the user's focus.
+
+Another promising direction is integrating user feedback into the adaptation loop. At present, SIF updates the user profile implicitly, based on interaction patterns or the user itself. A future version could prompt the user after significant adaptations with a quick, accessible feedback mechanism (“Was this change helpful?”). This feedback could be stored alongside interaction history and used by the LLM to adjust its decision-making over time. 
+
+There is also scope for dynamic, UI-level code changes driven directly by the LLM. Currently, SIF works within a fixed set of allowed actions and values prone to some hallucinations. This could be expanded so that the LLM can modify layout constraints, create new UI elements, or reorganise screens entirely with safeguards in place to prevent breaking the interface. The LLM could use its own "hallucinations" to provide creative solutions for layout issues or user interactions. This would take SIF from an adaptation system to a full UI changing layer, capable of designing new interactions on demand.
+
+Finally, the framework could explore multi-model, multi-provider reasoning and threading. At present, all reasoning is performed by Gemini and run sequentially, which simplifies development but limits the diversity and speed of outputs. Future versions could run agents across different LLM providers and threads or even mix LLMs with specialised non-language models (e.g., reinforcement learning agents for adaptation strategies), with the Validator Agent controlling and validating the final output. This would provide extra resilience against provider outages and allow different models to play to their strengths, as well as a strong speed improvement when asynchronous processing is implemented. Every agent could potentially run in its own thread or process and joined by the validator, allowing for true parallelism and faster overall response times.
+
+\section{Chapter Summary}
+This chapter presented Smart Intent Fusion (SIF) as the core reasoning layer of the adaptive framework. SIF combines multimodal inputs, user profiles, and recent interaction history to deliver personalised, context-aware UI adaptations. A hybrid approach of rule-based logic and LLM-driven reasoning ensures both reliability and flexibility, allowing essential accessibility features to work instantly while enabling more complex, context-sensitive changes.
+
+The multi-agent architecture (MA-SIF) was introduced, with specialised agents for UI, geometry, and input adaptations, and a Validator Agent responsible for merging and cleaning outputs. This design improves reliability, supports partial fallbacks, and can be dynamically reconfigured via \texttt{sif\_config.json}. Prompt engineering emerged as a critical factor in ensuring valid, schema-compliant LLM output, with careful wording required to avoid logical misinterpretations.
+
+Limitations of LLM integration including latency, occasional hallucinations, and reliance on a single provider, were mitigated through strict validation and fallback mechanisms. Finally, the chapter outlined future directions for SIF, such as adding visual UI context, integrating user feedback, enabling deeper UI changes, and exploring on-device AI models.
+
+Overall, Smart Intent Fusion was presented not just as an algorithm, but as a modular, extensible smart reasoning layer designed to work across platforms, adapt to different users, and remain robust in the face of LLM unpredictability. It is the component that turns multimodal input into meaningful, personalised adaptations for reshaping the interface to fit the user.

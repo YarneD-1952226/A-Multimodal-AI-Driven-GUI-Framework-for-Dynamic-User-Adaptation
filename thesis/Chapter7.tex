@@ -1,0 +1,112 @@
+%Chapter 7
+\chapter{Discussion and Future Work}
+\label{ch:chapter7}
+\section{Overview}
+This chapter interprets the results of this thesis in the broader context of accessibility and human-computer interaction (HCI), linking the implemented framework to existing research and real deployment. It first discusses implications for adaptive interface design, then summarises key findings and contrasts them with related work. Limitations and threats to validity are addressed explicitly. The chapter closes with a focused future-work,spanning near-term engineering improvements and longer-term research directions, including on-device, autonomous adaptation.
+
+\section{Implications for Accessibility and HCI}
+Combining deterministic rules with multi-agent, LLM-driven reasoning (SIF/MA-SIF) shows that multimodal interaction signals can be translated into personalised adaptations during live use. In the feasibility study over \textbf{84 events} and \textbf{six user profiles}, the system produced \textbf{84.5\%} schema-valid responses with a \textbf{median latency of $\sim$13\,s}, and all responses were passed through the Validator Agent for consistency. Hands-free profiles trailed slightly in validity, indicating where focused improvements are warranted.
+
+For accessibility, this reduces manual configuration and supports users with motor, visual, or hands-free needs by learning from interaction patterns over time. For HCI, the results indicate a generalisable path towards runtime, cross-platform adaptivity that spans UI, geometry, and input modalities. The hybrid approach also offers a pragmatic design trade-off: fast, predictable fallbacks via rules for common cases; flexible LLM reasoning when context is ambiguous. The caveat is increased complexity in orchestrating two reasoning pipelines and managing latency.
+
+\section{Key Findings and Contributions}
+This research contributes to both practical system design and conceptual models for multimodal adaptive UIs:
+\begin{enumerate}
+    \item \textbf{Framework Architecture:} A modular, three-layer architecture separating input capture, event standardisation, and reasoning, enabling portability across Flutter, SwiftUI, and future platforms (e.g., Unity).
+    \item \textbf{Smart Intent Fusion (SIF):} A hybrid engine combining deterministic rules for guaranteed accessibility fallbacks with LLM-driven reasoning for complex scenarios.
+    \item \textbf{Multi-Agent Extension (MA-SIF):} Specialised agents for UI, geometry, and input, validated by a dedicated Validator Agent to reduce conflicts and hallucinations.
+    \item \textbf{Developer-Focused Integration:} Standardised JSON contracts and generalised methods for event sending, adaptation handling, and profile management.
+    \item \textbf{Accessibility Impact (Empirical):} In the dataset, \textit{97.5\%} of suggestions directly supported motor, visual, or hands-free needs; median latency remained acceptable for asynchronous adaptation ($\sim$13\,s).
+\end{enumerate}
+
+\section{Comparison with Related Work}
+
+\paragraph{SUPPLE \cite{Gajos2008SUPPLE}}
+SUPPLE demonstrated the value of generating optimised interfaces for specific motor abilities, but relied primarily on constraint-solving over predefined UI descriptions. In contrast, the framework presented in this thesis performs \emph{real-time} adaptation during active use, using multimodal interaction signals fused by a hybrid rule-based and LLM-driven reasoning process. Whereas SUPPLE required a calibration phase, the proposed approach continuously refines adaptations based on interaction history.
+
+\paragraph{Reflow \cite{Wu2024}}
+Reflow’s pixel-based UI adaptation enables closed-source applications to be optimised without access to source code, but operates primarily at the visual layout level and does not incorporate higher-level semantic reasoning or multimodal fusion. The framework presented here incorporates profile- and history-driven adaptations across UI, geometry, and input modalities, and supports integration for both new and existing applications through standardised JSON contracts.
+
+\paragraph{UICoder \cite{Wu2024}}
+UICoder automates the generation of UI code from textual descriptions, enabling rapid interface creation. The approach taken in this work is complementary rather than competitive: whereas UICoder generates new interfaces at compile time, the proposed framework adapts \emph{existing} live interfaces at runtime, guided by multimodal context and inferred user intent.
+
+\paragraph{GUIDe \cite{kumar2007guide}}
+GUIDe’s gaze-augmented interaction techniques illustrate the potential of combining modalities for improved accuracy and reduced activation errors. This framework generalises that principle by supporting arbitrary modality combinations (e.g., voice + touch, gaze + gesture) and applying them within a cross-platform adaptation pipeline.
+
+\paragraph{Reinforcement Learning-based UI Adaptation \cite{gaspar2023learning}}
+Reinforcement learning approaches can personalise UIs over time using physiological feedback, but often require specialised sensing hardware and extended training periods. The framework presented in this thesis prioritises lightweight integration and immediate adaptation using LLM reasoning, while retaining the potential to incorporate reinforcement learning techniques in future iterations.
+
+\medskip
+Table~\ref{tab:related-comparison} summarises key differences between the framework and representative related work.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Comparison of related adaptive UI systems}
+\label{tab:related-comparison}
+\begin{tabular}{p{2cm}p{3cm}p{3cm}p{3cm}p{3cm}}
+\toprule
+\textbf{System} & \textbf{Modalities Supported} & \textbf{Reasoning Method} & \textbf{Adaptation Scope} & \textbf{Extensibility} \\
+\midrule
+SUPPLE & Single modality (motor calibration) & Constraint optimisation & Layout generation (compile-time) & Requires redesign for new modalities \\
+Reflow & Any (pixel-based only) & Visual analysis + rules & Layout changes only (runtime) & Limited; no semantic adaptation \\
+UICoder & N/A (code generation) & LLM code synthesis & New UI creation (compile-time) & Extendable via prompt tuning \\
+GUIDe & Gaze + keyboard/mouse & Rule-based & Targeting and scrolling (runtime) & Limited to gaze/pointing \\
+RL-based UI Adaptation & Depends on sensors & Reinforcement learning & Layout, content (runtime) & Requires specialised hardware \\
+\textbf{This work} & Touch, voice, gesture, keyboard (+ extensible) & Hybrid rules + multi-agent LLM & UI, geometry, input modes (runtime) & High; JSON contracts + config-based agents \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Future Work} 
+While the framework in its current form demonstrates the feasibility of real-time, multimodal adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
+
+\subsection{Short-Term Improvements}
+
+\subsubsection{Improved Gesture Support}
+The evaluation revealed that gesture events achieved only \textbf{8.33\%} ERA (Table~\ref{tab:era-by-event}), significantly lower than touch-based interactions (100\%) and voice commands (97.22\%). This limitation stems from insufficient disambiguation mechanisms and limited gesture-specific adaptations in the current action set.
+
+To address this, future iterations should implement a gesture disambiguation pipeline that includes brief confirmation prompts (e.g., "Point to confirm?") and fallback routing to voice modality when gesture recognition confidence is low. Additionally, extending the acceptable action sets with gesture-specific affordances such as focus outlines, dwell-to-activate mechanisms, and spatial targeting hints would improve appropriateness.
+
+\subsubsection{Enhanced Personalisation for Single-Need Profiles}
+While combined-need profiles (P4, P5) achieved strong Profile-Action Alignment scores, single-need profiles showed moderate performance, with P2 and P3 achieving 34.69\% and 28.00\% PAA respectively (Table~\ref{tab:obj-metrics}). This indicates room for improvement in tailoring adaptations to specific accessibility needs.
+
+The solution involves implementing need-weighted scoring within the Validator Agent, where adaptations matching the active profile's declared needs receive higher priority. The rule fallback engine could be implemented in a similar way for a higher overall effectiveness. Additionally, integrating lightweight user feedback mechanisms (accept, undo, revert actions) would provide continuous learning signals to refine personalisation over time. These improvements should target a \textbf{+10 point} increase in PAA for underperforming profiles while maintaining high Design Coherence Index (DCI $\geq$ 0.99).
+
+\subsubsection{Latency Reduction for Interactive Use}
+Current median latency of \textbf{13.19s} for MA-SIF (balanced) configuration, while acceptable for asynchronous adaptation, could benefit from optimisation for more responsive interaction. The heavy configuration's 36.06s median latency further emphasises the need for speed improvements.
+
+A staged approach would route obvious patterns (miss-tap → larger target, slider overshoot → larger slider) through a fast rule-based path, followed by MA-SIF consolidation for complex cases. Caching frequently suggested adaptations and implementing selective on-device classification for path selection could further reduce response times. The target is achieving p50 $\leq$ 8s while maintaining current schema validity and ERA performance.
+
+\subsubsection{SDK Development and Cross-Platform Support}
+To facilitate adoption, the framework requires packaging as developer-friendly SDKs for Flutter, SwiftUI, Unity/VR, and web platforms. These SDKs should include pre-built adapter components, standardised integration patterns, debugging tools, and comprehensive documentation with accessibility-focused examples.
+
+The SDK should also support offline modes using lightweight, on-device models for basic adaptations when cloud connectivity is unavailable. This addresses both privacy concerns and deployment constraints in sensitive environments.
+
+\subsection{Research Directions}
+
+\subsubsection{Visual UI Understanding and Semantic Analysis}
+Current reasoning relies on developer-provided metadata about UI elements and their relationships. Integrating computer vision capabilities would enable the system to analyse live interface screenshots, understanding spatial layouts, colour schemes, element hierarchies, and accessibility violations without requiring manual annotation.
+
+This visual understanding could be implemented using fine-tuned vision transformers or CLIP-like models trained on UI datasets. The analyser would complement existing metadata with real-time visual context, enabling more nuanced adaptations such as repositioning elements based on visual density or adjusting contrast based on actual colour relationships.
+
+\subsubsection{Specialised AI Models for UI Adaptation}
+Moving beyond general-purpose LLMs towards domain-specific models trained on UI interaction logs, accessibility guidelines (WCAG), and adaptation effectiveness data would improve both accuracy and efficiency. These models could be fine-tuned for specific contexts (healthcare, gaming, productivity) and optimised for on-device deployment.
+
+Such specialisation would reduce dependence on external APIs, improve privacy, and enable faster response times. The models could incorporate reinforcement learning from user feedback to continuously improve adaptation strategies.
+
+\subsubsection{Comprehensive User Studies}
+While the feasibility study demonstrates technical capability, validating real-world effectiveness requires comprehensive user studies with participants who have actual accessibility needs. A properly powered study should recruit N=12-18 participants across three groups: motor-impaired (4-6 participants), visually impaired (4-6 participants), and hands-free users (4-6 participants).
+
+The study design should employ a within-subjects comparison, testing participants on both rule-based adaptations and the full MA-SIF pipeline using realistic smart home control scenarios. Objective measures would include task completion time, error rates, and adaptation acceptance rates, while subjective measures would capture perceived usefulness through validated instruments such as the System Usability Scale (SUS) and NASA Task Load Index (TLX).
+
+Critically, participants should include individuals with lived experience of the target accessibility constraints rather than simulated impairments. This ensures that findings reflect genuine usability improvements and adaptation preferences. Such studies would provide essential evidence for the framework's practical impact beyond technical feasibility, while identifying refinements needed for real-world deployment based on authentic user experiences.
+
+\subsubsection{Extended Modality Support}
+Future work should expand input modality support to include eye tracking for hands-free navigation, advanced gesture recognition using depth sensors or computer vision, and brain-computer interfaces for users with severe motor impairments. Each new modality requires careful integration with the existing event standardisation pipeline and adaptation logic.
+
+Particular attention should be paid to multimodal fusion strategies that can intelligently combine signals from multiple simultaneous inputs, handling confidence weighting and temporal alignment to produce coherent user intent inference.
+
+\subsubsection{Privacy-Preserving and Federated Learning}
+As the framework collects rich interaction data including multimodal inputs and adaptation effectiveness, implementing privacy-preserving techniques becomes crucial. Federated learning approaches could enable model improvement across users without centralising sensitive data, while differential privacy techniques could protect individual interaction patterns.
+On-device processing capabilities should be expanded to minimise data transmission requirements, with selective cloud processing only for complex reasoning tasks that exceed local computational capacity.
