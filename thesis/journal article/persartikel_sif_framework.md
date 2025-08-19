@@ -1,6 +1,6 @@
 # AI die zich aanpast: een interface die jou begrijpt
 
-Een “one‑size‑fits‑all” interface werkt prima, tot je net naast een knop tikt, je in fel zonlicht staat of je je toestel liever met je stem bedient. Een nieuwe masterproef stelt een **multimodaal, AI‑gedreven framework** voor dat gebruikersinterfaces zich **in real time** laat aanpassen aan de persoon én de situatie. Het richt zich op toepassingen in de **gezondheidszorg** en verbetert de toegankelijkheid voor **motorisch** en **visueel** beperkte gebruikers én voor **handsfree** bedienen.
+Een “one‑size‑fits‑all” interface werkt prima, tot je net naast een knop tikt, je in fel zonlicht staat of je je toestel liever met je stem bedient. Deze nieuwe masterproef stelt een **multimodaal, AI‑gedreven framework** voor dat gebruikersinterfaces zich **in real time** laat aanpassen aan de persoon én de situatie. Het richt zich op toepassingen in de **gezondheidszorg** en verbetert de toegankelijkheid voor **motorisch** en **visueel** beperkte gebruikers én voor **handsfree** bedienen.
 
 ## Wat is het?
 

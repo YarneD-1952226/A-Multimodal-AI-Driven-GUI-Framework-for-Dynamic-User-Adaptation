@@ -36,10 +36,10 @@ While this configuration is sufficient for the current implementation, it is als
 
 % implementation details
 \section{Frontend (Flutter): Adaptive Smart Home Controller}
-The frontend of the Adaptive Smart Home Controller is implemented in Flutter and serves as the primary user-facing component of the framework. Its role is to render the interface, capture user interactions across multiple modalities, and apply adaptation actions received from the backend in real time. Although the backend is responsible for reasoning about what adaptations to make, the frontend is where these adaptations become visible to the user and directly influence usability.
+The frontend of the Adaptive Smart Home Controller is implemented in Flutter and serves as the primary user-facing component of the framework. Its role is to render the interface, capture user interactions across multiple modalities, and apply adaptation actions received from the backend in real-time. Although the backend is responsible for reasoning about what adaptations to make, the frontend is where these adaptations become visible to the user and directly influence usability.
 
 \subsection{Responsibilities \& Data Flow}
-The Flutter frontend (\texttt{AdaptiveSmartHomeApp} $\rightarrow$ \texttt{SmartHomeScreen}) renders the device cards, captures user interactions (live touch; voice/gesture mocked), and applies backend-issued adaptations in real time via a WebSocket callback. The \texttt{AdaptiveUIAdapter} is constructed with a user ID and a callback; when the backend responds with a list of \texttt{UIAdaptation} items, the frontend updates reactive state maps and triggers lightweight animations. (Figure~\ref{fig:frontend_data_flow})
+The Flutter frontend (\texttt{AdaptiveSmartHomeApp} $\rightarrow$ \texttt{SmartHomeScreen}) renders the device cards, captures user interactions (live touch; voice/gesture mocked), and applies backend-issued adaptations in real-time via a WebSocket callback. The \texttt{AdaptiveUIAdapter} is constructed with a user ID and a callback; when the backend responds with a list of \texttt{UIAdaptation} items, the frontend updates reactive state maps and triggers lightweight animations. (Figure~\ref{fig:frontend_data_flow})
 
 \begin{figure}[h]
 \centering
@@ -68,7 +68,7 @@ The UI is a scrollable list of device cards with minimalist controls each repres
 \label{fig:ui_overview}
 \end{figure}
 
-The UI is intentionally minimalist, focusing on clarity and accessibility. Each device card (Lamp, Thermostat, Lock) presents its controls in a clean, uncluttered layout: large buttons for toggling states, sliders for adjustments, and concise status labels. The design prioritizes high visual contrast and generous spacing, making it easier for users with motor or visual impairments to interact. Adaptations such as increased button size, font scaling, or contrast changes are immediately reflected in the UI, with smooth animations to reinforce feedback. A persistent mock event row below each card allows users (or testers) to simulate miss-taps, voice commands, or gestures, demonstrating how the interface responds and adapts in real time. This modular structure ensures that accessibility enhancements are both visible and intuitive, supporting a wide range of user needs without overwhelming the interface.
+The UI is intentionally minimalist, focusing on clarity and accessibility. Each device card (Lamp, Thermostat, Lock) presents its controls in a clean, uncluttered layout: large buttons for toggling states, sliders for adjustments, and concise status labels. The design prioritizes high visual contrast and generous spacing, making it easier for users with motor or visual impairments to interact. Adaptations such as increased button size, font scaling, or contrast changes are immediately reflected in the UI, with smooth animations to reinforce feedback. A persistent mock event row below each card allows users (or testers) to simulate miss-taps, voice commands, or gestures, demonstrating how the interface responds and adapts in real-time. This modular structure ensures that accessibility enhancements are both visible and intuitive, supporting a wide range of user needs without overwhelming the interface.
 
 \subsection{Event \& Adaptation Contract}
 \label{sec:event_adaptation_contract}
@@ -158,7 +158,7 @@ end if
 \subsection{Testing Harness: Mock Events \& Input Capture}
 To validate the end-to-end pipeline without physical input hardware, a mock panel triggers \emph{miss tap}, \emph{voice command}, and \emph{gesture} events per device. Each button constructs an \texttt{Event} with modality, target, and UI context and sends it via \texttt{adapter.sendEvent(...)}. This keeps the architecture ready for real speech/gesture modules later, while staying reproducible for the study.
 
-When a user presses on an mockup event in the test panel underneath each device, the frontend captures the event along with metadata such as the element’s type for UI context, the interaction type, and any other relevant parameters. This data is sent through the Input Adapter Layer, which standardises the event into the framework’s JSON contract before forwarding it to the backend via WebSocket. The choice of WebSocket ensures that adaptations can be returned and applied in near real time, a critical requirement for maintaining a smooth user experience in accessibility scenarios. The power of the framework lies in the ability to set the \texttt{event\_type}, \texttt{source}, and others, dynamically based on user interactions, since the backend will use LLM-reasoning to interpret these events in context. While the fields are bound by the JSON contract to standardise events (for modularity and consistency), the actual values can be highly contextual and dynamic.
+When a user presses on an mockup event in the test panel underneath each device, the frontend captures the event along with metadata such as the element’s type for UI context, the interaction type, and any other relevant parameters. This data is sent through the Input Adapter Layer, which standardizes the event into the framework’s JSON contract before forwarding it to the backend via WebSocket. The choice of WebSocket ensures that adaptations can be returned and applied in near real-time, a critical requirement for maintaining a smooth user experience in accessibility scenarios. The power of the framework lies in the ability to set the \texttt{event\_type}, \texttt{source}, and others, dynamically based on user interactions, since the backend will use LLM-reasoning to interpret these events in context. While the fields are bound by the JSON contract to standardize events (for modularity and consistency), the actual values can be highly contextual and dynamic.
 
 \textbf{Input Capture}: The frontend layer captures raw inputs from multiple modalities, including touch, voice, and gestures. Each modality is handled through specific Flutter widgets and event listeners:
 \begin{itemize}
@@ -376,7 +376,7 @@ void sendEyeTrackingEvent(String target, Map<String,double> gazeCoords) {
 The adapter is fully wired for touch events and for mocked voice/gesture events triggered from the frontend’s test panel, enabling end-to-end validation without external hardware. The adapter treats mocked and real events identically, so integrating actual speech/gesture modules later is a frontend-only change. By isolating serialization, profile checks, and transport here, the frontend stays focused on rendering, and the backend receives consistent inputs. The same adapter design can be reused in SwiftUI or other platforms with minimal changes to the method surface and JSON contract.
 
 \section{SIF Backend Layer: Implementation of Adaptation Logic}
-The backend implements the decision‑making core of the framework. It receives standardised events from the adapter, fuses them with user profiles and recent interaction history, and returns concrete adaptation actions for the frontend to apply. The service is written in Python using FastAPI, with Uvicorn for serving requests and MongoDB for persistent storage of profiles and logs. WebSocket is used for low‑latency, bidirectional communication during interaction, HTTP is used for profile management and auxiliary endpoints.
+The backend implements the decision‑making core of the framework. It receives standardized events from the adapter, fuses them with user profiles and recent interaction history, and returns concrete adaptation actions for the frontend to apply. The service is written in Python using FastAPI, with Uvicorn for serving requests and MongoDB for persistent storage of profiles and logs. WebSocket is used for low‑latency, bidirectional communication during interaction, HTTP is used for profile management and auxiliary endpoints.
 
 \subsection{Webserver layout and endpoints}
 The application exposes a WebSocket endpoint, \texttt{/ws/adapt}, that accepts JSON events matching the contract introduced earlier. Each message is parsed into a Pydantic \texttt{Event} model, the user profile is loaded from MongoDB, and the event, profile, and short history window are passed to the Smart Intent Fusion routine. The resulting adaptation list is returned on the same socket, allowing the frontend to update the UI immediately. For non‑interactive operations the backend offers \texttt{POST /profile} for profile creation, \texttt{GET /profile/{user\_id}} for retrieval, and a small set of diagnostic endpoints such as \texttt{GET /full\_history} and \texttt{GET /modalities}. Profile writes use FastAPI \texttt{BackgroundTasks}, which keeps the interaction path responsive while updates are persisted asynchronously.
@@ -390,7 +390,7 @@ uvicorn backend:app --reload --host 0.0.0.0 --port 8000 \
 This configuration enables reliable long-lived WS sessions during interactive testing, and eases startup of all the different services.
 
 \subsection{Data persistence and history management}
-MongoDB stores user profiles in a \texttt{profiles} collection and event–adaptation pairs in a \texttt{logs} collection. Profiles are indexed by \texttt{user\_id} to allow direct lookups during interaction. Each time an event is processed the backend appends a compact JSON representation to the profile’s \texttt{interaction\_history}, capped to a small sliding window. This keeps the prompt context focused on recent behaviour while avoiding unnecessary growth in the database. For redundancy, a JSONL file mirrors the log entries during development, which simplifies offline inspection or debugging purposes when the database is reset.
+MongoDB stores user profiles in a \texttt{profiles} collection and event–adaptation pairs in a \texttt{logs} collection. Profiles are indexed by \texttt{user\_id} to allow direct lookups during interaction. Each time an event is processed the backend appends a compact JSON representation to the profile’s \texttt{interaction\_history}, capped to a small sliding window. This keeps the prompt context focused on recent behavior while avoiding unnecessary growth in the database. For redundancy, a JSONL file mirrors the log entries during development, which simplifies offline inspection or debugging purposes when the database is reset.
 
 \subsection{Smart Intent Fusion and MA‑SIF}
 The fusion step supports two paths. A multi‑agent configuration, MA‑SIF, is the default. It loops over a set of specialised LLM agents, UI, Geometry, and Input, each prompted with the current event, the user profile, and a short history via runtime injection (for more details see Chapter~\ref{ch:chapter4}), defined in the \texttt{sif\_config.json}. These agents propose structured adaptations in their domain, for example increasing button size, adjusting spacing, switching input mode, or triggering a button when intent is clear. Their outputs are then passed to a dedicated Validator agent that consolidates, filters, and normalises the suggestions into a final list. The validator removes duplicates, corrects out‑of‑range values, and ensures that every adaptation conforms to the allowed action set and includes a target and either a value or a mode and more. See Table~\ref{fig:current-agent-configuration} for the current agent configuration.
@@ -454,7 +454,7 @@ The output schema will produce an adaptation of the following format:\\
 \lstinline[language=json,basicstyle=\ttfamily\small,caption={Example adaptation Format}]|{"adaptations":[{"action":"...","target":"...","value\mode":...,"reason":"...","intent":"..."}]}|
 
 \subsection{Rule‑based fallback and resilience}
-A lightweight rule engine acts as a safety net when LLM calls time out or the provider is unavailable. This rule engine comes into action when all the suggestion agents fail (no output). It covers essential accessibility behaviours, for example increasing button size after a miss‑tap, switching to voice for users flagged as motor‑impaired, or enabling high‑contrast mode for visually impaired profiles. These rules are intentionally conservative, they guarantee progress without surprising the user, and they keep the implementation usable in environments with unstable connectivity.
+A lightweight rule engine acts as a safety net when LLM calls time out or the provider is unavailable. This rule engine comes into action when all the suggestion agents fail (no output). It covers essential accessibility behaviors, for example increasing button size after a miss‑tap, switching to voice for users flagged as motor‑impaired, or enabling high‑contrast mode for visually impaired profiles. These rules are intentionally conservative, they guarantee progress without surprising the user, and they keep the implementation usable in environments with unstable connectivity.
 
 \subsubsection*{Fallback rules (summary)}
 \begin{table}[H]
@@ -493,7 +493,7 @@ Profile documents are structured as JSON as described in Chapter~\ref{ch:chapter
 
 To optimise performance and safety, all profile mutations are atomic, relying on MongoDB transactions to prevent race conditions when simultaneous events and updates occur. Adaptation logs are stored separately in the \texttt{logs} collection and mirrored to a local \texttt{adaptation\_log.jsonl} file, supporting offline analysis and reproducibility of evaluation results. Furthermore, if a profile update is in-flight during an event, the backend uses the latest committed profile, mitigated by client-side checks (waiting for \texttt{POST /profile} success) and server-side transactions.
 
-This implementation ensures that every adaptation decision, whether produced by a static rule or the multi-agent LLM pipeline, is grounded in the user’s persisted profile and immediate interaction context, enabling consistent, personalised, and stateful UI behaviour across sessions.
+This implementation ensures that every adaptation decision, whether produced by a static rule or the multi-agent LLM pipeline, is grounded in the user’s persisted profile and immediate interaction context, enabling consistent, personalised, and stateful UI behavior across sessions.
 
 \section{Dynamic Adaptation Mechanisms Implementation}
 The dynamic adaptation mechanism is the final stage in the adaptation pipeline, where decisions made by the backend are translated into immediate and visible changes in the user interface. In the current implementation, this process is tightly integrated with Flutter’s reactive widget system, allowing adaptation actions to be applied without forcing full UI rebuilds or navigation resets.
@@ -576,7 +576,7 @@ The transformation (see figure \ref{fig:before-after-adaptation}) demonstrates t
 
 \paragraph{Personalization Benefits:} 
 This example illustrates how the framework moves beyond generic accessibility settings to deliver contextual, profile-aware adaptations. Rather than applying a one-size-fits-all solution, the system combines the user's declared visual impairment with their interaction behavior (miss-tap) and stated preferences (voice modality) to produce a coordinated set of improvements that address both immediate needs (completing the lamp activation) and future interactions (persistent size and contrast improvements).
-The adaptation occurred within the framework's typical latency range ($\sim$13 seconds median), allowing the user to continue interacting while improvements are applied progressively. This demonstrates the practical viability of real-time, AI-driven adaptation for accessibility enhancement.
+The adaptation occurred within the framework's typical latency range ($\sim$13 seconds median), allowing the user to continue interacting while improvements are applied progressively. This demonstrates the practical viability of near real-time, AI-driven adaptation for accessibility enhancement.
 
 \begin{figure}[H]
 \centering
@@ -656,10 +656,10 @@ On launch, the adapter creates a minimal default profile when needed, connects W
 \end{figure}
 
 \section{Design Decisions}
-The design of the Adaptive Multimodal GUI Framework using LLMs reflects a series of deliberate choices aimed at balancing accessibility, performance, scalability, extensibility, and ease of integration. These decisions were made with the primary goal of delivering real-time, personalised adaptations for motor-impaired, visually impaired, and hands-free users, while ensuring that the framework remains modular and adaptable to future platforms and domains.
+The design of the Adaptive Multimodal GUI Framework using LLMs reflects a series of deliberate choices aimed at balancing accessibility, performance, scalability, extensibility, and ease of integration. These decisions were made with the primary goal of delivering near real-time, personalised adaptations for motor-impaired, visually impaired, and hands-free users, while ensuring that the framework remains modular and adaptable to future platforms and domains.
 
 \subsection{Modularity Over Monolithic Design}
-\textbf{Decision:} The framework adopts a modular three-layer architecture (Frontend, Input Adapter, SIF Backend) with clear separation of concerns, connected through a standardised JSON contract.
+\textbf{Decision:} The framework adopts a modular three-layer architecture (Frontend, Input Adapter, SIF Backend) with clear separation of concerns, connected through a standardized JSON contract.
 
 \textbf{Reasoning:}
 \begin{itemize}
@@ -685,11 +685,11 @@ The design of the Adaptive Multimodal GUI Framework using LLMs reflects a series
 \begin{itemize}
   \item \textbf{Scalability:} MongoDB’s NoSQL design and indexing ensure fast queries for large user bases, critical for real-world deployment.
   \item \textbf{Flexibility:} JSON-like documents align with the framework’s JSON contract, simplifying profile/history storage.
-  \item \textbf{Continuous Learning:} Retaining a limited history supports adaptive behaviour, such as making permanent size adjustments after repeated miss-taps.
+  \item \textbf{Continuous Learning:} Retaining a limited history supports adaptive behavior, such as making permanent size adjustments after repeated miss-taps.
 \end{itemize}
 
 \subsection{Rule-Based Fallback with LLM Reasoning}
-\textbf{Decision:} SIF combines rule-based logic (e.g., \texttt{if miss\_tap then increase\_size}) with LLM reasoning for creative adaptations, with rules as a fallback for LLM failures or time-outs, since LLM's can have high respond latencies.
+\textbf{Decision:} SIF combines rule-based logic (e.g., \texttt{if miss\_tap then increase\_size}) with LLM reasoning for creative adaptations, with rules as a fallback for LLM failures or time-outs, since LLMs can have high respond latencies.
 
 \textbf{Reasoning:}
 \begin{itemize}
@@ -726,7 +726,7 @@ In its current implementation state, the backend accepts connections from any or
 \section{Chapter Summary}
 This chapter has detailed the implementation of the Adaptive Smart Home Controller as the primary proof-of-concept for the multimodal AI-driven GUI framework. The system was realised as a three-layer architecture, consisting of a Flutter-based frontend for rendering and applying adaptations, an Input Adapter Layer for standardising and transmitting events, and a FastAPI-based backend implementing multi-agent Smart Intent Fusion with MongoDB for persistent profile and history storage.
 
-Key implementation aspects included the construction of a dynamic adaptation pipeline capable of applying size, contrast, modality, and content changes in real time, and the use of a strict JSON schema to maintain consistency between layers. While some modalities such as voice and gesture inputs were simulated for demonstration purposes, the system was designed so that integrating real devices will require minimal architectural changes.
+Key implementation aspects included the construction of a dynamic adaptation pipeline capable of applying size, contrast, modality, and content changes in real-time, and the use of a strict JSON schema to maintain consistency between layers. While some modalities such as voice and gesture inputs were simulated for demonstration purposes, the system was designed so that integrating real devices will require minimal architectural changes.
 
 The prototype also faced practical challenges, including LLM output validation, latency management, security considerations, and the absence of certain safeguards against malicious or replayed events. These were addressed through a combination of a validator agent, conservative rule-based fallbacks, partial-result handling, and a modular design that isolates critical components.
 

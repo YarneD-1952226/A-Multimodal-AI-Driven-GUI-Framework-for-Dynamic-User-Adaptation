@@ -2,7 +2,7 @@
 \chapter{Discussion and Future Work}
 \label{ch:chapter7}
 \section{Overview}
-This chapter interprets the results of this thesis in the broader context of accessibility and human-computer interaction (HCI), linking the implemented framework to existing research and real deployment. It first discusses implications for adaptive interface design, then summarises key findings and contrasts them with related work. Limitations and threats to validity are addressed explicitly. The chapter closes with a focused future-work,spanning near-term engineering improvements and longer-term research directions, including on-device, autonomous adaptation.
+This chapter interprets the results of this thesis in the broader context of accessibility and human-computer interaction (HCI), linking the implemented framework to existing research and real deployment. It first discusses implications for adaptive interface design, then summarises key findings and contrasts them with related work. Limitations and threats to validity are addressed explicitly. The chapter closes with a focused future work,spanning near-term engineering improvements and longer-term research directions, including on-device, autonomous adaptation.
 
 \section{Implications for Accessibility and HCI}
 Combining deterministic rules with multi-agent, LLM-driven reasoning (SIF/MA-SIF) shows that multimodal interaction signals can be translated into personalised adaptations during live use. In the feasibility study over \textbf{84 events} and \textbf{six user profiles}, the system produced \textbf{84.5\%} schema-valid responses with a \textbf{median latency of $\sim$13\,s}, and all responses were passed through the Validator Agent for consistency. Hands-free profiles trailed slightly in validity, indicating where focused improvements are warranted.
@@ -59,7 +59,7 @@ RL-based UI Adaptation & Depends on sensors & Reinforcement learning & Layout, c
 \end{table}
 
 \section{Future Work} 
-While the framework in its current form demonstrates the feasibility of real-time, multimodal adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
+While the framework in its current first iteration form demonstrates the feasibility of (close to) real-time, multimodal adaptive UI adaptation, several opportunities exist to expand its capabilities, improve its performance, and extend its reach into new domains. Future work can be divided into short-term engineering improvements (such as SDK packaging and support for additional modalities) and long-term research directions (such as autonomous, on-device reasoning agents capable of compile-time and runtime adaptation).
 
 \subsection{Short-Term Improvements}
 
@@ -68,13 +68,13 @@ The evaluation revealed that gesture events achieved only \textbf{8.33\%} ERA (T
 
 To address this, future iterations should implement a gesture disambiguation pipeline that includes brief confirmation prompts (e.g., "Point to confirm?") and fallback routing to voice modality when gesture recognition confidence is low. Additionally, extending the acceptable action sets with gesture-specific affordances such as focus outlines, dwell-to-activate mechanisms, and spatial targeting hints would improve appropriateness.
 
-\subsubsection{Enhanced Personalisation for Single-Need Profiles}
+\subsubsection{Enhanced Personalization for Single-Need Profiles}
 While combined-need profiles (P4, P5) achieved strong Profile-Action Alignment scores, single-need profiles showed moderate performance, with P2 and P3 achieving 34.69\% and 28.00\% PAA respectively (Table~\ref{tab:obj-metrics}). This indicates room for improvement in tailoring adaptations to specific accessibility needs.
 
-The solution involves implementing need-weighted scoring within the Validator Agent, where adaptations matching the active profile's declared needs receive higher priority. The rule fallback engine could be implemented in a similar way for a higher overall effectiveness. Additionally, integrating lightweight user feedback mechanisms (accept, undo, revert actions) would provide continuous learning signals to refine personalisation over time. These improvements should target a \textbf{+10 point} increase in PAA for underperforming profiles while maintaining high Design Coherence Index (DCI $\geq$ 0.99).
+The solution involves implementing need-weighted scoring within the Validator Agent, where adaptations matching the active profile's declared needs receive higher priority. The rule fallback engine could be implemented in a similar way for a higher overall effectiveness. Additionally, integrating lightweight user feedback mechanisms (accept, undo, revert actions) would provide continuous learning signals to refine personalization over time. These improvements should target a \textbf{+10 point} increase in PAA for underperforming profiles while maintaining high Design Coherence Index (DCI $\geq$ 0.99).
 
 \subsubsection{Latency Reduction for Interactive Use}
-Current median latency of \textbf{13.19s} for MA-SIF (balanced) configuration, while acceptable for asynchronous adaptation, could benefit from optimisation for more responsive interaction. The heavy configuration's 36.06s median latency further emphasises the need for speed improvements.
+Current median latency of \textbf{13.19s} for MA-SIF (balanced) configuration, while acceptable for asynchronous adaptation, could benefit from optimisation for more responsive interaction. The heavy configuration's 36.06s median latency further emphasizes the need for speed improvements.
 
 A staged approach would route obvious patterns (miss-tap → larger target, slider overshoot → larger slider) through a fast rule-based path, followed by MA-SIF consolidation for complex cases. Caching frequently suggested adaptations and implementing selective on-device classification for path selection could further reduce response times. The target is achieving p50 $\leq$ 8s while maintaining current schema validity and ERA performance.
 
