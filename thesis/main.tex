@@ -1,0 +1,408 @@
+% !TEX root = main.tex
+\documentclass[openany]{book}
+    \usepackage[acronym]{glossaries}
+    \usepackage[english]{babel}
+    \usepackage{lipsum}
+    \usepackage{hyperref}
+    \usepackage{booktabs}
+    \usepackage[utf8]{inputenc}
+    \usepackage[a4paper,margin=2.5cm]{geometry}%2.5cm
+    \usepackage{algorithm}
+    \usepackage{algpseudocode}
+    \usepackage{multirow}
+    \usepackage{setspace}
+    \usepackage[parfill]{parskip}
+    \usepackage{graphicx}
+    \usepackage[margin=1cm,font=normalsize,labelfont=bf]{caption}
+    \usepackage{placeins}
+    \usepackage{csquotes} 
+    \usepackage{listings,xcolor}
+    \usepackage[most]{tcolorbox}     
+    \usepackage{pgfplots}
+    \usepackage{tikz}
+    \usepackage[
+    backend=biber,
+    style=numeric,
+]{biblatex}
+
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.misc}
+
+\addbibresource{refs.bib}
+
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;} 
+
+\newtcolorbox{myquote}{
+    enhanced,
+    frame hidden,
+    colback=gray!10,
+    sharp corners,
+    left=10pt,
+    right=0pt,
+    borderline west={2pt}{0pt}{gray!50}
+}
+
+\newcommand{\CaptionFontSize}{\small}
+\newcommand{\mdblockquote}[1]{  \begin{myquote}  #1  \end{myquote}  }
+
+\makeglossaries
+\newacronym{ui}{UI}{User Interface}
+\newacronym{ux}{UX}{User Experience}
+\newacronym{ai}{AI}{Artificial Intelligence}
+\newacronym{ml}{ML}{Machine Learning}
+\newacronym{hci}{HCI}{Human-Computer Interaction}
+\newacronym{gui}{GUI}{Graphical User Interface}
+\newacronym{llm}{LLM}{Large Language Model}
+\newacronym{nlp}{NLP}{Natural Language Processing}
+\newacronym{api}{API}{Application Programming Interface}
+\newacronym{vr}{VR}{Virtual Reality}
+\newacronym{xr}{XR}{Extended Reality}
+\newacronym{ar}{AR}{Augmented Reality}
+\newacronym{vlm}{VLM}{Vision-Language Model}
+\newacronym{react}{ReAct}{Reasoning and Acting}
+\newacronym{rpa}{RPA}{Robotic Process Automation}
+\newacronym{nlpui}{NLP UI}{Natural Language Processing User Interface}
+\newacronym{dsl}{DSL}{Domain-Specific Language}
+\newacronym{tui}{TUI}{Tangible User Interface}
+\newacronym{cli}{CLI}{Command-Line Interface}
+\newacronym{ide}{IDE}{Integrated Development Environment}
+\newacronym{pbd}{PBD}{Programming by Demonstration}
+\newacronym{vpl}{VPL}{Visual Programming Language}
+\newacronym{cot}{CoT}{Chain of Thought}
+\newacronym{seeact}{SeeAct}{Seeing and Acting}
+\newacronym{autogpt}{AutoGPT}{Autonomous GPT}
+\newacronym{gpt}{GPT}{Generative Pre-trained Transformer}
+
+\definecolor{background}{HTML}{EEEEEE}
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!10},
+    showstringspaces=false,
+    string=[db]{"},
+    stringstyle=\color{green!50!black},
+    morestring=[s][\color{black}]{\ \ "}{":},
+    keywordstyle=\color{blue},
+    keywords={true,false,null},
+    literate=
+     *{0}{{{\color{red}0}}}{1}
+      {1}{{{\color{red}1}}}{1}
+      {2}{{{\color{red}2}}}{1}
+      {3}{{{\color{red}3}}}{1}
+      {4}{{{\color{red}4}}}{1}
+      {5}{{{\color{red}5}}}{1}
+      {6}{{{\color{red}6}}}{1}
+      {7}{{{\color{red}7}}}{1}
+      {8}{{{\color{red}8}}}{1}
+      {9}{{{\color{red}9}}}{1}
+      {.}{{{\color{red}.}}}{1}
+      {:}{{{\color{gray}{:}}}}{1}
+      {,}{{{\color{gray}{,}}}}{1}
+      {\{}{{{\color{gray}{\{}}}}{1}
+      {\}}{{{\color{gray}{\}}}}}{1}
+      {[}{{{\color{gray}{[}}}}{1}
+      {]}{{{\color{gray}{]}}}}{1},
+}
+
+\lstdefinelanguage{Dart}{
+    morekeywords={
+        abstract, as, assert, async, await, break, case, catch, class, const, continue,
+        covariant, default, deferred, do, dynamic, else, enum, export, extends, extension,
+        external, factory, false, final, finally, for, Function, get, hide, if, implements,
+        import, in, inferface, is, late, library, mixin, new, null, on, operator, part,
+        rethrow, return, set, show, static, super, switch, sync, this, throw, true, try,
+        typedef, var, void, while, with, yield
+    },
+    sensitive=true,
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]",
+    morestring=[b]',
+    stringstyle=\color{green!50!black},
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!10},
+    showstringspaces=false,
+}
+
+% Define colors for syntax highlighting
+\definecolor{codeblue}{RGB}{42, 161, 152}
+\definecolor{codecomment}{RGB}{112, 128, 144}
+\definecolor{codestring}{RGB}{163, 21, 21}
+\definecolor{codekeyword}{RGB}{0, 112, 192}
+\definecolor{codebackground}{RGB}{248, 249, 250}
+\definecolor{codenumber}{RGB}{108, 117, 125}
+\definecolor{coderule}{RGB}{233, 236, 239}
+
+% Modern code style
+\lstdefinestyle{mystandard}{
+    basicstyle=\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{codenumber},
+    backgroundcolor=\color{codebackground},
+    frame=single,
+    frameround=tttt,
+    rulecolor=\color{coderule},
+    framerule=0.8pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    captionpos=b,
+    showstringspaces=false,
+    tabsize=2,
+    xleftmargin=15pt,
+    xrightmargin=5pt,
+    aboveskip=12pt,
+    belowskip=8pt,
+    lineskip=1pt,
+    columns=flexible,
+    keepspaces=true,
+    % Enhanced syntax highlighting
+    keywordstyle=\color{codekeyword}\bfseries,
+    commentstyle=\color{codecomment}\itshape,
+    stringstyle=\color{codestring},
+    identifierstyle=\color{black},
+    emphstyle=\color{codeblue}\bfseries,
+    % Add subtle shadow effect
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+% Inline code style
+\newcommand{\inlinecode}[1]{%
+    \colorbox{codebackground}{\texttt{\color{codekeyword}#1}}%
+}
+
+% Beautiful caption style for listings
+\DeclareCaptionFormat{listing}{%
+    \colorbox{codebackground}{%
+        \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+            \centering\color{codekeyword}\bfseries#1#2#3%
+        }%
+    }%
+}
+\captionsetup[lstlisting]{format=listing, singlelinecheck=false, margin=0pt, font={sf,footnotesize}}
+
+% Apply globally
+\lstset{style=mystandard}
+
+
+\begin{document}
+
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+
+\center
+ 
+%----------------------------------------------------------------------------------------
+%	HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+\textsc{\LARGE Hasselt University}\\[1.0cm]
+\textsc{\Large Master's thesis presented for the attainment of the degree of Master of Science in Computer Science}\\[0.5cm]
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+\HRule \\[0.2cm]
+{ \huge  \bfseries A Multimodal AI-Driven GUI Framework for Dynamic User Adaptation \par} 
+\HRule \\[1.5cm]
+ 
+%----------------------------------------------------------------------------------------
+%	AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{minipage}[t]{0.5\textwidth}
+    \begin{flushleft}
+        \large \textit{Author}:\vspace*{0.5cm} \\
+        Yarne Dirkx
+    \end{flushleft}
+\end{minipage}%
+%
+\begin{minipage}[t]{0.5\textwidth}
+    \begin{flushright}
+        \large \textit{Promotor}:\vspace*{0.5cm} \\
+        Prof. Dr. Kris Luyten\\
+        \vspace*{0.5cm}
+    \end{flushright}
+\end{minipage}
+
+\vspace*{1cm}
+
+%----------------------------------------------------------------------------------------
+%	DATE SECTION
+%----------------------------------------------------------------------------------------
+
+{\large Academic year 2024-2025}\\[2cm]
+
+%----------------------------------------------------------------------------------------
+%	LOGO SECTION
+%----------------------------------------------------------------------------------------
+
+\includegraphics[width=0.4\textwidth]{images/uhasselt.jpg}\\
+ 
+%----------------------------------------------------------------------------------------
+
+\vfill % Fill the rest of the page with whitespace
+
+\end{titlepage}
+
+\chapter*{Abstract}
+This thesis presents a multimodal AI-driven GUI framework for dynamic user interface adaptation, enabling real-time, personalised accessibility enhancements across platforms such as Flutter, SwiftUI, and beyond. Designed for the health domain, the framework supports motor-impaired, visually impaired, and hands free users by integrating touch, keyboard, voice, and gestures. At its core is Smart Intent Fusion (SIF), a configurable multi-agent architecture powered by large language models (Google Gemini) that fuses inputs, events, profiles, and interaction history to infer intent and propose targeted adaptations (e.g., button enlargement, contrast enhancement, navigation mode switching). The reasoning combines rule-based logic for predictable, low-latency back-up responses with LLM-driven reasoning for complex or ambiguous cases. Developer integration is provided through standardised JSON contracts and a FastAPI backend.
+A feasibility study across six user profiles and 84 events shows that 97.5\% of suggested changes are accessibility-oriented with high internal coherence (DCI $\approx$ 0.995). In a balanced configuration, median latency is 13.2s with 84.5\% schema-valid outputs and 55\% profile-action alignment; a heavier configuration raises schema validity to 100\% and alignment to 61\%, at 36.1s median latency. Corrective responses are near-perfect for common motor/voice issues (missed taps, slider overshoots, voice commands) and weaker for gestures, indicating a clear path for improvement. The results demonstrate practical, accessibility-focused adaptation with measurable trade-offs and lay groundwork for future systems that can autonomously refactor UI code for richer, context-aware personalisation.
+
+\chapter*{Acknowledgments}
+I would like to express my deepest appreciation to all those who have supported and guided me throughout the course of my master’s thesis.
+
+First and foremost, I am sincerely grateful to Prof. Dr. Kris Luyten, my thesis supervisor, for his invaluable guidance, constructive feedback, practical tips, and continuous support.
+
+My heartfelt gratitude extends to my family, especially my sister Phaedra, my brother-in-law Dennis, and my parents for their unwavering support, patience, and help with proofreading.
+
+I would also like to thank my fellow students for their encouragement, collaboration, and support during this journey. Special thanks go to my two dogs, Tobias and Casper, whose company during countless late-night coding sessions, and gentle reminders to take breaks helped keep me grounded.
+
+Finally, I am thankful to my friends for their motivation, belief in my abilities, and for making this challenging journey a rewarding one.
+
+This work would not have been possible without the contribution and support of all these people, to whom I am deeply grateful.
+
+\chapter*{Nederlandse Samenvatting}
+\section*{Inleiding}
+Grafische gebruikersinterfaces (GUI's) vormen de kern van hoe we dagelijks met technologie omgaan, van smartphones tot websites en smartwatches. Deze interfaces maken complexe taken toegankelijk door visuele elementen zoals knoppen, iconen en menu's te gebruiken, in plaats van tekstgebaseerde commando's. Vóór de opkomst van GUI's in de jaren 1980 waren command-line interfaces (CLI's) dominant, wat computing beperkte tot experts die commando's moesten memoriseren. GUI's hebben dit veranderd door visuele metaforen te introduceren, waardoor technologie beschikbaar werd voor het brede publiek. Ze vertalen ingewikkelde computertaken naar intuïtieve, visuele acties.
+
+In de loop der jaren zijn GUI's geëvolueerd van het klassieke WIMP-model (windows, icons, menus, pointers) naar multimodale systemen die touch, stem, gebaren en zelfs ruimtelijke interacties in augmented reality (AR) en virtual reality (VR) omvatten. Dit biedt rijkere en natuurlijkere interacties. Toch blijven de meeste GUI's statisch: ze volgen een one-size-fits-all aanpak, met dezelfde lay-out, gedrag en visuele elementen voor alle gebruikers, ongeacht hun behoeften of context. Dit creëert barrières in een diverse wereld, vooral voor gebruikers met toegankelijkheidsuitdagingen. Mensen met visuele beperkingen worstelen met laag contrast of gebrek aan screenreader-ondersteuning, terwijl motorisch beperkte gebruikers moeite hebben met kleine knoppen of precieze taps. Handsfree gebruikers, zoals in medische contexten, hebben alternatieve invoermethoden nodig.
+
+Gebruikers interacteren bovendien in variërende omgevingen – lawaaierig, felverlicht of onderweg – wat interactie verder compliceert. Apparaten variëren in grootte en capaciteit, van smartwatches tot desktops, maar toegankelijkheidsfuncties zijn vaak inconsistent. Dit benadrukt een kernuitdaging: hoe ontwerpen we GUI's die dynamisch aanpassen aan individuele toegankelijkheidsbehoeften en context, voor inclusieve en efficiënte interactie?
+
+Adaptieve gebruikersinterfaces (UI's) passen zich dynamisch aan aan gebruikersbehoeften en contextuele factoren. Ze wijzigen lay-out, gedrag of uiterlijk op basis van voorkeuren, vaardigheden en omstandigheden. Door multimodale invoer zoals touch, stem, gebaren en gaze te verwerken, bieden ze gepersonaliseerde, inclusieve ervaringen, vooral voor diverse gebruikersgroepen. Een 'intelligente' interface interpreteert complexe gedragingen autonoom en leert van interacties in real-time. Kunstmatige intelligentie (AI), inclusief machine learning en grote taalmodellen (LLM's), maakt dit mogelijk door invoer, UI-context en gebruikersdata te verwerken.
+
+LLM's zoals GPT hebben natuurlijke taalverwerking gerevolutioneerd. Ze begrijpen context, leiden intentie af en genereren menselijke reacties, ideaal voor multimodale interpretatie. In adaptieve UI's fungeren LLM's als controllers die interacties vertalen naar aanpassingen, zoals het vergroten van knoppen op basis van een stemcommando of aarzeling in gebaren. Ze kunnen zelfs UI-elementen genereren door de interface als API te behandelen.
+
+Ondanks onderzoek en technologie blijven adaptieve UI's zeldzaam door implementatiecomplexiteit en gebrek aan frameworks. Dit motiveerde deze scriptie, geïnspireerd op ideeën om UI's als API's te behandelen, bestuurd door intelligente modellen. LLM's bieden potentieel, maar hebben uitdagingen zoals latency, hallucinaties en gebrek aan specialisatie voor GUI-taken. Deze scriptie ziet LLM's als contextbewuste assistenten die, met begeleiding, UI-aanpassingen verbeteren.
+\newpage
+\textbf{Probleemstelling en Onderzoeksdoelen}
+
+De meeste applicaties zijn statisch en passen zich niet aan aan veranderende contexten of beperkingen. Huidige adaptaties zijn cosmetisch, zoals aanpassing aan schermgrootte, maar pakken niet de diepere uitdagingen aan van intentie, cognitieve staat of fysieke limieten in real-time.
+Het ontwerpen van adaptieve UI's is ongewoon door technische moeilijkheden in modellering en gebrek aan frameworks. Real-world interactie is chaotisch: kleine variaties zoals een miss-tap of omgevingsruis leiden tot divergenties, wat regelgebaseerd ontwerp fragiel maakt.
+
+Dit vereist systemen die nuances interpreteren, geschikt voor AI zoals LLM's. Bestaande frameworks integreren zulke modellen zelden voor real-time adaptatie, wat een kloof creëert tussen potentieel en praktijk.
+Het primaire doel is een modulair, multimodaal AI-framework te ontwerpen, implementeren en valideren voor dynamische UI-aanpassing, met focus op toegankelijkheid. Het gaat voorbij statische designs met real-time, contextbewuste aanpassingen via hybride redenering.
+
+Specifieke doelen:
+\begin{enumerate}
+    \item Modulaire cross-platform architectuur ontwikkelen voor events over Flutter, SwiftUI en meer.
+    \item Multimodale invoerfuzie implementeren (touch, stem, gebaren).
+    \item Smart Intent Fusion (SIF) integreren: hybride engine voor aanpassingen.
+    \item Toegankelijkheidsgerichte aanpassingen leveren (vergroten, contrast, modi).
+    \item Ontwikkelaarvriendelijk integratiepad bieden via een soort basic SDK.
+    \item Performance evalueren via proof-of-concept en metrics.
+\end{enumerate}
+
+\section*{Gerelateerd Werk}
+Multimodaal AI in gebruikersinterfaces (UI's) omvat een evolutie van pointing devices, van traditionele muisinteracties naar touch-gebaseerde systemen op mobiele apparaten, die precisie en intuïtie verbeteren maar uitdagingen stellen voor gebruikers met beperkingen. Steminterfaces, zoals Siri en Alexa, introduceren natuurlijke taalverwerking (NLP) voor handsfree bediening, terwijl gebaren en gaze-tracking – geïllustreerd door Kinect voor lichaamstracking en eye-tracking tools voor cursorcontrole – rijkere, niet-contact interacties mogelijk maken, vooral in AR/VR-contexten.
+
+Adaptieve GUI's richten zich primair op toegankelijkheid, met systemen zoals SUPPLE (dat constraint-optimalisatie gebruikt voor motorische calibratie en lay-outgeneratie) en GUIDe (dat gaze combineert met keyboard of muis voor nauwkeurige targeting en scrolling). Uitdagingen liggen in het handhaven van consistentie over modaliteiten, waar variërende inputs (bijv. touch vs. stem) kunnen leiden tot inconsistente ervaringen, en in het balanceren van automatisering zonder gebruikerscontrole te verliezen.
+
+Klassieke adaptieve technieken includeren responsive layouts, die media queries en breakpoints gebruiken voor apparaatadaptatie (bijv. aanpassing aan schermgrootte en oriëntatie), en context-aware design dat sensoren (locatie, licht, beweging) integreert voor omgevingsaanpassingen, zoals thema-switches in donkere modi. Programmeerbare UI's en frameworks bieden meer dynamiek: Reflow analyseert pixels voor runtime lay-outwijzigingen, UICoder genereert code met LLM's voor nieuwe UI-creatie, en RL-gebaseerde adaptatie (reinforcement learning) leert van interacties om lay-outs en content te optimaliseren, vaak met gespecialiseerde hardware.
+
+Gebruikersprofielgebaseerde UI's, zoals XML-gebaseerde runtime systemen, maken dynamische beschrijvingen mogelijk, aangepast aan mobiele en embedded devices voor personalisatie op basis van voorkeuren en capaciteiten. Multimodale fusie omvat architecturen zoals vroeg (feature-level) of laat (semantisch-level) fusie, met eventmodellen die inputs standaardiseren voor coherente verwerking.
+
+LLM's als UI-controllers transformeren interfaces door ze als API's te behandelen, waar modellen intentie afleiden en acties uitvoeren; agents zoals ReAct (redeneren en handelen in loops) en AutoGPT (autonome taakuitvoering) voegen autonomie toe. In gezondheidstoepassingen tonen chatbots voor cognitieve gedragstherapie (bijv. Woebot voor depressie) of apps voor rugpijnbehandeling potentieel voor gepersonaliseerde, multimodale zorg, met integratie van stem en gebaren voor therapie-ondersteuning.
+Dit werk bouwt hierop door multimodale fusie te combineren met hybride AI (regels + LLM's) voor real-time, toegankelijkheidsgerichte adaptatie, overbruggend gaps in bestaande systemen zoals statische generatie of beperkte modaliteiten.
+
+\section*{Systeemontwerp en Architectuur}
+Het framework is opgebouwd rond een drie-laagse architectuur die modulariteit en schaalbaarheid prioriteert, met een duidelijke scheiding van verantwoordelijkheden om uitbreidbaarheid te garanderen. De lagen zijn: de Frontend laag voor directe UI-interactie, de Input Adapter laag voor multimodale invoerverwerking, en de SIF Backend laag voor intentiefusie en adaptatiebeslissingen. Het ontwerp focust primair op het gezondheidsdomein, waar het ondersteunt gebruikers met motorische beperkingen (bijv. tremors of coördinatieproblemen), visuele beperkingen (bijv. laag zicht of kleurenblindheid) en handsfree behoeften (bijv. in revalidatie of mobiele contexten), door aanpassingen te bieden die inclusiviteit bevorderen zonder de kernfunctionaliteit te verstoren.
+
+De Frontend laag, geïmplementeerd in frameworks zoals Flutter of SwiftUI, beheert de interface-elementen zoals knoppen, sliders, toggles en navigatiecomponenten. Het ondersteunt aanpassingsniveaus op visueel vlak (bijv. kleurcontrast verhogen of fonts vergroten) en interactief vlak (bijv. invoermodi schakelen van touch naar stem). Deze laag vangt ruwe interactiegebeurtenissen op en past aanpassingen toe met soepele animaties voor een naadloze gebruikerservaring, terwijl het ook profielinitialisatie handhabt via een editor voor persoonlijke instellingen.
+
+De Input Adapter laag fungeert als intermediair en standaardiseert diverse invoermodaliteiten – touch (taps en swipes), keyboard (toetsaanslagen), stem (spraakherkenning via API's) en gebaren (via sensoren zoals accelerometer) – in een uniform JSON-formaat met velden zoals type, timestamp en confidence-score. Dit zorgt voor consistente verwerking, onafhankelijk van het platform. Transport wordt beheerd via WebSocket voor real-time, lage-latency events (ideaal voor continue interactie) en HTTP voor batch-operaties zoals profielupdates, met automatische reconnects voor robuustheid.
+
+De SIF Backend laag integreert alles door data te fuseren: het combineert gestandaardiseerde events met profielcontext using regelgebaseerde logica voor snelle, deterministische reacties (bijv. automatische knopvergroting bij detectie van een miss-tap) en LLM-redenering voor complexere gevallen (bijv. ambiguë stemcommando's interpreteren). Gebruikersprofielen modelleren beperkingen (impairments), voorkeuren (bijv. hoge contrastmodus) en interactiegeschiedenis (logs van eerdere events) voor diepgaande personalisatie, opgeslagen in een database zoals MongoDB voor persistentie.
+
+Dynamische aanpassingsmechanismen volgen een pipeline: inkomende events worden verwerkt, intentie afgeleid (bijv. via heatmap-analyse van tap-patronen), en aanpassingen gegenereerd (bijv. knopvergroting met factor 1.5 of contrastverhoging naar 4:1 ratio, in lijn met WCAG-richtlijnen). Een continue leerlus integreert feedback door geschiedenis te analyseren en modellen te verfijnen, zodat aanpassingen evolueren (bijv. progressieve optimalisatie bij herhaalde fouten). Ontwerpoverwegingen benadrukken modulariteit (losse koppeling voor eenvoudige uitbreidingen, bijv. nieuwe modaliteiten toevoegen), schaalbaarheid (asynchrone verwerking voor hoge loads) en privacy (data-redactie op device-niveau, minimale logging van gevoelige inputs), met toekomstige extensies naar VR/AR via Unity. Dit zorgt voor een robuust, developer-vriendelijk systeem dat statische UI's omzet in adaptieve, contextbewuste interfaces.
+
+\section*{Smart Intent Fusion (SIF)}
+Smart Intent Fusion (SIF) vormt het hart van het framework en is verantwoordelijk voor het intelligent combineren van multimodale invoer met gebruikerscontext om intenties af te leiden en gepersonaliseerde UI-aanpassingen voor te stellen. In essentie is SIF een geavanceerde redeneerengine die multimodale signalen – zoals touch-events, stemcommando's, gebaren en toetsaanslagen – fuseert met profielgegevens, interactiegeschiedenis en UI-context. Dit resulteert in real-time aanpassingen die de toegankelijkheid verbeteren, zoals het vergroten van knoppen voor motorisch beperkte gebruikers of het verhogen van contrast voor visueel beperkten. SIF is ontworpen als een multi-agent architectuur, aangedreven door grote taalmodellen (LLM's) via de Google Gemini API, maar met een hybride aanpak om de beperkingen van LLM's te compenseren.
+
+Theoretisch is SIF geworteld in multimodale fusieprincipes uit de HCI-literatuur. Multimodale fusie kan vroeg (op feature-niveau, bijv. ruwe data van sensoren combineren) of laat (op semantisch niveau, bijv. geïnterpreteerde intenties integreren) gebeuren. SIF kiest voor een late fusie om complexiteit te beheren: invoer wordt eerst gestandaardiseerd in een uniforme JSON-structuur voordat ze worden verwerkt. Intentie-inferentie bouwt op modellen zoals ReAct (Reasoning and Acting), waarbij LLM's redeneren over context om acties te voorspellen. De hybride aanpak – regelgebaseerde logica voor eenvoudige, voorspelbare gevallen en LLM-redenering voor ambigue of complexe scenario's – zorgt voor betrouwbaarheid. Regels bieden lage latency (milliseconden), terwijl LLM's diepere inzichten leveren, maar met mogelijke vertraging (seconden). Dit hybride model voorkomt over-reliance op LLM's, die vatbaar zijn voor hallucinaties (fictieve outputs) of inconsistentie.
+
+Gebruikersprofielen spelen een cruciale rol in SIF en structureren behoeften op een gestandaardiseerde manier. Een profiel bevat velden zoals "impairments" (bijv. "motor" voor tremors, "visual" voor laag zicht), "preferences" (bijv. voorkeur voor grote fonts of stemfeedback) en "history" (een log van eerdere interacties). Deze profielen beïnvloeden beslissingen door als context te dienen: voor een motorisch beperkt profiel prioriteert SIF aanpassingen zoals knopvergroting of tremor-correctie. Leren van interactiegeschiedenis gebeurt continu; SIF analyseert patronen, zoals herhaalde miss-taps, om toekomstige aanpassingen te verfijnen. Dit creëert een feedbacklus waarbij het systeem personaliseert op basis van evoluerende data, in lijn met ability-based design principes uit HCI, waar interfaces zich aanpassen aan individuele capaciteiten in plaats van een standaard te forceren.
+
+De modellering van multimodale invoerfuzie begint met standaardisatie: ruwe events (bijv. een touch-tap met coördinaten en timestamp) worden omgezet in een JSON-formaat met velden zoals "type" (touch/voice/gesture), "confidence" (een score van 0-1 voor betrouwbaarheid, bijv. spraakherkenning accuracy) en "timestamp". Timing is essentieel; SIF gebruikt vensters (bijv. 500ms) om synchrone inputs te groeperen, zoals een stemcommando tijdens een gebaar. Confidence-scores wegen inputs: een lage confidence-touch (bijv. door tremor) triggert extra LLM-redenering. LLM's worden ingezet voor fusiebeslissingen, bijvoorbeeld door prompts zoals "Gegeven deze events en profiel, leid intentie af en stel aanpassingen voor", wat resulteert in outputs zoals \{"action": "enlarge\_button", "target": "submit", "value": 1.5\}.
+
+Regelgebaseerde logica handelt eenvoudige gevallen: bijv. als een miss-tap wordt gedetecteerd (afstand $>$ threshold), vergroot de knop automatisch. Dit is deterministic en laag-latency, ideaal voor real-time. Voor ambiguïteit schakelt SIF naar LLM's, die context interpreteren (bijv. "gebruiker aarzelt bij slider – stel voice-control voor"). Heatmap-analyse voegt toe door interactiepatronen te visualiseren: herhaalde taps rond een knop genereren een heatmap, die SIF gebruikt om hotspots te identificeren en lay-outs aan te passen.
+
+Multi-Agent SIF (MA-SIF) verfijnt dit door taken te splitsen in gespecialiseerde agents: de UI Agent focust op visuele aanpassingen (bijv. contrast, lay-out), de Geometry Agent op ruimtelijke veranderingen (bijv. knopgrootte, positie), en de Input Agent op modaliteitsswitches (bijv. van touch naar voice). Elke agent ontvangt dezelfde input maar met een specifieke prompt, en genereert onafhankelijke voorstellen. Een Validator Agent reconcileert outputs: het controleert op conflicten (bijv. overlappende acties), valideert tegen een strikt JSON-schema (bijv. "value" moet numeriek zijn binnen ranges), en mergeert tot een finale set. MA-SIF is configureerbaar via een JSON-file, waar agents' prompts, toegestane acties en temperaturen (creativiteitsparameter, laag voor conservatief) worden gedefinieerd. Bijvoorbeeld: temperature=0.2 voor deterministische outputs, thinking\_budget=500 tokens om redenering te beperken.
+
+Prompt engineering is cruciaal voor LLM-prestaties. Principes includeren expliciete instructies ("Wees conservatief, hallucineer geen targets"), gestructureerde formats (bijv. "Output als JSON: {actions: [{type, target, value}]}"), en ambiguïteit vermijden (geen disjuncties zoals "A of B" die LLM's verkeerd interpreteren). Strikte schemas dwingen validiteit af: ongeldige outputs worden verworpen en fallbacken naar regels. Metrics evalueren SIF: latency (mediaan 13s voor MA-SIF), schema-validiteit (84.5\% in tests), correctheid (actie-alignment met profiel, 97.5\% toegankelijkheidsgericht), en personalisatie (bijv. \% aanpassingen uniek per profiel).
+
+Beperkingen van LLM-integratie zijn significant: latency door API-calls (seconden vs. ms voor regels), hallucinaties (bijv. niet-bestaande targets), en tokenlimits (contextgrootte beperkt geschiedenis). Mogelijke oplossingen: hybride fallbacks (regels eerst, LLM asynchroon), validatoren voor filtering, en caching van bijvoorbeeld veelvoorkomende prompts. LLM-selectie (Gemini vs. GPT) balanceert kosten, snelheid en multimodaliteit. Toekomstige richtingen: autonome on-device agents met fine-tuned modellen (bijv. getraind op UI-logs en WCAG-richtlijnen), integratie met RL voor leren van feedback, en visuele UI-analyse (vision models voor screenshot-parsing) om context te verrijken zonder metadata.
+SIF transformeert statische UI's naar dynamische, intentiebewuste systemen, met een balans tussen snelheid, intelligentie en betrouwbaarheid, cruciaal voor toegankelijkheidsgerichte toepassingen.
+
+\textbf{Implementatie van het Framework}
+
+De implementatie van het framework is gerealiseerd als een proof-of-concept: een Adaptieve Smart Home Controller, een eenvoudige app die slimme apparaten (lamp, thermostaat, slot) beheert en dynamisch aanpast op basis van gebruikersevents. Dit demonstreert de end-to-end workflow en portability over platforms. De stack omvat Flutter voor de frontend (Dart-based, cross-platform UI), een Dart-adapter voor inputverwerking, en een Python-backend met FastAPI voor SIF-logica. Ontwikkelomgeving: Flutter SDK voor UI, Dart voor adapter, Python 3 met libraries zoals FastAPI, MongoDB-driver en Google Gemini API-client.
+
+De Frontend in Flutter beheert de UI-staat en interacties. Het bestaat uit scrollbare kaarten met minimalistische controls (toggle, slider, knop) en een mock-event rij voor testen (bijv. "Miss Tap", "Voice Command"). Events worden vastgelegd (bijv. tap-coördinaten, stemtekst) en doorgestuurd naar de adapter. Aanpassingen worden toegepast via een state-model: bij ontvangst van JSON-outputs (bijv. \{"action": "enlarge\_button", "target": "submit", "value": 1.5\}) update de UI dynamisch met animaties (bijv. AnimatedContainer voor soepele resizing). State wordt beheerd met Provider voor reactiviteit, en profielen bootstrappen via een editor-scherm waar gebruikers impairments selecteren. Voor responsiveness: een loading-indicator (roterende gradient) tijdens backend-wachting, en partial results (regels eerst, LLM later).
+
+De Input Adapter in Dart fungeert als brug: het serialiseert ruwe events naar JSON, beheert transport (WebSocket voor real-time events, HTTP voor profielbeheer), en callbackt aanpassingen terug naar de frontend. Klasse-overzicht: AdaptiveUIAdapter met methods zoals sendEvent() en onAdaptationReceived(). Interne representaties: Event (type, data, timestamp), Adaptation (action, target, value), UserProfile (impairments, preferences). Extensibiliteit: nieuwe modaliteiten (bijv. gaze) toevoegen door Event-subklassen. WebSocket-lifecycle includes reconnect-backoff voor robuustheid.
+
+De SIF Backend in Python gebruikt FastAPI voor endpoints (/events via WebSocket, /profiles via HTTP) en MongoDB voor persistentie (geschiedenis opslaan per user\_id). SIF/MA-SIF wordt geïmplementeerd als async functions: events verrijken met profiel/geschiedenis, regels toepassen (bijv. if miss-tap: enlarge), dan LLM-invocatie (Gemini met prompts uit config). Structured outputs via JSON-schemas, guardrails tegen invaliditeit (validator parseert en filtert). Regel-fallbacks: hardcoded triggers (bijv. overshoot-slider → voice-mode). Heatmap-analyse: accumuleer taps in een grid, detecteer clusters voor lay-out shifts. Latency-handling: timeouts (5s), partial results (stuur regels direct). Security: CORS voor frontend-origin, geen auth in prototype.
+
+Profielen worden bootstrapped (default laden) en bewerkt via HTTP, met opslag in MongoDB voor persistentie. Dynamische mechanismen: applyAdaptations() mapped acties naar widgets (bijv. enlarge → scale factor), met animaties voor UX. Conflicten: prioriteer (bijv. geometry $>$ UI), onbekende acties negeren. Real-time voorbeeld: miss-tap → regel-vergroting + LLM-suggestie (contrast boost), toegepast na 13s mediaan.
+Backend-injectie interface (web-app) simuleert events/profielen, visualiseert responses en geschiedenis voor debugging. Cross-platform voorbeeld in SwiftUI: minimal UI met state-mapping, adapter via URLSession/WebSocket, events injecteren, toont portability met dezelfde JSON-contracts.
+
+Ontwerpbeslissingen benadrukken modulariteit (losse koppeling voor swaps), WebSocket voor lage-latency events (vs. HTTP batch), MongoDB voor flexibele schema's (JSON-docs), en hybride redenering (regels voor basis, MA-SIF voor diepte). Uitdagingen: LLM-consistentie opgelost met validatoren en prompts; performance met caching en batching; beveiliging met CORS en toekomstige auth (JWT). Testen met incomplete modaliteiten via mocks; privacy via on-device redactie.
+
+Deze implementatie bewijst de haalbaarheid: een schaalbaar, developer-vriendelijk framework dat statische UI's omzet in adaptieve, toegankelijke systemen, met focus op gezondheidstoepassingen.
+
+\section*{Haalbaarheidsstudie}
+De evaluatie volgt een haalbaarheidsstudie om te verifiëren of de multimodale AI-gedreven adaptatiepijplijn end-to-end werkt onder realistische interactiesporen en of dit nuttig is voor toegankelijkheid. Zes uiteenlopende profielen werden gebruikt (motorisch, visueel, handsfree), elk met twee opeenvolgende runs van zeven events (totaal 84): \texttt{miss\_tap}, \texttt{slider\_miss}, \texttt{voice} en \texttt{gesture}. Dit bootst real-world gebruik na door directe fouten te combineren met een groeiende geschiedenis, zodat de tweede run voortbouwt op de eerste voor contextueel leren.
+
+De MA-SIF-configuratie (multi-agent, gebalanceerde instellingen) is getoetst op kernmetrics: schema-validiteit (84{,}52\% van de responsen voldoet aan het strikte JSON-schema; 100\% passeert via de Validator), toegankelijkheidsaandeel (97{,}51\% van alle acties is expliciet op toegankelijkheid gericht), en interne samenhang (DCI $\approx$ 0{,}995). Latency in deze configuratie heeft een mediaan van 13{,}19\,s; regels leveren directe feedback, terwijl LLM-adaptaties asynchroon binnenkomen. Qua geschiktheid per eventtype is ERA zeer hoog voor motor-gerelateerde fouten (\texttt{miss\_tap} en \texttt{slider\_miss} beide 100{,}00\%), hoog voor \texttt{voice} (97{,}22\%) en laag voor \texttt{gesture} (8{,}33\%). Per profiel varieert schema-validiteit van 71{,}43\% (P3, handsfree) tot 100{,}00\% (P5, visueel+motor).
+
+De discussie benadrukt sterke personalisatie – aanpassingen evolueren met geschiedenis (bijv. herhaalde miss-taps leiden tot progressieve vergrotingen) – en tegelijk de beperkingen van de synthetische opzet: geen echte gebruikers betekent beperkte gedragsvariatie en geen subjectieve feedback; latency is merkbaar in snelle interacties. Conclusie: het systeem is haalbaar voor toegankelijkheidsverbetering met hoge validiteit en alignment, maar vraagt vervolgwerk via gebruikersstudies en gerichte optimalisatie van prompts, validatorbeleid en fallbacks.
+
+\section*{Discussie en Toekomstig Werk}
+De implicaties reiken tot inclusieve HCI: statische interfaces verschuiven naar dynamische systemen die zich tijdens gebruik aanpassen aan uiteenlopende behoeften, met duidelijke relevantie voor gezondheidscontexten (bijv. revalidatie-apps of stemgestuurde tools). Belangrijkste bijdragen zijn een modulaire drie-laagse architectuur (Frontend, Input Adapter, SIF Backend), een hybride redeneringskern (regels + multi-agent LLM’s met Validator) en een focus op concrete toegankelijkheidsaanpassingen (knopvergroting, contrast, moduswissels) via ontwikkelaarsvriendelijke JSON-contracten.
+
+In vergelijking met gerelateerd werk onderscheidt dit framework zich door multimodale fusie en runtime-adaptatie: t.o.v. SUPPLE (compile-time layout-optimalisatie met calibratie) biedt het runtime-fusie van signalen; t.o.v. Reflow (pixel-gebaseerde layout) voegt het semantische intentieredenering toe; UICoder (LLM-codegeneratie) werkt compile-time, terwijl dit werk bestaande live UI’s aanpast; RL-gebaseerde systemen vragen vaak gespecialiseerde hardware en langere training. 
+
+Toekomstig werk omvat een gebruikersstudie met 12–18 deelnemers (4–6 per cluster) in een within-subjects design (regels-only vs. regels+MA-SIF), met SUS, NASA-TLX, foutenpercentages en taaktijden in smart home-scenario’s met geïnduceerde beperkingen. Verdere stappen zijn overlays/OS-hooks voor retrofit zonder codewijzigingen, een ontwikkelaars-SDK (Flutter/SwiftUI/Unity) met debug-tools en WCAG-templates, en een UI-analyzer die widget trees of screenshots semantisch begrijpt (vision-modellen) om context te verrijken. Uitbreiding van input omvat gaze-tracking, geavanceerde handtracking en BCI. Autonome agents kunnen prompts en beleid dynamisch bijsturen en zichzelf valideren; een gespecialiseerd, op logs en WCAG getraind on-device model verlaagt latency en verbetert privacy. Langetermijn: integratie van RL voor continue optimalisatie met dual-mode adaptatie (compile-time defaults + runtime tweaks).
+
+\section*{Conclusie}
+Dit werk ontwikkelt een framework voor (nagenoeg) real-time multimodale UI-adaptatie met een sterke toegankelijkheidsfocus. Smart Intent Fusion (SIF) combineert deterministische regels met LLM-gedreven redenering in een multi-agent opzet met Validator en levert betrouwbare, contextbewuste aanpassingen (bijv. elementen vergroten of naar stemmodus schakelen) binnen een modulaire, platformoverschrijdende architectuur.
+
+Bijdragen omvatten gestandaardiseerde JSON-contracten, ontwikkelaarsvriendelijke integratie en een hybride engine die snelheid (regels, snelle paden) en intelligentie (LLM’s + Validator) in balans brengt. Beperkingen zijn afhankelijkheid van externe LLM-API’s, een synthetische evaluatie (geen veldstudie) en merkbare latency in multi-agent flows (mediaan 13{,}19\,s). De evaluatie bevestigt haalbaarheid: 84{,}52\% schema-validiteit, 97{,}51\% toegankelijkheidsgerichte acties en hoge interne samenhang (DCI $\approx$ 0{,}995) over 84 events en zes profielen; motor- en voice-cases scoren zeer hoog, terwijl gebaren de grootste verbetermogelijkheid vormen. Een regels-only aanpak presteert niet beter, maar een rule fast path is praktisch (ca. 86\% van de events heeft minstens één canonieke correctie): emit die onmiddellijk en laat MA-SIF + Validator de volledige, profielbewuste set consolideren. Daarmee vormt dit werk een solide basis voor verdere validatie met gebruikers en voor uitbreiding richting UI-bewuste context en on-device redenering.
+
+
+\tableofcontents
+\listoffigures
+\listoftables
+%\glsaddall
+%\printglossary[type=\acronymtype, title=List of Abbreviations]
+
+\include{Chapter1}
+
+\include{Chapter2}
+
+\include{Chapter3}
+
+\include{Chapter4}
+
+\include{Chapter5}
+
+\include{Chapter6}
+
+\include{Chapter7}
+
+\include{Chapter8}
+
+\printbibliography[title=References]
+
+\end{document}

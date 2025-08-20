@@ -1,0 +1,7 @@
+user_id,events_total,miss_tap,tap,voice,gesture,key_press,other,schema_valid_pct,latency_p50_ms,latency_p90_ms,latency_max_ms,top_targets,top_miss_targets,backend_top,validated_pct,combined_pct,mock_pct
+P0,14,4,0,6,2,0,2,78.57,16022.61,20232.83,21095.52,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",MA-SIF balanced + instant rules,100.00,0.00,0.00
+P1,14,4,0,6,2,0,2,85.71,13186.26,16780.89,17434.45,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",MA-SIF balanced + instant rules,100.00,0.00,0.00
+P2,14,4,0,6,2,0,2,85.71,13651.44,16461.16,19035.59,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",MA-SIF balanced + instant rules,100.00,0.00,0.00
+P3,14,4,0,6,2,0,2,71.43,11819.79,14680.87,16486.06,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",MA-SIF balanced + instant rules,100.00,0.00,0.00
+P4,14,4,0,6,2,0,2,85.71,13625.15,15757.03,17906.42,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",MA-SIF balanced + instant rules,100.00,0.00,0.00
+P5,14,4,0,6,2,0,2,100.00,12699.09,16249.51,16603.19,"lamp:6, thermostat:4, lock:4","lamp:2, lock:2",MA-SIF balanced + instant rules,100.00,0.00,0.00

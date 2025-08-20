@@ -1,0 +1,3 @@
+config,p50_s,schema_valid_pct,paa_pct,era_pct,dci_mean,events
+Config A,13.19,84.52,55.22,97.62,0.99,84
+Config B,36.06,100.00,61.45,98.81,1.00,84

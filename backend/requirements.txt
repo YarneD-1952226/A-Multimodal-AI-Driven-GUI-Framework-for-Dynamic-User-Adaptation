@@ -1,0 +1,10 @@
+fastapi
+pydantic
+uvicorn
+requests
+google-genai
+pymongo
+python-dotenv
+websockets
+jsonschema
+requests

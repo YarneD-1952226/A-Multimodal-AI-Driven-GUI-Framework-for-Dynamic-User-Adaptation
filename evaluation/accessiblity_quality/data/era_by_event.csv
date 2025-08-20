@@ -1,0 +1,5 @@
+event,count,era_pct,ci_95,notes
+miss_tap,24,100.0,"[86.20, 100.00]",motor fixes prevalent
+slider_miss,12,100.0,"[75.75, 100.00]",slider size/spacing
+voice,36,97.22,"[85.83, 99.51]",mode confirmation
+gesture,12,8.33,"[1.49, 35.39]",mode confirmation
